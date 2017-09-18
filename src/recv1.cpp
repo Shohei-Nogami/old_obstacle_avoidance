@@ -13,7 +13,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "ros/ros.h"
-#include "obst_avoid/wheel_msg.h"
+#include <obst_avoid/wheel_msg.h>
 #define BUFFER_SIZE 2048 //256 = 1 byte, 64bit OS -> 2048 , 32bit OS -> 1024
 #define DATABUFFER 1024 
 #define IP_Number "192.168.0.2"
