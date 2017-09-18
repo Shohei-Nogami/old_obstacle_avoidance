@@ -1,0 +1,5 @@
+#odometry service file
+#--req
+---
+#--res
+nav_msgs/Odometry odmmsg

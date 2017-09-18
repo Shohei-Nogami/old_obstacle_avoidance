@@ -1,0 +1,5 @@
+#image service file
+#--req
+---
+#--res
+sensor_msgs/Image imgmsg

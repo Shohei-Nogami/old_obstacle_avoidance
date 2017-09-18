@@ -15,6 +15,7 @@ find_package(catkin REQUIRED
 	cv_bridge
 	image_transport
     tf
+    nav_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -63,11 +64,11 @@ find_package(OpenCV REQUIRED)
  )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+ add_service_files(
+   FILES
+   image.srv
+   odometry.srv
+ )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -80,6 +81,8 @@ find_package(OpenCV REQUIRED)
  generate_messages(
    DEPENDENCIES
    std_msgs  # Or other packages containing msgs
+   sensor_msgs
+   nav_msgs
  )
 
 ################################################
@@ -209,11 +212,20 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
+add_executable(img_srv_tst src/test.cpp src/img_prc_cls.cpp)
+target_link_libraries(img_srv_tst ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(img_srv src/img_srv.cpp)
+target_link_libraries(img_srv ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(dpt_srv src/dpt_srv.cpp)
+target_link_libraries(dpt_srv ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 add_executable(udpipreceiver src/recv1.cpp)
 target_link_libraries(udpipreceiver ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(ZedImageProcesser src/image_process_zed_function.cpp src/image_process_zed_main.cpp src/image_process_zed_editing.cpp)
-target_link_libraries(ZedImageProcesser ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#add_executable(ZedImageProcesser src/image_process_zed_function.cpp src/image_process_zed_main.cpp src/image_process_zed_editing.cpp)
+#target_link_libraries(ZedImageProcesser ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #set(CMAKE_CXX_FLAGS “-std=c++0x ${CMAKE_CXX_FLAGS}”)
 add_definitions(-std=c++11)
