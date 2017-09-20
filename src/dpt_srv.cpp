@@ -15,6 +15,7 @@ cv_bridge::CvImagePtr dpt_bridge;
 
 void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
+    ROS_INFO("depth received by subscriber");
     try{
         dpt_bridge= cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_32FC1);
     }
@@ -27,6 +28,7 @@ void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 
 bool dpt_srv(obst_avoid::image::Request& req,obst_avoid::image::Response& res)
 {
+	ROS_INFO("called depth service");
 	dpt_bridge->toImageMsg(res.imgmsg);
 	return true;
 }

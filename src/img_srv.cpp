@@ -15,6 +15,7 @@ cv_bridge::CvImagePtr img_bridge;
 
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
+    ROS_INFO("image received by subscriber");
     try{
         img_bridge= cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
     }
@@ -27,7 +28,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 
 bool img_srv(obst_avoid::image::Request& req,obst_avoid::image::Response& res)
 {
-//	img_bridge->toImageMsg(res.imgmsg);
+	ROS_INFO("called image service");
 	img_bridge->toImageMsg(res.imgmsg);
 	return true;
 }

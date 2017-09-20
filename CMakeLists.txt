@@ -212,6 +212,9 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
+add_executable(img_prc src/main.cpp src/img_prc_cls.cpp src/prcs_fnc.cpp)
+target_link_libraries(img_prc ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 add_executable(img_srv_tst src/test.cpp src/img_prc_cls.cpp)
 target_link_libraries(img_srv_tst ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
@@ -220,6 +223,9 @@ target_link_libraries(img_srv ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(dpt_srv src/dpt_srv.cpp)
 target_link_libraries(dpt_srv ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(odm_srv src/odm_srv.cpp)
+target_link_libraries(odm_srv ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(udpipreceiver src/recv1.cpp)
 target_link_libraries(udpipreceiver ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
