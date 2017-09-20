@@ -135,6 +135,12 @@ public:
 //set odometry
 	void setodom(void){
 		if(isOdom()){
+			//---get previous time
+			getprevtime();
+			//get time
+			gettime();
+			//culculation dt
+			culcdt();
 			//---一つ前のodometryを格納
 			setPrevodom();
 			//現在のodometryを格納
@@ -148,8 +154,11 @@ public:
 				dysignchange();
 		}
 		else{
+			//現在のodometryを格納
 			setparam();
 			setodomrcvd();
+			//get time
+			gettime();
 		}
 	}
 //set x,y,z,r,p,y
@@ -304,5 +313,15 @@ public:
 		else
 			return true;
 	}
-
+//----time----
+	void gettime(void){
+		ros::Duration time = ros::Time::now()-start_time;
+		new_time=time.toSec();
+	}
+	void getprevtime(void){
+		prev_time=new_time;
+	}
+	void culcdt(void){
+		dt=new_time-prev_time;
+	}
 };
