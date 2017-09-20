@@ -25,7 +25,7 @@ int main(int argc,char **argv){
 			prc.setodom();
 		}
 		//画像処理
-//		prc.imageProcess();
+		prc.imageProcess();
 	}
 
 	return 0;

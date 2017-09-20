@@ -36,7 +36,7 @@ class ImageProcesser
 	ros::Time start_time;
 public:
 //publisher
-	image_transport::Publisher pub;
+	image_transport::Publisher pub_orgimg;
 	image_transport::Publisher pub_Limg;
 	image_transport::Publisher pub_Lmsk;
 	image_transport::Publisher pub_dpt;
@@ -112,7 +112,7 @@ public:
 		PreLimg=org_img->image.clone();
 	}
 	void pub_org_img(void){
-		pub_Limg.publish(org_img->toImageMsg());
+		pub_orgimg.publish(org_img->toImageMsg());
 	}
 //----depth----
 //set depth image
@@ -151,7 +151,6 @@ public:
 			setparam();
 			setodomrcvd();
 		}
-
 	}
 //set x,y,z,r,p,y
 	void setparam(void){

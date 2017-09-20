@@ -6,13 +6,14 @@ void ImageProcesser::imageProcess()
 	//debug
   ROS_INFO("process start");
 
-	ros::Time process_start_time= ros::Time::now();
+  ros::Time process_start_time= ros::Time::now();
   ros::Duration process_time = ros::Time::now()-start_time;
 
 	int count=0;
 	cv::Mat depth_img;
 	cv::Mat Limg;
 	Limg=org_img->image.clone();
+	depth_img=depthimg->image.clone();
 	cv::Mat Limg_view=Limg.clone();//imshow用のMat
 	if(PreLimg.empty()){	//差分を取るための処理(ループ１回目のみ処理をしない)
 	}
@@ -25,9 +26,9 @@ void ImageProcesser::imageProcess()
 		cv::Mat DifLgray,MaskLimg;
 		cv::absdiff(Lgray,PreLgray,DifLgray);
     //差分diffのうち、閾値thを超えている部分を1、それ以外を0としてmaskに出力
-    cv::threshold(DifLgray,MaskLimg,10,1,cv::THRESH_BINARY);
+    	cv::threshold(DifLgray,MaskLimg,10,1,cv::THRESH_BINARY);
     //マスクmaskのうち、1(True)の部分を白(0)に、0(False)の部分を黒(255)にしてim_maskに出力
-    cv::threshold(MaskLimg,MaskLimg,0,255,cv::THRESH_BINARY);
+    	cv::threshold(MaskLimg,MaskLimg,0,255,cv::THRESH_BINARY);
     //膨張縮小処理
 		cv::erode(MaskLimg,MaskLimg,cv::Mat(),cv::Point(-1,-1), 1);
 		cv::dilate(MaskLimg,MaskLimg,cv::Mat(),cv::Point(-1,-1), 4);
@@ -40,7 +41,7 @@ void ImageProcesser::imageProcess()
 		double sum_area=0;//差分合計面積
 		act=MaskLimg.clone();
 		std::vector<std::vector<cv::Point> >  contours;
-    cv::findContours(act, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+    	cv::findContours(act, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 		std::vector<std::vector<cv::Point> > contours_poly( contours.size() );
 		std::vector<cv::Rect> boundRect( contours.size() );//
     //差分画像を矩形で囲む(左上、右下の座標を取る)
@@ -164,7 +165,6 @@ void ImageProcesser::imageProcess()
 			}
 		}
 //矩形の合成終了
-
 //-----オプティカルフロー関数用パラメータ-----
 		std::vector<cv::Point2f> points[rect_size];	//特徴点
 		std::vector<cv::Point2f> newpoints[rect_size];	//移動後の特徴点
@@ -335,7 +335,7 @@ void ImageProcesser::imageProcess()
                   			))*dt);
 					}
 				}
-//----矢印描写----
+//----矢印描写---
 				if(!std::isnan(z)){
 					float eval;
 					eval=sqrt(
