@@ -61,7 +61,7 @@ void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	if(n++==0){
 		//ofstream Data converted into each 10cm
 		std::ofstream ofs("depth_graph.csv",std::ios::app);
-    	    ofs << ",";
+/* 	    ofs << ",";
 		for(int j=0;j<width;j++)
 		    ofs << j << ",";
 		ofs << std::endl;
@@ -70,8 +70,24 @@ void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 		    for(int j=0;j<width;j++)
 		        ofs << edit_img.at<float>(j,i) << ",";
 		    ofs << std::endl;
-    	    }
+*/
+		for(int i=0;i<height;i++){
+			for(int j=0;j<width;j++)
+				ofs<<j<<" "<<i<<" "<<edit_img.at<float>(j,i)<<std::endl;
+   		}
 	}
+
+	//
+		
+//		cv::Mat edit_img = cv::Mat::zeros(cv::Size(width,height),CV_32FC1);	
+	for(int i=0;i<height;i++){
+	   	for(int j=0;j<width;j++){
+				
+				
+				
+		}
+	}
+	
 }
 int main(int argc,char **argv)
 {
