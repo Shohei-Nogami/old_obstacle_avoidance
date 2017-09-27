@@ -27,7 +27,7 @@ void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
     for(int i=0;i<width;i++){
         for(int j=0;j<height;j++){
 	    depth=depth_img.at<float>(j,i);
-	    if(!std::isnan(depth))
+	    if(!std::isnan(depth)&&depth>0)
 	        edit_img.at<float>(j,i)=(int)(depth*10)/10.0;//10cmごとのdataに変換
 	    }
 	}
@@ -68,12 +68,12 @@ void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 		for(int i=0;i<height;i++){
 		    ofs << i << ",";
 		    for(int j=0;j<width;j++)
-		        ofs << edit_img.at<float>(j,i) << ",";
+		        ofs << edit_img.at<float>(i,j) << ",";
 		    ofs << std::endl;
 */
 		for(int i=0;i<height;i++){
 			for(int j=0;j<width;j++)
-				ofs<<j<<" "<<i<<" "<<edit_img.at<float>(j,i)<<std::endl;
+				ofs<<j<<" "<<i<<" "<<edit_img.at<float>(i,j)<<std::endl;
    		}
 	}
 
