@@ -12,7 +12,6 @@
 //service
 #include<obst_avoid/image.h>
 cv_bridge::CvImagePtr dpt_bridge;
-
 void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
     ROS_INFO("depth received by subscriber");

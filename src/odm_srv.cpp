@@ -6,7 +6,10 @@
 #include<nav_msgs/Odometry.h>
 //service file
 #include<obst_avoid/odometry.h>
+//ファイル出力用
+#include<fstream>//file input output
 ::nav_msgs::Odometry odm;
+
 void OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg){
 	ROS_INFO("odometry received by subscribe");//deebug
 	odm.pose=msg->pose;

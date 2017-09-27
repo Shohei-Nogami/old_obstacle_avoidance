@@ -12,15 +12,15 @@ void twistCallback(const geometry_msgs::Twist::ConstPtr& msg){
 	obst_avoid::wheel_msg wheelMsg;
 	std::cout<<"linear.x,angular.z:("<<msg->linear.x<<","<<msg->angular.z<<")\n";
 		if(msg->linear.x==0&&msg->angular.z==0)
-			wheelMsg.vel_data="000000";
+			wheelMsg.vel_data="00000000";
 		else if(msg->linear.x>0&&msg->angular.z==0)
-			wheelMsg.vel_data="100100";
+			wheelMsg.vel_data="01000100";
 		else if(msg->linear.x==0&&msg->angular.z<0)
-			wheelMsg.vel_data="100000";//left=100,right=000
+			wheelMsg.vel_data="-1000100";//left=100,right=000
 		else if(msg->linear.x==0&&msg->angular.z>0)
-			wheelMsg.vel_data="000100";//left=000,right=100
+			wheelMsg.vel_data="0100-100";//left=000,right=100
 		else
-			wheelMsg.vel_data="000000";
+			wheelMsg.vel_data="00000000";
 
 		std::cout<<"ready to publish\n";
 		std::cout<<"msg:"<<wheelMsg.vel_data<<'\n';

@@ -212,6 +212,13 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
+
+#add_executable(NodeName src/sourcecode.cpp )
+#target_link_libraries(NodeName ${catkin_LIBRARIES} )
+
+add_executable(obst_dtct src/obst_dtct.cpp)
+target_link_libraries(obst_dtct ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 add_executable(img_prc src/main.cpp src/img_prc_cls.cpp src/prcs_fnc.cpp)
 target_link_libraries(img_prc ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
@@ -226,6 +233,12 @@ target_link_libraries(dpt_srv ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(odm_srv src/odm_srv.cpp)
 target_link_libraries(odm_srv ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(publish_wheel_vel src/publish_wheel_data.cpp)
+target_link_libraries(publish_wheel_vel ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(beego_teleop_key src/beego_teleop_key.cpp)
+target_link_libraries(beego_teleop_key ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(udpipreceiver src/recv1.cpp)
 target_link_libraries(udpipreceiver ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})

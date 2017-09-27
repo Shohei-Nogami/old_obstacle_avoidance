@@ -81,7 +81,7 @@ public:
 	obst_avoid::image dptsrv;
 	obst_avoid::odometry odmsrv;
 //ファイル出力
-	std::ofstream ofs;//("output_data.csv");
+	std::ofstream ofs;
 
 	ImageProcesser();//コンストラクタ
 	~ImageProcesser()//デストラクタ

@@ -11,7 +11,7 @@ void publish_wheel_vel(){
 	while(ros::ok()&&flag){
 		do{
 			std::cout<<"速度を入力してください(6文字):";std::cin>>msg.vel_data;
-		}while(msg.vel_data.length()!=6);
+		}while(msg.vel_data.length()!=8);
 		
 		pub_wheel.publish(msg);
 			

@@ -4,7 +4,7 @@
 void ImageProcesser::imageProcess()
 {
 	//debug
-  ROS_INFO("process start");
+//  ROS_INFO("process start");
 
   ros::Time process_start_time= ros::Time::now();
   ros::Duration process_time = ros::Time::now()-start_time;
@@ -360,8 +360,8 @@ void ImageProcesser::imageProcess()
 						ImageProcesser::cvArrow(&Limg_view,
 							cv::Point((RectPoint_tl[i].x+(int)points[i][j].x),
 								(RectPoint_tl[i].y+(int)points[i][j].y)),
-							cv::Point((RectPoint_tl[i].x+(int)newpoints[i][j].x+(int)value_x),
-								(RectPoint_tl[i].y+(int)newpoints[i][j].y)+(int)value_y),
+							cv::Point((RectPoint_tl[i].x+(int)(newpoints[i][j].x+value_x)),
+								(RectPoint_tl[i].y+(int)(newpoints[i][j].y)+value_y)),
 							cv::Scalar(255,255,255));//白
 					}
 					else{
@@ -369,8 +369,8 @@ void ImageProcesser::imageProcess()
 							cv::Point((RectPoint_tl[i].x+(int)points[i][j].x
 								),
 								(RectPoint_tl[i].y+(int)points[i][j].y)),
-							cv::Point((RectPoint_tl[i].x+(int)points[i][j].x-(int)value_x),
-								(RectPoint_tl[i].y+(int)points[i][j].y-(int)value_y)),
+							cv::Point((RectPoint_tl[i].x+(int)(points[i][j].x+value_x)),
+								(RectPoint_tl[i].y+(int)(points[i][j].y-value_y))),
 							cv::Scalar(200,0,200));//紫
 						ImageProcesser::cvArrow(&Limg_view,
 							cv::Point((RectPoint_tl[i].x+(int)points[i][j].x),
@@ -382,6 +382,37 @@ void ImageProcesser::imageProcess()
 						point.y=newpoints[i][j].y;
 						movepoints.points.push_back(point);
 					}
+				//debug   
+			//	std::ofstream ofss("./Documents/output_opticalflow.csv",std::ios::app);
+/*				ofss<<RectPoint_tl[i].x+points[i][j].x+delta_cx-cx<<","//X
+					<<RectPoint_tl[i].y+points[i][j].y+delta_cy-cy<<","//Y
+					<<z<<","//z
+					<<dx<<","//dx
+					<<v<<","//dz
+					<<w<<","//dw
+					<<dt<<","//dt
+					<<","
+					<<newpoints[i][j].x-points[i][j].x<<","//観測x
+					<<newpoints[i][j].y-points[i][j].y<<","//観測y
+					<<(double)value_x<<","//ヤコビx
+					<<(double)value_y<<","//ヤコビy
+					<<std::endl;*/
+				std::cout<<RectPoint_tl[i].x+points[i][j].x+delta_cx-cx<<","//X
+					<<RectPoint_tl[i].y+points[i][j].y+delta_cy-cy<<","//Y
+					<<z<<","//z
+					<<dx<<","//dx
+					<<v<<","//dz
+					<<w<<","//dw
+					<<dt<<","//dt
+					<<","
+					<<newpoints[i][j].x-points[i][j].x<<","//観測x
+					<<newpoints[i][j].y-points[i][j].y<<","//観測y
+					<<(double)value_x<<","//ヤコビx
+					<<(double)value_y<<","//ヤコビy
+					<<std::endl;
+//				ofs.close();
+//				ofs.clear();
+				//so far
 				}
 				movepointsArray.moving_pointsArray.push_back(movepoints);
       }
@@ -401,5 +432,5 @@ void ImageProcesser::imageProcess()
 	PubLimg->image=Limg_view.clone();
 	pub_Limg.publish(PubLimg->toImageMsg());
 
-  ROS_INFO("process end");//debug
+//  ROS_INFO("process end");//debug
 }
