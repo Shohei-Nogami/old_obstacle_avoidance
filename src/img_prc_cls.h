@@ -151,7 +151,7 @@ public:
 			setglobalodom();
 			bool front=pose_detection(position_x,position_y,prev_yaw);
 			if(!front)
-				dysignchange();
+				dxsignchange();
 		}
 		else{
 			//現在のodometryを格納
@@ -208,8 +208,8 @@ public:
 		ODOMETRY_RECEIVED=true;
 	}
 //odometry dy's sign change
-	void dysignchange(void){
-		global_dy=(-global_dy);
+	void dxsignchange(void){
+		global_dx=(-global_dx);
 	}
 //進行の向きを取得
 	bool pose_detection(double position_x,double position_y,double prev_yaw)
