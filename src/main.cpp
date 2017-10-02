@@ -3,6 +3,7 @@
 ros::Time img_crnt_time,odm_crnt_time,img_prvs_time,odm_prvs_time;
 long double img_dt,odm_dt;
 bool prcs_onc;
+
 int main(int argc,char **argv){
 	ros::init(argc,argv,"img_prc");
 	//コンストラクタにて初期化
@@ -13,42 +14,38 @@ int main(int argc,char **argv){
 		//imageを取得
 //		ROS_INFO("image service call");
 		if(prc.callimgsrv()){
-			prc.setimage();
-
-			img_crnt_time=ros::Time::now();
-    		if(prcs_onc){
-        		ros::Duration imgdt=img_crnt_time-img_prvs_time;
-        		img_dt= imgdt.toSec();
+			//ROS_INFO("respons by image service ");
+			ROS_INFO("1 ");
+		}
+		if(prc.set_lpfimg()){
+			ROS_INFO("2 ");
+			//depthを取得
+			//ROS_INFO("depth service call");
+			if(prc.calldptsrv()){
+			ROS_INFO("3 ");
+				prc.setdepth();
+//				prc.pub_depthimg();
 			}
-        	img_prvs_time=img_crnt_time;
-
+			//odometryを取得
+			//ROS_INFO("odometry service call");
+			if(prc.callodmsrv()){
+			ROS_INFO("4 ");
+				prc.setodom();
+			}
+			ROS_INFO("5 ");
+			//各パラメータset
+/*			prc.setimage();
+			ROS_INFO("6 ");
+			prc.setdepth_img();
+			ROS_INFO("7 ");
+			//publish original image
 			prc.pub_org_img();
+			ROS_INFO("8 ");
+			//画像処理
+			prc.imageProcess();
+*/
+			prc.reset_img_srv_count();
 		}
-		//depthを取得
-//		ROS_INFO("depth service call");
-		if(prc.calldptsrv()){
-			prc.setdepth();
-			prc.pub_depthimg();
-		}
-		//odometryを取得
-//		ROS_INFO("odometry service call");
-		if(prc.callodmsrv()){
-			prc.setodom();
-		    odm_crnt_time=ros::Time::now();
-		    if(prcs_onc){
-		        ros::Duration odmdt=odm_crnt_time-odm_prvs_time;
-		        odm_dt= odmdt.toSec();
-		    }
-		    else
-		        prcs_onc=true;
-			odm_prvs_time=odm_crnt_time;
-		}
-//		std::cout<<"dt(img,odm):("<<img_dt<<","<<odm_dt<<")"<<std::endl;	
-		//show current speed
-		prc.show_speed();
-		//画像処理
-		prc.imageProcess();
 	}
-
 	return 0;
 }

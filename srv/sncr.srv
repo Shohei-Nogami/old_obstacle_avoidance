@@ -1,0 +1,6 @@
+#synchro service file
+#request
+int8 a
+---
+#response
+int8 b

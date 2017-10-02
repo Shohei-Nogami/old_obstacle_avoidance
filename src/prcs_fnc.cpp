@@ -8,14 +8,10 @@ void ImageProcesser::imageProcess()
 
   ros::Time process_start_time= ros::Time::now();
   ros::Duration process_time = ros::Time::now()-start_time;
-
-	int count=0;
-	cv::Mat depth_img;
-	cv::Mat Limg;
-	Limg=org_img->image.clone();
-	depth_img=depthimg->image.clone();
+	if(isPrevimage())
+		return ;
 	cv::Mat Limg_view=Limg.clone();//imshow用のMat
-	if(PreLimg.empty()){	//差分を取るための処理(ループ１回目のみ処理をしない)
+	if(isPrevimage()){	//差分を取るための処理(ループ１回目のみ処理をしない)
 	}
 	else{
     //グレースケール化
@@ -425,9 +421,8 @@ void ImageProcesser::imageProcess()
 	pub_Lmsk.publish(PubLmsk->toImageMsg());
 	}//else文終了
 //１つ前の画像処理時間を取得
-//現フレームを1つ前のフレームとする
-	Limg.copyTo(PreLimg);
-	Limg.release();
+
+
 //publish用のcvbridge
 	cv_bridge::CvImagePtr PubLimg(new cv_bridge::CvImage);
 	PubLimg->encoding=sensor_msgs::image_encodings::BGR8;

@@ -1,6 +1,5 @@
 #image service file
 #--req
-int64 cnt
 ---
 #--res
 sensor_msgs/Image imgmsg

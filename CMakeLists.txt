@@ -68,6 +68,7 @@ find_package(OpenCV REQUIRED)
    FILES
    image.srv
    odometry.srv
+   sncr.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -216,14 +217,14 @@ include_directories(
 #add_executable(NodeName src/sourcecode.cpp )
 #target_link_libraries(NodeName ${catkin_LIBRARIES} )
 
-add_executable(obst_dtct src/obst_dtct.cpp)
-target_link_libraries(obst_dtct ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#add_executable(obst_dtct src/obst_dtct.cpp)
+#target_link_libraries(obst_dtct ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(img_prc src/main.cpp src/img_prc_cls.cpp src/prcs_fnc.cpp)
 target_link_libraries(img_prc ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(img_srv_tst src/test.cpp src/img_prc_cls.cpp)
-target_link_libraries(img_srv_tst ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#add_executable(img_srv_tst src/test.cpp src/img_prc_cls.cpp)
+#target_link_libraries(img_srv_tst ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(img_srv src/img_srv.cpp)
 target_link_libraries(img_srv ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})

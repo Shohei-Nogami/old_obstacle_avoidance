@@ -11,12 +11,18 @@
 #include<sensor_msgs/image_encodings.h>
 //service
 #include<obst_avoid/image.h>
+#include<obst_avoid/sncr.h>
+
 cv_bridge::CvImagePtr dpt_bridge;
+image_transport::Subscriber sub_depth;
+bool is_sub;
+
 void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
 //    ROS_INFO("depth received by subscriber");
     try{
         dpt_bridge= cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_32FC1);
+	is_sub=true;
     }
     catch (cv_bridge::Exception& e) {
         ROS_ERROR("Could not convert from '%s' to 'TYPE_32FC1'.",
@@ -32,14 +38,26 @@ bool dpt_srv(obst_avoid::image::Request& req,obst_avoid::image::Response& res)
 	return true;
 }
 
+bool Synchro_srv(obst_avoid::sncr::Request& req,obst_avoid::sncr::Response& res)
+{
+	ros::NodeHandle nhh;
+	image_transport::ImageTransport it(nhh);
+	is_sub=false;
+	sub_depth=it.subscribe("/zed/depth/depth_registered",1,
+			&depthImageCallback);
+	while(!is_sub){
+		ros::spinOnce();
+	}
+	return true;
+}
+
 int main(int argc, char** argv){
 	ros::init(argc,argv,"dpt_srv");
 	ros::NodeHandle nh;
-	image_transport::ImageTransport it(nh);
-	ros::ServiceServer service 
+	ros::ServiceServer service1 
 		= nh.advertiseService("getdpt",dpt_srv);
-	image_transport::Subscriber sub_depth=it.subscribe("/zed/depth/depth_registered",1,
-		&depthImageCallback);
+	ros::ServiceServer service2
+		= nh.advertiseService("setdpt",Synchro_srv);
 	ros::spin();
 	return 0;
 }

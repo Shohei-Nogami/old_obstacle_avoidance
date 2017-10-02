@@ -25,7 +25,8 @@
 #include<fstream>//file input output
 //円周率
 #define PI 3.141593
-
+#define	value_lpf (3)
+ 
 class ImageProcesser
 {
 	ros::NodeHandle nh;
@@ -48,9 +49,12 @@ public:
 //variable
 	int maxfps=0;			//to read process time
 	int minfps=100;			//
+//	const int value_lpf=3;//LPF
+	cv::Mat Limg,depth_img;
 	cv::Mat PreLimg,PreRimg;//1つ前のフレームを格納
 	cv_bridge::CvImagePtr org_img;// Subscriber change zed topic
 	cv_bridge::CvImagePtr depthimg;// Subscriber change zed topic
+	cv_bridge::CvImagePtr lpf_img[value_lpf];//
 	bool DEPTH_RECEIVED;
 	bool ODOMETRY_RECEIVED;
 	int PROCESS_ORDER;
@@ -69,6 +73,7 @@ public:
 	double roll,pitch,yaw;
 	double prev_roll,prev_pitch,prev_yaw;
 	double droll,dpitch,dyaw;
+	int img_srv_count=0;
 //debug
 	float max_value_x,min_value_x,max_value_y,min_value_y;
 	double current_z;
@@ -91,15 +96,43 @@ public:
 //---image----
 //set original image	要改善(1つ前の画像の有無等)
 	void setimage(void){
-		if(isPrevimage()){
+		if(isPrevimage())
 			setPrevimage();
-			org_img=cv_bridge::toCvCopy(imgsrv.response.imgmsg,sensor_msgs::image_encodings::BGR8);
-		}
-		else{
-			org_img=cv_bridge::toCvCopy(imgsrv.response.imgmsg,sensor_msgs::image_encodings::BGR8);
-
-		}
+		
+		set_orgimg();
+		set_Limg();
 	}
+	//set LPF image
+	bool set_lpfimg(void){
+	  bool flag=false;
+	  lpf_img[img_srv_count++]=cv_bridge::toCvCopy(imgsrv.response.imgmsg,sensor_msgs::image_encodings::BGR8);
+	  if(iscount()){
+	      reset_img_srv_count();
+	      flag=true;
+	  }
+	  
+	  return flag;
+	}
+	//set Left image
+	void set_Limg(void){
+		Limg=org_img->image.clone();
+	}
+	//set original image
+	void set_orgimg(void){
+//		cv::Mat sum_img;
+		cv_bridge::CvImagePtr sum_img(new cv_bridge::CvImage);
+		sum_img->encoding=sensor_msgs::image_encodings::BGR8;
+//		org_img->encoding=sensor_msgs::image_encodings::BGR8;
+//		sum_img=lpf_img[0];
+//		for(int i=1;i<value_lpf;i++)
+		for(int i=0;i<value_lpf;i++)
+			sum_img->image+=lpf_img[i]->image;//
+//			sum_img+=lpf_img[i];
+		std::cout<<"end for +=\n";
+		org_img->image=sum_img->image/value_lpf;
+//		org_img=sum_img/value_lpf;
+
+}
 //wheater image exist
 	bool isPrevimage(void){
 		if(PreLimg.empty())
@@ -118,6 +151,10 @@ public:
 //set depth image
 	void setdepth(void){
 		depthimg=cv_bridge::toCvCopy(dptsrv.response.imgmsg,sensor_msgs::image_encodings::TYPE_32FC1);
+	}
+	//set cv::Mat depth_img
+	void setdepth_img(void){
+	  depth_img=depthimg->image.clone();
 	}
 	void pub_depthimg(void){
 		pub_dpt.publish(depthimg->toImageMsg());
@@ -207,17 +244,10 @@ public:
 	void setodomrcvd(void){
 		ODOMETRY_RECEIVED=true;
 	}
-<<<<<<< HEAD
 //odometry dx's sign change
 	void dxsignchange(void){
 		global_dx=(-global_dx);
-}
-=======
-//odometry dy's sign change
-	void dxsignchange(void){
-		global_dx=(-global_dx);
 	}
->>>>>>> 686eb9388e0962db01bdc5ced38b966211be8ce0
 //進行の向きを取得
 	bool pose_detection(double position_x,double position_y,double prev_yaw)
 	{
@@ -295,16 +325,26 @@ public:
 	    	cv::line(*img,pt2,ptr,color,thickness,lineType,shift);
 		}
 	}
+//count image service
+	bool iscount(void){
+		if(img_srv_count<value_lpf)
+			return false;
+		else
+			return true;
+	}
+	void reset_img_srv_count(void){
+		img_srv_count=0;
+}
 //----service----
 //call imageservice
 	bool callimgsrv(void){
+	        imgsrv.request.cnt=img_srv_count;
 		if(!imgclient.call(imgsrv)){
 			ROS_INFO("error: falid image received");
 			return false;
 		}
-		else
-			return true;
-	}
+		return true;
+}
 //call depthimageservice
 	bool calldptsrv(void){
 		if(!dptclient.call(dptsrv)){
