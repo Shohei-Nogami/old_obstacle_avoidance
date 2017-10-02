@@ -151,7 +151,7 @@ public:
 			setglobalodom();
 			bool front=pose_detection(position_x,position_y,prev_yaw);
 			if(!front)
-				dysignchange();
+				dxsignchange();
 		}
 		else{
 			//現在のodometryを格納
@@ -207,10 +207,10 @@ public:
 	void setodomrcvd(void){
 		ODOMETRY_RECEIVED=true;
 	}
-//odometry dy's sign change
-	void dysignchange(void){
-		global_dy=(-global_dy);
-	}
+//odometry dx's sign change
+	void dxsignchange(void){
+		global_dx=(-global_dx);
+}
 //進行の向きを取得
 	bool pose_detection(double position_x,double position_y,double prev_yaw)
 	{
@@ -256,7 +256,10 @@ public:
 		ROS_INFO("(x,y,z,|,r,p,y):(%f,%f,%f,|,%f,%f,%f)",
 			position_x,position_y,position_z,roll,pitch,yaw);
 	}
-
+	//show current speed
+	void show_speed(void){
+		ROS_INFO("(v,w:(%f,%f),(dz,dw,dt):(%f,%f,%f)",global_dx/dt,dyaw/dt,global_dz,dyaw,dt);
+	}
 //-----画像処理----
 //画像処理
 	void imageProcess();

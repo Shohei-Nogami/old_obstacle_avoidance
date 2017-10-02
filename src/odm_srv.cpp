@@ -11,13 +11,13 @@
 ::nav_msgs::Odometry odm;
 
 void OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg){
-	ROS_INFO("odometry received by subscribe");//deebug
+//	ROS_INFO("odometry received by subscribe");//deebug
 	odm.pose=msg->pose;
 	odm.twist=msg->twist;
 }
 bool odm_srv(obst_avoid::odometry::Request& req,obst_avoid::odometry::Response& res)
 {
-	ROS_INFO("called odom service");//deebug
+//	ROS_INFO("called odom service");//deebug
 	res.odmmsg=odm;
 	return true;
 }

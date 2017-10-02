@@ -282,19 +282,19 @@ void ImageProcesser::imageProcess()
 						RectPoint_tl[i].y+(int)points[i][j].y,
 						RectPoint_tl[i].x+(int)points[i][j].x
 						);
-				float X=(float)(RectPoint_tl[i].x+points[i][j].x+delta_cx-cx)/f;//-width;
-				float Y=(float)(RectPoint_tl[i].y+points[i][j].y+delta_cy-cy)/f;//-height;
+				float X=(float)(RectPoint_tl[i].x+points[i][j].x+delta_cx-cx);//-width;
+				float Y=(float)(RectPoint_tl[i].y+points[i][j].y+delta_cy-cy);//-height;
 				float value_x;
 				float value_y;
 				if(!std::isnan(z)){//z!=nan
 					value_x=(float)((
-                		dx/dt/z-X/z*v/dt
-                		-(1+pow(X,2.0))*w/dt
-                		)*dt);
+                		f*dx/dt/z-X/z*v/dt
+                		-(1+pow(X,2.0)/f)*w/dt
+                		)*dt);//add /f
            			value_y=(float)((
                 		-(Y/z*v/dt)
-                		-(X*Y*w/dt
-                		))*dt);
+                		-(X*Y*w/dt/f
+                		))*dt);//add /f
 				}
 				else{
 					float around_z;
@@ -326,13 +326,13 @@ void ImageProcesser::imageProcess()
 					if(is_around_z<=1&&(max_around_z-min_around_z)<0.05){//z==nan&&z周りが!nan
 						z=sum_around_z/num_around_z;
             			value_x=(float)((
-                  			dx/dt/z-X/z*v/dt
-                  			-(1+pow(X,2.0))*w/dt
+                  			f*dx/dt/z-X/z*v/dt
+                  			-(1+pow(X,2.0)/f)*w/dt
                   			)*dt);
             			value_y=(float)((
                   			-(Y/z*v/dt)
-                  			-(X*Y*w/dt
-                  			))*dt);
+                  			-(X*Y*w/dt/f)
+                  			)*dt);
 					}
 				}
 //----矢印描写---
@@ -366,38 +366,25 @@ void ImageProcesser::imageProcess()
 					}
 					else{
 						ImageProcesser::cvArrow(&Limg_view,
+							cv::Point((RectPoint_tl[i].x+(int)points[i][j].x),
+								(RectPoint_tl[i].y+(int)points[i][j].y)),
+							cv::Point((RectPoint_tl[i].x+(int)newpoints[i][j].x),
+								(RectPoint_tl[i].y+(int)newpoints[i][j].y)),
+							cv::Scalar(0,200,200));//黄
+						ImageProcesser::cvArrow(&Limg_view,
 							cv::Point((RectPoint_tl[i].x+(int)points[i][j].x
 								),
 								(RectPoint_tl[i].y+(int)points[i][j].y)),
 							cv::Point((RectPoint_tl[i].x+(int)(points[i][j].x+value_x)),
 								(RectPoint_tl[i].y+(int)(points[i][j].y-value_y))),
 							cv::Scalar(200,0,200));//紫
-						ImageProcesser::cvArrow(&Limg_view,
-							cv::Point((RectPoint_tl[i].x+(int)points[i][j].x),
-								(RectPoint_tl[i].y+(int)points[i][j].y)),
-							cv::Point((RectPoint_tl[i].x+(int)newpoints[i][j].x),
-								(RectPoint_tl[i].y+(int)newpoints[i][j].y)),
-							cv::Scalar(0,200,200));//黄
 						point.x=newpoints[i][j].x;
 						point.y=newpoints[i][j].y;
 						movepoints.points.push_back(point);
 					}
 				//debug   
-			//	std::ofstream ofss("./Documents/output_opticalflow.csv",std::ios::app);
-/*				ofss<<RectPoint_tl[i].x+points[i][j].x+delta_cx-cx<<","//X
-					<<RectPoint_tl[i].y+points[i][j].y+delta_cy-cy<<","//Y
-					<<z<<","//z
-					<<dx<<","//dx
-					<<v<<","//dz
-					<<w<<","//dw
-					<<dt<<","//dt
-					<<","
-					<<newpoints[i][j].x-points[i][j].x<<","//観測x
-					<<newpoints[i][j].y-points[i][j].y<<","//観測y
-					<<(double)value_x<<","//ヤコビx
-					<<(double)value_y<<","//ヤコビy
-					<<std::endl;*/
-				std::cout<<RectPoint_tl[i].x+points[i][j].x+delta_cx-cx<<","//X
+				std::ofstream ofss("./Documents/output_opticalflow.csv",std::ios::app);
+				ofss<<RectPoint_tl[i].x+points[i][j].x+delta_cx-cx<<","//X
 					<<RectPoint_tl[i].y+points[i][j].y+delta_cy-cy<<","//Y
 					<<z<<","//z
 					<<dx<<","//dx
@@ -410,6 +397,21 @@ void ImageProcesser::imageProcess()
 					<<(double)value_x<<","//ヤコビx
 					<<(double)value_y<<","//ヤコビy
 					<<std::endl;
+
+/*				std::cout<<RectPoint_tl[i].x+points[i][j].x+delta_cx-cx<<","//X
+					<<RectPoint_tl[i].y+points[i][j].y+delta_cy-cy<<","//Y
+					<<z<<","//z
+					<<dx<<","//dx
+					<<v<<","//dz
+					<<w<<","//dw
+					<<dt<<","//dt
+					<<","
+					<<newpoints[i][j].x-points[i][j].x<<","//観測x
+					<<newpoints[i][j].y-points[i][j].y<<","//観測y
+					<<(double)value_x<<","//ヤコビx
+					<<(double)value_y<<","//ヤコビy
+					<<std::endl;
+*/
 //				ofs.close();
 //				ofs.clear();
 				//so far
