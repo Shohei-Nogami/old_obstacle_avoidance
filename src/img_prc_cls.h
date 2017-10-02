@@ -207,10 +207,17 @@ public:
 	void setodomrcvd(void){
 		ODOMETRY_RECEIVED=true;
 	}
+<<<<<<< HEAD
 //odometry dx's sign change
 	void dxsignchange(void){
 		global_dx=(-global_dx);
 }
+=======
+//odometry dy's sign change
+	void dxsignchange(void){
+		global_dx=(-global_dx);
+	}
+>>>>>>> 686eb9388e0962db01bdc5ced38b966211be8ce0
 //進行の向きを取得
 	bool pose_detection(double position_x,double position_y,double prev_yaw)
 	{
