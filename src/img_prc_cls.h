@@ -96,22 +96,12 @@ public:
 //---image----
 //set original image	要改善(1つ前の画像の有無等)
 	void setimage(void){
-		if(isPrevimage())
+		if(isLimage())
 			setPrevimage();
 		
 		set_orgimg();
 		set_Limg();
-	}
 	//set LPF image
-	bool set_lpfimg(void){
-	  bool flag=false;
-	  lpf_img[img_srv_count++]=cv_bridge::toCvCopy(imgsrv.response.imgmsg,sensor_msgs::image_encodings::BGR8);
-	  if(iscount()){
-	      reset_img_srv_count();
-	      flag=true;
-	  }
-	  
-	  return flag;
 	}
 	//set Left image
 	void set_Limg(void){
@@ -119,23 +109,17 @@ public:
 	}
 	//set original image
 	void set_orgimg(void){
-//		cv::Mat sum_img;
-		cv_bridge::CvImagePtr sum_img(new cv_bridge::CvImage);
-		sum_img->encoding=sensor_msgs::image_encodings::BGR8;
-//		org_img->encoding=sensor_msgs::image_encodings::BGR8;
-//		sum_img=lpf_img[0];
-//		for(int i=1;i<value_lpf;i++)
-		for(int i=0;i<value_lpf;i++)
-			sum_img->image+=lpf_img[i]->image;//
-//			sum_img+=lpf_img[i];
-		std::cout<<"end for +=\n";
-		org_img->image=sum_img->image/value_lpf;
-//		org_img=sum_img/value_lpf;
-
-}
+		org_img=cv_bridge::toCvCopy(imgsrv.response.imgmsg,sensor_msgs::image_encodings::BGR8);
+	}
 //wheater image exist
 	bool isPrevimage(void){
 		if(PreLimg.empty())
+			return false;
+		else
+			return true;
+	}
+	bool isLimage(void){
+		if(Limg.empty())
 			return false;
 		else
 			return true;

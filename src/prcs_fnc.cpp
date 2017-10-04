@@ -8,12 +8,12 @@ void ImageProcesser::imageProcess()
 
   ros::Time process_start_time= ros::Time::now();
   ros::Duration process_time = ros::Time::now()-start_time;
-	if(isPrevimage())
+	if(!isPrevimage())
 		return ;
 	cv::Mat Limg_view=Limg.clone();//imshow用のMat
-	if(isPrevimage()){	//差分を取るための処理(ループ１回目のみ処理をしない)
-	}
-	else{
+//	if(!isPrevimage()){	//差分を取るための処理(ループ１回目のみ処理をしない)
+//	}
+//	else{
     //グレースケール化
 		cv::Mat Lgray,PreLgray;
 		cv::cvtColor(Limg,Lgray,CV_BGR2GRAY);
@@ -244,7 +244,7 @@ void ImageProcesser::imageProcess()
 				continue;
 			}
 //---オプティカルフローを得る-----------------------------
-			cv::calcOpticalFlowPyrLK(opt_PreLimg[i],opt_Limg[i], points[i], newpoints[i], status[i], errors, cv::Size(/*21,21*/15,15), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 0);
+			cv::calcOpticalFlowPyrLK(opt_PreLimg[i],opt_Limg[i], points[i], newpoints[i], status[i], errors, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
 		}//それぞれの矩形に対する処理(for文)終了
 //memory release
 		PreLgray.release();
@@ -414,20 +414,25 @@ void ImageProcesser::imageProcess()
 				}
 				movepointsArray.moving_pointsArray.push_back(movepoints);
       }
-    }
-	cv_bridge::CvImagePtr PubLmsk(new cv_bridge::CvImage);
+   }
+/*	cv_bridge::CvImagePtr PubLmsk(new cv_bridge::CvImage);
 	PubLmsk->encoding=sensor_msgs::image_encodings::MONO8;
 	PubLmsk->image=MaskLimg_view.clone();
 	pub_Lmsk.publish(PubLmsk->toImageMsg());
-	}//else文終了
+*/
+//	}//else文終了
 //１つ前の画像処理時間を取得
 
-
-//publish用のcvbridge
-	cv_bridge::CvImagePtr PubLimg(new cv_bridge::CvImage);
+ 	cv_bridge::CvImagePtr PubLimg(new cv_bridge::CvImage);
 	PubLimg->encoding=sensor_msgs::image_encodings::BGR8;
 	PubLimg->image=Limg_view.clone();
 	pub_Limg.publish(PubLimg->toImageMsg());
 
+//publish用のcvbridge
+/*	cv_bridge::CvImagePtr PubLimg(new cv_bridge::CvImage);
+	PubLimg->encoding=sensor_msgs::image_encodings::BGR8;
+	PubLimg->image=Limg_view.clone();
+	pub_Limg.publish(PubLimg->toImageMsg());
+*/
 //  ROS_INFO("process end");//debug
 }
