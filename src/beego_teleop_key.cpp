@@ -11,7 +11,7 @@ void twistCallback(const geometry_msgs::Twist::ConstPtr& msg){
 	int flag=1;
 	obst_avoid::wheel_msg wheelMsg;
 	std::cout<<"linear.x,angular.z:("<<msg->linear.x<<","<<msg->angular.z<<")\n";
-		if(msg->linear.x==0&&msg->angular.z==0)
+/*		if(msg->linear.x==0&&msg->angular.z==0)
 			wheelMsg.vel_data="00000000";
 		else if(msg->linear.x>0&&msg->angular.z==0)
 			wheelMsg.vel_data="01000100";
@@ -21,6 +21,18 @@ void twistCallback(const geometry_msgs::Twist::ConstPtr& msg){
 			wheelMsg.vel_data="0100-100";//left=000,right=100
 		else
 			wheelMsg.vel_data="00000000";
+*/
+		if(msg->linear.x==0&&msg->angular.z==0)
+			wheelMsg.vel_data="00000000";
+		else if(msg->linear.x>0&&msg->angular.z==0)
+			wheelMsg.vel_data="01000100";
+		else if(msg->linear.x==0&&msg->angular.z<0)
+			wheelMsg.vel_data="00000100";//left=100,right=000 curve
+		else if(msg->linear.x==0&&msg->angular.z>0)
+			wheelMsg.vel_data="01000000";//left=000,right=100 curve
+		else
+			wheelMsg.vel_data="00000000";
+
 
 		std::cout<<"ready to publish\n";
 		std::cout<<"msg:"<<wheelMsg.vel_data<<'\n';
