@@ -19,8 +19,9 @@ int main(int argc,char **argv){
 		prc.setimage();
 		prc.setdepth();
 		prc.setdepth_img();
-		prc.pub_org_img();
 		prc.imageProcess();
+		prc.pub_org_img();
+		prc.pub_left_img();
 	}
 	return 0;
 }

@@ -50,11 +50,12 @@ public:
 	int maxfps=0;			//to read process time
 	int minfps=100;			//
 //	const int value_lpf=3;//LPF
-	cv::Mat Limg,depth_img;
+	cv::Mat Limg,depth_img,Limg_view;
 	cv::Mat PreLimg,PreRimg;//1つ前のフレームを格納
 	cv_bridge::CvImagePtr org_img;// Subscriber change zed topic
 	cv_bridge::CvImagePtr depthimg;// Subscriber change zed topic
 	cv_bridge::CvImagePtr lpf_img[value_lpf];//
+	cv_bridge::CvImagePtr PubLimg;
 	bool DEPTH_RECEIVED;
 	bool ODOMETRY_RECEIVED;
 	int PROCESS_ORDER;
@@ -101,7 +102,6 @@ public:
 		
 		set_orgimg();
 		set_Limg();
-	//set LPF image
 	}
 	//set Left image
 	void set_Limg(void){
@@ -128,9 +128,7 @@ public:
 	void setPrevimage(void){
 		PreLimg=org_img->image.clone();
 	}
-	void pub_org_img(void){
-		pub_orgimg.publish(org_img->toImageMsg());
-	}
+
 //----depth----
 //set depth image
 	void setdepth(void){
@@ -140,6 +138,19 @@ public:
 	void setdepth_img(void){
 	  depth_img=depthimg->image.clone();
 	}
+//----Publish image----
+	//publish original image
+	void pub_org_img(void){
+		pub_orgimg.publish(org_img->toImageMsg());
+	}
+	//publish view left image
+	void pub_left_img(void){
+		cv_bridge::CvImagePtr PubLimg(new cv_bridge::CvImage);
+		PubLimg->encoding=sensor_msgs::image_encodings::BGR8;
+		PubLimg->image=Limg_view.clone();
+		pub_Limg.publish(PubLimg->toImageMsg());
+	}
+	//publish depth image
 	void pub_depthimg(void){
 		pub_dpt.publish(depthimg->toImageMsg());
 	}

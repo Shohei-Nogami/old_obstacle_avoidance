@@ -4,435 +4,186 @@
 void ImageProcesser::imageProcess()
 {
 	//debug
-//  ROS_INFO("process start");
+//	ROS_INFO("process start");
 
-  ros::Time process_start_time= ros::Time::now();
-  ros::Duration process_time = ros::Time::now()-start_time;
+	Limg_view=Limg.clone();//imshow用のMat
 	if(!isPrevimage())
 		return ;
-	cv::Mat Limg_view=Limg.clone();//imshow用のMat
-//	if(!isPrevimage()){	//差分を取るための処理(ループ１回目のみ処理をしない)
-//	}
-//	else{
-    //グレースケール化
-		cv::Mat Lgray,PreLgray;
-		cv::cvtColor(Limg,Lgray,CV_BGR2GRAY);
-		cv::cvtColor(PreLimg,PreLgray,CV_BGR2GRAY);
-    //差分をとり２値化
-		cv::Mat DifLgray,MaskLimg;
-		cv::absdiff(Lgray,PreLgray,DifLgray);
-    //差分diffのうち、閾値thを超えている部分を1、それ以外を0としてmaskに出力
-    	cv::threshold(DifLgray,MaskLimg,10,1,cv::THRESH_BINARY);
-    //マスクmaskのうち、1(True)の部分を白(0)に、0(False)の部分を黒(255)にしてim_maskに出力
-    	cv::threshold(MaskLimg,MaskLimg,0,255,cv::THRESH_BINARY);
-    //膨張縮小処理
-		cv::erode(MaskLimg,MaskLimg,cv::Mat(),cv::Point(-1,-1), 1);
-		cv::dilate(MaskLimg,MaskLimg,cv::Mat(),cv::Point(-1,-1), 4);
-    //表示用maskLimg
-		cv::Mat MaskLimg_view=MaskLimg.clone();
-    //memory release
-		DifLgray.release();
-    //輪郭抽出(左カメラ)
-		cv::Mat act;
-		double sum_area=0;//差分合計面積
-		act=MaskLimg.clone();
-		std::vector<std::vector<cv::Point> >  contours;
-    	cv::findContours(act, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-		std::vector<std::vector<cv::Point> > contours_poly( contours.size() );
-		std::vector<cv::Rect> boundRect( contours.size() );//
-    //差分画像を矩形で囲む(左上、右下の座標を取る)
-		int rect_num=0;//矩形の数
-		for( int i = 0; i < contours.size(); i++ ){
-		  double area=cv::contourArea(contours.at(i));
-			if(area>200){//面積が一定以上であれば//改善の余地あり
-			cv::approxPolyDP(cv::Mat(contours[i]), contours_poly[i], 3, true );
-			boundRect[rect_num++] = cv::boundingRect(cv::Mat(contours_poly[i]) );//矩形の作成、格納
-			}
-		}
-		act.release();//memory release
-//-----オプティカルフローをかける矩形
-		cv::Mat opt_PreLimg[rect_num];
-		cv::Mat opt_Limg[rect_num];
-//-------------------矩形の重ね合わせ---------------------
 
-		int rect_num0=rect_num;
-		int RectStatus[rect_num0];
-		cv::Point2i RectPoint_tl[rect_num0];
-		cv::Point2i RectPoint_br[rect_num0];
-		int rect_size=0;
-		for(int i=0;i<rect_num0;i++){
-			RectStatus[i]=0;//初期化
-		}
-		for(int i=0;i<rect_num0;i++){
-			if(RectStatus[i]==0){
-				for(int j=0;j<rect_num0;j++){
-					if(rect_size>2){
-						for(int k=0;k<rect_size-1;k++){
-							if( ( RectPoint_tl[k].x < boundRect[j].br().x ) &&
-								( boundRect[j].tl().x < RectPoint_br[k].x ) &&
-								( RectPoint_tl[k].y < boundRect[j].br().y ) &&
-								( boundRect[j].tl().y < RectPoint_br[k].y ) ) {
-
-								if(RectPoint_tl[k].x > RectPoint_tl[k+1].x){//左上x
-										RectPoint_tl[k].x=RectPoint_tl[k+1].x;
-								}
-								if(RectPoint_tl[k].y > RectPoint_tl[k+1].y){//左上y
-									RectPoint_tl[k].y=RectPoint_tl[k+1].y;
-								}
-								if(RectPoint_br[k].x < RectPoint_br[k+1].x){//右下x
-									RectPoint_br[k].x=RectPoint_br[k+1].x;
-								}
-								if(RectPoint_br[k].y < RectPoint_br[k+1].y){//右下y
-									RectPoint_br[k].y=RectPoint_br[k+1].y;
-								}
-							}
-						}
-						rect_size--;
-					}
-					if(RectStatus[j]==0){//重ねたあとの矩形は処理しない
-						for(int k=0;k<rect_size;k++){
-							if( ( RectPoint_tl[k].x < boundRect[j].br().x ) &&
-								( boundRect[j].tl().x < RectPoint_br[k].x ) &&
-								( RectPoint_tl[k].y < boundRect[j].br().y ) &&
-								( boundRect[j].tl().y < RectPoint_br[k].y ) ) {
-								if(RectPoint_tl[k].x > boundRect[j].tl().x){//左上x
-									RectPoint_tl[k].x=boundRect[j].tl().x;
-								}
-								if(RectPoint_tl[k].y > boundRect[j].tl().y){//左上y
-									RectPoint_tl[k].y=boundRect[j].tl().y;
-								}
-								if(RectPoint_br[k].x < boundRect[j].br().x){//右下x
-									RectPoint_br[k].x=boundRect[j].br().x;
-								}
-								if(RectPoint_br[k].y < boundRect[j].br().y){//右下y
-									RectPoint_br[k].y=boundRect[j].br().y;
-								}
-								RectStatus[j]=1;
-							}
-						}
-					}
-					if(RectStatus[j]==0&&RectStatus[i]==0&&i!=j){//重ねたあとの矩形は処理しない
-						if( ( boundRect[i].tl().x < boundRect[j].br().x ) &&
-							( boundRect[j].tl().x < boundRect[i].br().x ) &&
-							( boundRect[i].tl().y < boundRect[j].br().y ) &&
-							( boundRect[j].tl().y < boundRect[i].br().y )  ) {
-						  //当たっている場合にこの部分が実行されます
-							if(boundRect[i].tl().x > boundRect[j].tl().x){//左上x
-								RectPoint_tl[rect_size].x=boundRect[j].tl().x;
-							}
-							else{
-								RectPoint_tl[rect_size].x=boundRect[i].tl().x;
-							}
-							if(boundRect[i].tl().y > boundRect[j].tl().y){//左上y
-								RectPoint_tl[rect_size].y=boundRect[j].tl().y;
-							}
-							else{
-								RectPoint_tl[rect_size].y=boundRect[i].tl().y;
-							}
-							if(boundRect[i].br().x < boundRect[j].br().x){//右下x
-								RectPoint_br[rect_size].x=boundRect[j].br().x;
-							}
-							else{
-								RectPoint_br[rect_size].x=boundRect[i].br().x;
-							}
-							if(boundRect[i].br().y < boundRect[j].br().y){//右下y
-								RectPoint_br[rect_size].y=boundRect[j].br().y;
-							}
-							else{
-								RectPoint_br[rect_size].y=boundRect[i].br().y;
-							}
-							RectStatus[i]=1;
-							RectStatus[j]=1;
-							rect_size++;
-						}
-					}
-				}
-			}
-		}
-//合成した矩形と矩形の配列をつなげる
-		for(int j=0,i=rect_size;j<rect_num;j++){
-			if(RectStatus[j]==0){
-				RectPoint_tl[i].x=boundRect[j].tl().x;
-				RectPoint_tl[i].y=boundRect[j].tl().y;
-				RectPoint_br[i].x=boundRect[j].br().x;
-				RectPoint_br[i].y=boundRect[j].br().y;
-				rect_size++;
-				i++;
-			}
-		}
-//矩形の合成終了
+//グレースケール化
+	cv::Mat Lgray,PreLgray;
+	cv::cvtColor(Limg,Lgray,CV_BGR2GRAY);
+	cv::cvtColor(PreLimg,PreLgray,CV_BGR2GRAY);
 //-----オプティカルフロー関数用パラメータ-----
-		std::vector<cv::Point2f> points[rect_size];	//特徴点
-		std::vector<cv::Point2f> newpoints[rect_size];	//移動後の特徴点
-		std::vector<uchar> status[rect_size];
-		std::vector<float> errors;
+	std::vector<cv::Point2f> pts;	//特徴点
+	std::vector<cv::Point2f> npts;	//移動後の特徴点
+	std::vector<uchar> sts;
+	std::vector<float> ers;
 //-----特徴点抽出用変数-----
-		std::vector<cv::KeyPoint> keypoints;
-
-		for(int i=0;i<rect_size;i++){
-//----------矩形それぞれに対する処理----------
-//合成矩形で囲む
-			cv::rectangle(Limg_view,RectPoint_tl[i],RectPoint_br[i],cv::Scalar(0,200,0),3,4);
-//現フレームの動体と予測された範囲を矩形として取り出す
-			opt_Limg[i]=Lgray(cv::Rect(RectPoint_tl[i],RectPoint_br[i]));
-//前フレームの動体と予測された範囲を矩形として取り出す
-			opt_PreLimg[i]=PreLgray(cv::Rect(RectPoint_tl[i],RectPoint_br[i]));
+	std::vector<cv::KeyPoint> keypoints;
+//Provisional vector z
+	std::vector<float> pz;
 //参照URL:http://opencv.jp/opencv-2svn/cpp/motion_analysis_and_object_tracking.html#cv-calcopticalflowpyrlk
 //---特徴点(keypoints)を得る-------------
-			auto detector = cv::ORB(3000, 1.25f, 4, 7, 0, 2, 0, 7);
-			detector.detect(opt_PreLimg[i], keypoints);
-//debug----------------------------------
-			std::vector<cv::Point2f> debug_points;
-			for(std::vector<cv::KeyPoint>::iterator itk = keypoints.begin();
-				itk != keypoints.end(); ++itk){
-					debug_points.push_back(itk->pt);
-			}
-			int isz_num=0;
-			for(int y=0;y<height;y++){
-				for(int x=0;x<width;x++){
-					float isz=depth_img.at<float>(y,x);
-					if(std::isnan(isz))
-						isz_num++;
-				}
-			}
-//--------------------------------
+	auto detector = cv::ORB(3000, 1.25f, 4, 7, 0, 2, 0, 7);
+	detector.detect(PreLgray, keypoints);
+
 //---keypointsをpointsにコピー-----------
-			for(std::vector<cv::KeyPoint>::iterator itk = keypoints.begin();
-				 itk != keypoints.end(); ++itk){
-                  float z=depth_img.at<float>(
-                          RectPoint_tl[i].y+itk->pt.y,
-                          RectPoint_tl[i].x+itk->pt.x
-                          );
-				if(!std::isnan(z)){
-					points[i].push_back(itk->pt);
-				}
+	for(std::vector<cv::KeyPoint>::iterator itk = keypoints.begin();
+		 itk != keypoints.end(); ++itk){
+		float ptz=depth_img.at<float>(
+		        itk->pt.y,
+		        itk->pt.x
+		        );
+		if(!std::isnan(ptz)){
+			pts.push_back(itk->pt);
+			pz.push_back(ptz);
+		}
 //zまわりの8点を探索し、zのばらつきが閾値以下かつ8点すべてが!nanではない時
 //その平均値を測定可能とする
-				else{
-					float around_z;
-					int n=0;
-					int is_around_z=0;
-					int num_around_z=0;
-					float sum_around_z=0;
-					float min_around_z=100,max_around_z=0;
-					for(int k=-1;k<=1;k++){
-						for(int l=-1;l<=1;l++){
-							if(k==0&&l==0)
-								continue;
-							around_z=depth_img.at<float>(
-								RectPoint_tl[i].y+itk->pt.y+k,
-								RectPoint_tl[i].x+itk->pt.x+l
-							);
-							if(std::isnan(around_z))
-								is_around_z++;
-							else{
-								if(min_around_z>around_z)
-									min_around_z=around_z;
-								if(max_around_z>around_z)
-									max_around_z=around_z;
-								num_around_z++;
-								sum_around_z+=around_z;
-							}
-						}
-					}
-					if(is_around_z<=1&&(max_around_z-min_around_z)<0.05){
-						points[i].push_back(itk->pt);
+		else{
+			float around_z;
+			int n=0;
+			int is_around_z=0;
+			int num_around_z=0;
+			float sum_around_z=0;
+			float min_around_z=100,max_around_z=0;
+			for(int k=-1;k<=1;k++){
+				for(int l=-1;l<=1;l++){
+					if(k==0&&l==0)
+						continue;
+					around_z=depth_img.at<float>(
+						itk->pt.y+k,
+						itk->pt.x+l
+					);
+					if(std::isnan(around_z))
+						is_around_z++;
+					else{
+						if(min_around_z>around_z)
+							min_around_z=around_z;
+						if(max_around_z>around_z)
+							max_around_z=around_z;
+						num_around_z++;
+						sum_around_z+=around_z;
 					}
 				}
 			}
-			if(!points[i].size()){
-				continue;
+			if(is_around_z<=1&&(max_around_z-min_around_z)<0.05){
+				pts.push_back(itk->pt);
+				pz.push_back(ptz);
 			}
+		}
+	}
+	if(!pts.size()){
+		return ;
+	}
 //---オプティカルフローを得る-----------------------------
-			cv::calcOpticalFlowPyrLK(opt_PreLimg[i],opt_Limg[i], points[i], newpoints[i], status[i], errors, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
-		}//それぞれの矩形に対する処理(for文)終了
+	cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 0);
+//Delete the point that not be matched
+        std::vector<cv::Point2f> points;	//特徴点
+	std::vector<cv::Point2f> newpoints;	//移動後の特徴点
+	std::vector<float> z;
+	for(int i=0;i<pts.size();i++){
+	    if(sts[i]){
+        	points.push_back(pts[i]);
+			newpoints.push_back(npts[i]);
+			z.push_back(pz[i]);
+	    }
+
+	}
+
 //memory release
-		PreLgray.release();
-		Lgray.release();
+	PreLgray.release();
+	Lgray.release();
 //-----画像ヤコビアンを用いて--------------------
 //-----ロボットの移動によるnewpointsの求める-----
-		double d=0.276;//車輪幅
-		double v=global_dx;//visual odometry z座標
-		double w=(vr-vl)/d;//回転角速度
-		double sh=w*dt;//回転角
-		double dx=global_dy;//visual odometry x座標
-		dt=(new_time-prev_time);
-		float delta_cx=cx-width/2.0;
-		float delta_cy=cy-height/2.0;
-		std::vector<cv::Point2f>  theory_newpoints[rect_size];
-		w=dyaw;
-    //msg for publisher
-		::obst_avoid::moving_pointsArray movepointsArray;
-		movepointsArray.rect_size=rect_size;
-    for(int i=0;i<rect_size;i++){
-			::obst_avoid::moving_points movepoints;
-			movepoints.rect_tl.x=RectPoint_tl[i].x;
-			movepoints.rect_tl.y=RectPoint_tl[i].y;
-			movepoints.rect_br.x=RectPoint_br[i].x;
-			movepoints.rect_br.y=RectPoint_br[i].y;
-			movepoints.point_size=points[i].size();
-      for(int j=0;j<points[i].size();j++){
-				::obst_avoid::points point;
-				float z;
-				z=depth_img.at<float>(
-						RectPoint_tl[i].y+(int)points[i][j].y,
-						RectPoint_tl[i].x+(int)points[i][j].x
-						);
-				float X=(float)(RectPoint_tl[i].x+points[i][j].x+delta_cx-cx);//-width;
-				float Y=(float)(RectPoint_tl[i].y+points[i][j].y+delta_cy-cy);//-height;
-				float value_x;
-				float value_y;
-				if(!std::isnan(z)){//z!=nan
-					value_x=(float)((
-                		f*dx/dt/z-X/z*v/dt
-                		-(1+pow(X,2.0)/f)*w/dt
-                		)*dt);//add /f
-           			value_y=(float)((
-                		-(Y/z*v/dt)
-                		-(X*Y*w/dt/f
-                		))*dt);//add /f
-				}
-				else{
-					float around_z;
-					int n=0;
-					int is_around_z=0;
-					int num_around_z=0;
-					float min_around_z=100,max_around_z=0;
-					float sum_around_z=0;
-					for(int k=-1;k<=1;k++){
-						for(int l=-1;l<=1;l++){
-							if(k==0&&l==0)
-								continue;
-							around_z=depth_img.at<float>(
-								RectPoint_tl[i].y+(int)points[i][j].y+k,
-								RectPoint_tl[i].x+(int)points[i][j].x+l
-							);
-							if(std::isnan(around_z))
-								is_around_z++;
-							else{
-								num_around_z++;
-								sum_around_z+=around_z;
-								if(min_around_z>around_z)
-									min_around_z=around_z;
-								if(max_around_z<around_z)
-									max_around_z=around_z;
-							}
-						}
-					}
-					if(is_around_z<=1&&(max_around_z-min_around_z)<0.05){//z==nan&&z周りが!nan
-						z=sum_around_z/num_around_z;
-            			value_x=(float)((
-                  			f*dx/dt/z-X/z*v/dt
-                  			-(1+pow(X,2.0)/f)*w/dt
-                  			)*dt);
-            			value_y=(float)((
-                  			-(Y/z*v/dt)
-                  			-(X*Y*w/dt/f)
-                  			)*dt);
-					}
-				}
+	double d=0.276;//車輪幅
+	double v=global_dx;//visual odometry z座標
+	double w=(vr-vl)/d;//回転角速度
+	double sh=w*dt;//回転角
+	double dx=global_dy;//visual odometry x座標
+	dt=(new_time-prev_time);
+	float delta_cx=cx-width/2.0;
+	float delta_cy=cy-height/2.0;
+	std::vector<cv::Point2f>  theory_newpoints;
+	w=dyaw;
+	for(int j=0;j<points.size();j++){
+		::obst_avoid::points point;
+		float z;
+		z=depth_img.at<float>(
+				(int)points[j].y,
+				(int)points[j].x
+				);
+		float X=(float)(points[j].x+delta_cx-cx);//-width;
+		float Y=(float)(points[j].y+delta_cy-cy);//-height;
+		float value_x;
+		float value_y;
+		value_x=(float)((
+	      	dx/z-X/z*v
+	      	-(1+pow(X,2.0)/f)*w
+	      	));
+		value_y=(float)(
+		      	-(Y/z*v)
+		      	-(X*Y*w/f
+		      	));
+	
 //----矢印描写---
-				if(!std::isnan(z)){
-					float eval;
-					eval=sqrt(
-						std::pow((newpoints[i][j].x-points[i][j].x
-								+value_x)//-theory_newpoints[i][j].x)
-								,2.0)+
-						std::pow((newpoints[i][j].y-points[i][j].y
-								+value_y)//-theory_newpoints[i][j].y)
-								,2.0));
-					float opticalflow_size_prev=sqrt(
-						std::pow((newpoints[i][j].x-points[i][j].x)
-								,2.0)+
-						std::pow((newpoints[i][j].y-points[i][j].y)
-								,2.0));
-					float opticalflow_size=sqrt(
-						std::pow((newpoints[i][j].x-points[i][j].x-value_x)
-								,2.0)+
-						std::pow((newpoints[i][j].y-points[i][j].y-value_y)
-								,2.0));
-          //opticaleflowが一定サイズ以下のとき
-					if(0<opticalflow_size&&opticalflow_size<5){
-						ImageProcesser::cvArrow(&Limg_view,
-							cv::Point((RectPoint_tl[i].x+(int)points[i][j].x),
-								(RectPoint_tl[i].y+(int)points[i][j].y)),
-							cv::Point((RectPoint_tl[i].x+(int)(newpoints[i][j].x+value_x)),
-								(RectPoint_tl[i].y+(int)(newpoints[i][j].y)+value_y)),
-							cv::Scalar(255,255,255));//白
-					}
-					else{
-						ImageProcesser::cvArrow(&Limg_view,
-							cv::Point((RectPoint_tl[i].x+(int)points[i][j].x),
-								(RectPoint_tl[i].y+(int)points[i][j].y)),
-							cv::Point((RectPoint_tl[i].x+(int)newpoints[i][j].x),
-								(RectPoint_tl[i].y+(int)newpoints[i][j].y)),
-							cv::Scalar(0,200,200));//黄
-						ImageProcesser::cvArrow(&Limg_view,
-							cv::Point((RectPoint_tl[i].x+(int)points[i][j].x
-								),
-								(RectPoint_tl[i].y+(int)points[i][j].y)),
-							cv::Point((RectPoint_tl[i].x+(int)(points[i][j].x+value_x)),
-								(RectPoint_tl[i].y+(int)(points[i][j].y-value_y))),
-							cv::Scalar(200,0,200));//紫
-						point.x=newpoints[i][j].x;
-						point.y=newpoints[i][j].y;
-						movepoints.points.push_back(point);
-					}
-				//debug   
-				std::ofstream ofss("./Documents/output_opticalflow.csv",std::ios::app);
-				ofss<<RectPoint_tl[i].x+points[i][j].x+delta_cx-cx<<","//X
-					<<RectPoint_tl[i].y+points[i][j].y+delta_cy-cy<<","//Y
-					<<z<<","//z
-					<<dx<<","//dx
-					<<v<<","//dz
-					<<w<<","//dw
-					<<dt<<","//dt
-					<<","
-					<<newpoints[i][j].x-points[i][j].x<<","//観測x
-					<<newpoints[i][j].y-points[i][j].y<<","//観測y
-					<<(double)value_x<<","//ヤコビx
-					<<(double)value_y<<","//ヤコビy
-					<<std::endl;
+		float eval;
+		eval=sqrt(
+			std::pow((newpoints[j].x-points[j].x
+					+value_x)//-theory_newpoints[j].x)
+					,2.0)+
+			std::pow((newpoints[j].y-points[j].y
+					+value_y)//-theory_newpoints[j].y)
+					,2.0));
+		float opticalflow_size_prev=sqrt(
+			std::pow((newpoints[j].x-points[j].x)
+					,2.0)+
+			std::pow((newpoints[j].y-points[j].y)
+					,2.0));
+		float opticalflow_size=sqrt(
+			std::pow((newpoints[j].x-points[j].x-value_x)
+					,2.0)+
+			std::pow((newpoints[j].y-points[j].y-value_y)
+					,2.0));
+//opticaleflowが一定サイズ以下のとき
+		if(0<opticalflow_size&&opticalflow_size<5){
+			ImageProcesser::cvArrow(&Limg_view,
+				cv::Point(((int)points[j].x),
+					(+(int)points[j].y)),
+				cv::Point(((int)newpoints[j].x+(int)value_x),
+					(+(int)newpoints[j].y)+(int)value_y),
+				cv::Scalar(255,255,255));//白
+		}
+		else{
+			ImageProcesser::cvArrow(&Limg_view,
+				cv::Point(((int)points[j].x
+					),
+					((int)points[j].y)),
+				cv::Point(((int)points[j].x+(int)value_x),
+					((int)points[j].y+(int)value_y)),
+				cv::Scalar(200,0,200));//紫
+			ImageProcesser::cvArrow(&Limg_view,
+				cv::Point(((int)points[j].x),
+					((int)points[j].y)),
+				cv::Point(((int)newpoints[j].x),
+					((int)newpoints[j].y)),
+				cv::Scalar(0,200,200));//黄
+			point.x=newpoints[j].x;
+			point.y=newpoints[j].y;
+			movepoints.points.push_back(point);
+		}
+	
+	movepointsArray.moving_pointsArray.push_back(movepoints);
+	}
 
-/*				std::cout<<RectPoint_tl[i].x+points[i][j].x+delta_cx-cx<<","//X
-					<<RectPoint_tl[i].y+points[i][j].y+delta_cy-cy<<","//Y
-					<<z<<","//z
-					<<dx<<","//dx
-					<<v<<","//dz
-					<<w<<","//dw
-					<<dt<<","//dt
-					<<","
-					<<newpoints[i][j].x-points[i][j].x<<","//観測x
-					<<newpoints[i][j].y-points[i][j].y<<","//観測y
-					<<(double)value_x<<","//ヤコビx
-					<<(double)value_y<<","//ヤコビy
-					<<std::endl;
-*/
-//				ofs.close();
-//				ofs.clear();
-				//so far
-				}
-				movepointsArray.moving_pointsArray.push_back(movepoints);
-      }
-   }
-/*	cv_bridge::CvImagePtr PubLmsk(new cv_bridge::CvImage);
-	PubLmsk->encoding=sensor_msgs::image_encodings::MONO8;
-	PubLmsk->image=MaskLimg_view.clone();
-	pub_Lmsk.publish(PubLmsk->toImageMsg());
-*/
-//	}//else文終了
-//１つ前の画像処理時間を取得
-
- 	cv_bridge::CvImagePtr PubLimg(new cv_bridge::CvImage);
-	PubLimg->encoding=sensor_msgs::image_encodings::BGR8;
-	PubLimg->image=Limg_view.clone();
-	pub_Limg.publish(PubLimg->toImageMsg());
-
+	
 //publish用のcvbridge
-/*	cv_bridge::CvImagePtr PubLimg(new cv_bridge::CvImage);
-	PubLimg->encoding=sensor_msgs::image_encodings::BGR8;
-	PubLimg->image=Limg_view.clone();
-	pub_Limg.publish(PubLimg->toImageMsg());
-*/
-//  ROS_INFO("process end");//debug
+//	cv_bridge::CvImagePtr PubLimg(new cv_bridge::CvImage);
+//	PubLimg->encoding=sensor_msgs::image_encodings::BGR8;
+//	PubLimg->image=Limg_view.clone();
+//	pub_Limg.publish(PubLimg->toImageMsg());
+
+//	ROS_INFO("process end");//debug
+
 }

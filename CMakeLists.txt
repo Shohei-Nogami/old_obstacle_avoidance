@@ -220,6 +220,9 @@ include_directories(
 #add_executable(obst_dtct src/obst_dtct.cpp)
 #target_link_libraries(obst_dtct ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
+add_executable(obst_dtct_bndry src/obst_dtct_bndry_srfc.cpp)
+target_link_libraries(obst_dtct_bndry ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 add_executable(img_prc src/main.cpp src/img_prc_cls.cpp src/prcs_fnc.cpp)
 target_link_libraries(img_prc ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
