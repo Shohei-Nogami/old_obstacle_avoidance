@@ -14,24 +14,16 @@ void ImageProcesser::imageProcess()
 	cv::Mat Lgray,PreLgray;
 	cv::cvtColor(Limg,Lgray,CV_BGR2GRAY);
 	cv::cvtColor(PreLimg,PreLgray,CV_BGR2GRAY);
-//-----オプティカルフロー関数用パラメータ-----
-	std::vector<cv::Point2f> pts;	//特徴点
-	std::vector<cv::Point2f> npts;	//移動後の特徴点
-	std::vector<uchar> sts;
-	std::vector<float> ers;
-//-----特徴点抽出用変数-----
-	std::vector<cv::KeyPoint> keypoints;
-//Provisional vector z
-	std::vector<float> pz;
 //参照URL:http://opencv.jp/opencv-2svn/cpp/motion_analysis_and_object_tracking.html#cv-calcopticalflowpyrlk
 //---特徴点(keypoints)を得る-------------
-	auto detector = cv::ORB(3000, 1.25f, 4, 7, 0, 2, 0, 7);
+	auto detector = cv::ORB(2000, 1.25f, 4, 7, 0, 2, 0, 7);
 	detector.detect(PreLgray, keypoints);
 
 //---keypointsをpointsにコピー-----------
-	for(std::vector<cv::KeyPoint>::iterator itk = keypoints.begin();
+    float ptz;
+    for(std::vector<cv::KeyPoint>::iterator itk = keypoints.begin();
 		 itk != keypoints.end(); ++itk){
-		float ptz=depth_img.at<float>(
+		ptz=depth_img.at<float>(
 		        itk->pt.y,
 		        itk->pt.x
 		        );
@@ -39,59 +31,20 @@ void ImageProcesser::imageProcess()
 			pts.push_back(itk->pt);
 			pz.push_back(ptz);
 		}
-//zまわりの8点を探索し、zのばらつきが閾値以下かつ8点すべてが!nanではない時
-//その平均値を測定可能とする
-		else{
-			float around_z;
-			int n=0;
-			int is_around_z=0;
-			int num_around_z=0;
-			float sum_around_z=0;
-			float min_around_z=100,max_around_z=0;
-			for(int k=-1;k<=1;k++){
-				for(int l=-1;l<=1;l++){
-					if(k==0&&l==0)
-						continue;
-					around_z=depth_img.at<float>(
-						itk->pt.y+k,
-						itk->pt.x+l
-					);
-					if(std::isnan(around_z))
-						is_around_z++;
-					else{
-						if(min_around_z>around_z)
-							min_around_z=around_z;
-						if(max_around_z>around_z)
-							max_around_z=around_z;
-						num_around_z++;
-						sum_around_z+=around_z;
-					}
-				}
-			}
-			if(is_around_z<=1&&(max_around_z-min_around_z)<0.05){
-				pts.push_back(itk->pt);
-				pz.push_back(ptz);
-			}
-		}
-	}
+   }
 	if(!pts.size()){
 		return ;
 	}
 //---オプティカルフローを得る-----------------------------
 	cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 0);
 //Delete the point that not be matched
-        std::vector<cv::Point2f> points;	//特徴点
-	std::vector<cv::Point2f> newpoints;	//移動後の特徴点
-	std::vector<float> z;
-	for(int i=0;i<pts.size();i++){
+	for(int i=0,k=0;i<pts.size();i++){
 	    if(sts[i]){
-        	points.push_back(pts[i]);
+			points.push_back(pts[i]);
 			newpoints.push_back(npts[i]);
 			z.push_back(pz[i]);
 	    }
-
 	}
-
 //memory release
 	PreLgray.release();
 	Lgray.release();
@@ -103,27 +56,19 @@ void ImageProcesser::imageProcess()
 	double sh=w*dt;//回転角
 	double dx=global_dy;//visual odometry x座標
 	dt=(new_time-prev_time);
-	float delta_cx=cx-width/2.0;
-	float delta_cy=cy-height/2.0;
-	std::vector<cv::Point2f>  theory_newpoints;
 	w=dyaw;
 	for(int j=0;j<points.size();j++){
 		::obst_avoid::points point;
-		float z;
-		z=depth_img.at<float>(
-				(int)points[j].y,
-				(int)points[j].x
-				);
-		float X=(float)(points[j].x+delta_cx-cx);//-width;
-		float Y=(float)(points[j].y+delta_cy-cy);//-height;
+		float X=(float)(points[j].x-width/2.0);//-width;
+		float Y=(float)(points[j].y-height/2.0);//-height;
 		float value_x;
 		float value_y;
 		value_x=(float)((
-	      	dx/z-X/z*v
+	      	dx/z[j]-X/z[j]*v
 	      	-(1+pow(X,2.0)/f)*w
 	      	));
 		value_y=(float)(
-		      	-(Y/z*v)
+		      	-(Y/z[j]*v)
 		      	-(X*Y*w/f
 		      	));
 	
@@ -169,15 +114,8 @@ void ImageProcesser::imageProcess()
 				cv::Point(((int)newpoints[j].x),
 					((int)newpoints[j].y)),
 				cv::Scalar(0,200,200));//黄
-			point.x=newpoints[j].x;
-			point.y=newpoints[j].y;
-			movepoints.points.push_back(point);
 		}
-	
-	movepointsArray.moving_pointsArray.push_back(movepoints);
 	}
-
-	
 //publish用のcvbridge
 //	cv_bridge::CvImagePtr PubLimg(new cv_bridge::CvImage);
 //	PubLimg->encoding=sensor_msgs::image_encodings::BGR8;

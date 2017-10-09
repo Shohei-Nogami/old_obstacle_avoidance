@@ -1,4 +1,5 @@
 #include"ros/ros.h"
+#include <ros/callback_queue.h>
 //画像取得用
 #include<image_transport/image_transport.h>
 #include<cv_bridge/cv_bridge.h>
@@ -30,10 +31,26 @@
 class ImageProcesser
 {
 	ros::NodeHandle nh;
+	ros::NodeHandle nh1;
+	ros::NodeHandle nh2;
+//subscriber
 	image_transport::ImageTransport it;
-	image_transport::Subscriber sub_Limg;//LeftImage
-	image_transport::Subscriber sub_depth;//DepthImage
+	image_transport::ImageTransport it1;
+	image_transport::ImageTransport it2;
+//	image_transport::Subscriber sub_Limg;//LeftImage
+//	image_transport::Subscriber sub_depth;//DepthImage
+	ros::Subscriber sub_Limg;//LeftImage
+	ros::Subscriber sub_depth;//DepthImage
 	ros::Subscriber sub_odom;
+//callbackqueue
+	ros::CallbackQueue image_queue;
+	ros::CallbackQueue depth_queue;
+	ros::CallbackQueue odom_queue;
+//subscribe options
+	ros::SubscribeOptions image_option;
+	ros::SubscribeOptions depth_option;
+	ros::SubscribeOptions odom_option;
+
 	ros::Time start_time;
 public:
 //publisher
@@ -75,6 +92,20 @@ public:
 	double prev_roll,prev_pitch,prev_yaw;
 	double droll,dpitch,dyaw;
 	int img_srv_count=0;
+//point,z
+	std::vector<cv::Point2f> pts;   //特徴点
+	std::vector<cv::Point2f> npts;  //移動後の特徴点
+	std::vector<uchar> sts;
+	std::vector<float> ers;
+//-----特徴点抽出用変数-----
+	std::vector<cv::KeyPoint> keypoints;
+//Provisional vector z
+	std::vector<float> pz;
+	
+    std::vector<cv::Point2f> points;    //特徴点
+    std::vector<cv::Point2f> newpoints; //移動後の特徴点
+	std::vector<float> z;
+
 //debug
 	float max_value_x,min_value_x,max_value_y,min_value_y;
 	double current_z;
@@ -89,10 +120,54 @@ public:
 //ファイル出力
 	std::ofstream ofs;
 
+	
 	ImageProcesser();//コンストラクタ
+
 	~ImageProcesser()//デストラクタ
 	{
 	}
+//callback function
+	void image_callback(const sensor_msgs::ImageConstPtr& msg)
+	{
+	    try{
+		org_img= cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+	    }
+	    catch(cv_bridge::Exception& e) {
+		    ROS_ERROR("Could not convert from '%s' to 'bgr8'.",
+		    msg->encoding.c_str());
+		    return ;
+	    }
+	}
+	void depth_callback(const sensor_msgs::ImageConstPtr& msg)
+	{
+	    try{
+		depthimg= cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_32FC1);
+	    }
+	    catch (cv_bridge::Exception& e) {
+		ROS_ERROR("Could not convert from '%s' to 'TYPE_32FC1'.",
+		msg->encoding.c_str());
+		return ;
+	    }
+	}
+
+	void odom_callback(const nav_msgs::Odometry::ConstPtr& msg){
+		//現在のodometryを取得
+		double r,p,y;//一時的に格納するための変数
+		tf::Quaternion quat(
+			msg->pose.pose.orientation.x,
+			msg->pose.pose.orientation.y,
+			msg->pose.pose.orientation.z,
+			msg->pose.pose.orientation.w);
+		tf::Matrix3x3(quat).getRPY(r,p,y);
+		//set
+		position_x=msg->pose.pose.position.x;
+		position_y=msg->pose.pose.position.y;
+		position_z=msg->pose.pose.position.z;
+		roll=r;
+		pitch=p;
+		yaw=y;
+	}
+
 //image,depth,odometry取り込み用メソッド
 //---image----
 //set original image	要改善(1つ前の画像の有無等)
@@ -109,7 +184,7 @@ public:
 	}
 	//set original image
 	void set_orgimg(void){
-		org_img=cv_bridge::toCvCopy(imgsrv.response.imgmsg,sensor_msgs::image_encodings::BGR8);
+		image_queue.callOne(ros::WallDuration(100));
 	}
 //wheater image exist
 	bool isPrevimage(void){
@@ -132,11 +207,10 @@ public:
 //----depth----
 //set depth image
 	void setdepth(void){
-		depthimg=cv_bridge::toCvCopy(dptsrv.response.imgmsg,sensor_msgs::image_encodings::TYPE_32FC1);
+		depth_queue.callOne(ros::WallDuration(100));
 	}
-	//set cv::Mat depth_img
 	void setdepth_img(void){
-	  depth_img=depthimg->image.clone();
+		depth_img=depthimg->image.clone();
 	}
 //----Publish image----
 	//publish original image
@@ -195,21 +269,7 @@ public:
 	}
 //set x,y,z,r,p,y
 	void setparam(void){
-		//現在のodometryを取得
-		double r,p,y;//一時的に格納するための変数
-		tf::Quaternion quat(
-			odmsrv.response.odmmsg.pose.pose.orientation.x,
-			odmsrv.response.odmmsg.pose.pose.orientation.y,
-			odmsrv.response.odmmsg.pose.pose.orientation.z,
-			odmsrv.response.odmmsg.pose.pose.orientation.w);
-		tf::Matrix3x3(quat).getRPY(r,p,y);
-		//set
-		position_x=odmsrv.response.odmmsg.pose.pose.position.x;
-		position_y=odmsrv.response.odmmsg.pose.pose.position.y;
-		position_z=odmsrv.response.odmmsg.pose.pose.position.z;
-		roll=r;
-		pitch=p;
-		yaw=y;
+		odom_queue.callOne(ros::WallDuration(100));
 	}
 //set delta r,p,y
 	void setdpose(void){
@@ -320,44 +380,6 @@ public:
 	    	cv::line(*img,pt2,ptr,color,thickness,lineType,shift);
 		}
 	}
-//count image service
-	bool iscount(void){
-		if(img_srv_count<value_lpf)
-			return false;
-		else
-			return true;
-	}
-	void reset_img_srv_count(void){
-		img_srv_count=0;
-}
-//----service----
-//call imageservice
-	bool callimgsrv(void){
-	        imgsrv.request.cnt=img_srv_count;
-		if(!imgclient.call(imgsrv)){
-			ROS_INFO("error: falid image received");
-			return false;
-		}
-		return true;
-}
-//call depthimageservice
-	bool calldptsrv(void){
-		if(!dptclient.call(dptsrv)){
-			ROS_INFO("error: falid depth received");
-			return false;
-		}
-		else
-			return true;
-	}
-//call odometryservice
-	bool callodmsrv(void){
-		if(!odmclient.call(odmsrv)){
-			ROS_INFO("error: falid odometry received");
-			return false;
-		}
-		else
-			return true;
-	}
 //----time----
 	void gettime(void){
 		ros::Duration time = ros::Time::now()-start_time;
@@ -369,4 +391,35 @@ public:
 	void culcdt(void){
 		dt=new_time-prev_time;
 	}
+//memory
+	void reserve_vectors(void){
+		int size=2000;
+		pts.reserve(size);   //特徴点
+		npts.reserve(size);  //移動後の特徴点
+		sts.reserve(size);
+		ers.reserve(size);
+//-----特徴点抽出用変数-----
+		keypoints.reserve(size);
+//Provisional vector z
+		pz.reserve(size);
+		points.reserve(size);
+		newpoints.reserve(size);
+		z.reserve(size);
+		
+	}
+	void clear_vectors(void){
+		pts.clear();   //特徴点
+		npts.clear();  //移動後の特徴点
+		sts.clear();
+		ers.clear();
+//-----特徴点抽出用変数-----
+		keypoints.clear();
+//Provisional vector z
+		pz.clear();
+		points.clear();
+		newpoints.clear();
+		z.clear();	
+		
+	}
+
 };
