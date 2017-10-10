@@ -1,7 +1,7 @@
 #include"img_prc_cls.h"
 //memory
 	void ImageProcesser::reserve_vectors(void){
-		int size=2000;
+		int size=8000;
 		pts.reserve(size);   //特徴点
 		npts.reserve(size);  //移動後の特徴点
 		sts.reserve(size);

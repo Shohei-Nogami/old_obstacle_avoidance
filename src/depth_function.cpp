@@ -13,7 +13,7 @@
 	}
 //set depth cvbridge image
 	void ImageProcesser::setdepth(void){
-	  depth_queue.callOne(ros::WallDuration(100));
+	  depth_queue.callOne(ros::WallDuration(1));
 	}
 //set depth mat image
 	void ImageProcesser::setdepth_img(void){

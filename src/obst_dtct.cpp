@@ -69,36 +69,46 @@ void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
   PubDepth->image=view_img1.clone();
   comp_nan.publish(PubDepth->toImageMsg());
  
-  float depth1,depth2;
+  float depth1=0,depth2=0;
   float fu=350.505;
   //上から下に
   if(edit_img.at<float>(0,0)!=0)
     depth2=edit_img.at<float>(0,0);
+  int cy=(int)191.479;
+  float height_cam=0.215;
+  float height_all=0.7;
+  float y;
 
-  for(int i=0;i<height;i++){
-    for(int j=0;j<width-1;j++){
-      if(edit_img.at<float>(j+1,i)!=0)
-        depth2=edit_img.at<float>(j+1,i);
-	std::cout<<"j,j+1"<<edit_img.at<float>(j,i)<<","<<edit_img.at<float>(j+1,i)<<std::endl;
-      if(depth2!=0&&edit_img.at<float>(j,i)==edit_img.at<float>(j+1,i)){
-	std::cout<<"j,j+1"<<edit_img.at<float>(j,i)<<","<<edit_img.at<float>(j+1,i)<<std::endl;
+  for(int j=0;j<height;j++){
+    for(int i=0;i<width-1;i++){
+      y=-(j-cy)*depth/fu+height_cam;
+	  if(y>=height_all||y<=0.10)
+		continue;
+      if(edit_img.at<float>(j,i+1)!=0)
+        depth2=edit_img.at<float>(j,i+1);
+//	std::cout<<"j,j+1"<<edit_img.at<float>(j,i)<<","<<edit_img.at<float>(j+1,i)<<std::endl;
+      if(depth2!=0&&edit_img.at<float>(j,i)==edit_img.at<float>(j,i+1)
+		&&edit_img.at<float>(j,i)!=0){
+//	std::cout<<"j,j+1"<<edit_img.at<float>(j,i)<<","<<edit_img.at<float>(j+1,i)<<std::endl;
         depth1=depth2;
         view_img2.at<cv::Vec3b>(j,i)=white_color;
       }
-      if(edit_img.at<float>(j,i)==0
-        &&edit_img.at<float>(j+1,i)==depth1){
+	
+  /*    if(edit_img.at<float>(j,i)==0
+        &&edit_img.at<float>(j,i+1)==depth1){
           //calc number of nan
-	std::cout<<"j,j+1"<<edit_img.at<float>(j,i)<<","<<edit_img.at<float>(j+1,i)<<std::endl;
+//	std::cout<<"j,j+1"<<edit_img.at<float>(j,i)<<","<<edit_img.at<float>(j+1,i)<<std::endl;
           int count_nan=0;
     	    for(int k=i;edit_img.at<float>(j,k)==0;k--)
-            count_nan++;
+           		 count_nan++;
     	    double space= count_nan*depth/fu;//nanの距離
-    	    if(space<=0.30){//<=30cm
+    	    if(space<=0.10){//<=30cm
 	       	for(int k=i;edit_img.at<float>(j,k)==0;k--)
-                	view_img2.at<cv::Vec3b>(j,i)=white_color;
+                	view_img2.at<cv::Vec3b>(j,k)=white_color;
           }//if(space<=thresold)
+
       }//if  |nan|nan|depth|
-      //各行ごとを白く塗りつぶす 完了
+*/      //各行ごとを白く塗りつぶす 完了
     }
   }
 

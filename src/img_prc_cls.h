@@ -66,7 +66,8 @@ public:
 	double prev_time;	//for image jacobian
 	double new_time;	//
 	double dt;			//delta time
-	int f=(int)350.505;
+//	int f=(int)350.505;
+	int f=699.209;
 	int cx=(int)354.676;
 	int cy=(int)191.479;
 	double vl=0.0;		//velocity left
@@ -104,8 +105,7 @@ public:
 	{
 	}
 //callback function
-	void image_callback(const sensor_msgs::ImageConstPtr& msg)
-;
+	void image_callback(const sensor_msgs::ImageConstPtr& msg);
 	void depth_callback(const sensor_msgs::ImageConstPtr& msg);
 
 	void odom_callback(const nav_msgs::Odometry::ConstPtr& msg);
@@ -153,10 +153,11 @@ public:
 	void dxsignchange(void);
 //進行の向きを取得
 	bool pose_detection(double position_x,double position_y,double prev_yaw);
-//debug
+//----------debug-------------
 	void print_odom(void);
 	//show current speed
 	void show_speed(void);
+	void print_dt(void);
 //-----画像処理----
 //画像処理
 	void imageProcess();

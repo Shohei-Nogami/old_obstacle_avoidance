@@ -22,7 +22,7 @@
 	}
 	//set original image
 	void ImageProcesser::set_orgimg(void){
-		image_queue.callOne(ros::WallDuration(100));
+		image_queue.callOne(ros::WallDuration(1));
 	}
 	//set Left image
 	void ImageProcesser::set_Limg(void){

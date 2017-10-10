@@ -70,7 +70,7 @@ void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 		for(int i=0;i<width-1;i++){
 	  	  depth=edit_img.at<float>(j,i);
 		  y=-(j-cy)*depth/f+height_cam;
-		  if(y>=height_all||y<=0){
+		  if(y>=height_all||y<=0.05){
 	      	depth=edit_img.at<float>(j,i+1);
 			continue ;
 		  }
@@ -94,7 +94,7 @@ int main(int argc,char **argv)
 	image_transport::ImageTransport it(nh);
 	sub_depth=it.subscribe("/zed/depth/depth_registered",1,
 		&depthImageCallback);
-	pub_edge=it.advertise("output_Limage",1);
+	pub_edge=it.advertise("dtct_Limage",1);
 	ros::spin();
 	return 0;
 }

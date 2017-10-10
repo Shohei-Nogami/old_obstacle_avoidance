@@ -16,7 +16,7 @@ void ImageProcesser::imageProcess()
 	cv::cvtColor(PreLimg,PreLgray,CV_BGR2GRAY);
 //参照URL:http://opencv.jp/opencv-2svn/cpp/motion_analysis_and_object_tracking.html#cv-calcopticalflowpyrlk
 //---特徴点(keypoints)を得る-------------
-	auto detector = cv::ORB(2000, 1.25f, 4, 7, 0, 2, 0, 7);
+	auto detector = cv::ORB(8000, 1.25f, 4, 7, 0, 2, 0, 7);
 	detector.detect(PreLgray, keypoints);
 
 //---keypointsをpointsにコピー-----------
@@ -55,7 +55,6 @@ void ImageProcesser::imageProcess()
 	double w=(vr-vl)/d;//回転角速度
 	double sh=w*dt;//回転角
 	double dx=global_dy;//visual odometry x座標
-	dt=(new_time-prev_time);
 	w=dyaw;
 	for(int j=0;j<points.size();j++){
 		::obst_avoid::points point;
@@ -73,26 +72,18 @@ void ImageProcesser::imageProcess()
 		      	));
 	
 //----矢印描写---
-		float eval;
-		eval=sqrt(
-			std::pow((newpoints[j].x-points[j].x
-					+value_x)//-theory_newpoints[j].x)
-					,2.0)+
-			std::pow((newpoints[j].y-points[j].y
-					+value_y)//-theory_newpoints[j].y)
-					,2.0));
 		float opticalflow_size_prev=sqrt(
 			std::pow((newpoints[j].x-points[j].x)
 					,2.0)+
 			std::pow((newpoints[j].y-points[j].y)
 					,2.0));
 		float opticalflow_size=sqrt(
-			std::pow((newpoints[j].x-points[j].x-value_x)
+			std::pow((newpoints[j].x-points[j].x+value_x)
 					,2.0)+
-			std::pow((newpoints[j].y-points[j].y-value_y)
+			std::pow((newpoints[j].y-points[j].y+value_y)
 					,2.0));
 //opticaleflowが一定サイズ以下のとき
-		if(0<opticalflow_size&&opticalflow_size<5){
+		if(opticalflow_size<5){
 			ImageProcesser::cvArrow(&Limg_view,
 				cv::Point(((int)points[j].x),
 					(+(int)points[j].y)),
@@ -102,18 +93,18 @@ void ImageProcesser::imageProcess()
 		}
 		else{
 			ImageProcesser::cvArrow(&Limg_view,
+				cv::Point(((int)points[j].x),
+					((int)points[j].y)),
+				cv::Point(((int)newpoints[j].x),
+					((int)newpoints[j].y)),
+				cv::Scalar(0,200,200));//黄
+			ImageProcesser::cvArrow(&Limg_view,
 				cv::Point(((int)points[j].x
 					),
 					((int)points[j].y)),
 				cv::Point(((int)points[j].x+(int)value_x),
 					((int)points[j].y+(int)value_y)),
 				cv::Scalar(200,0,200));//紫
-			ImageProcesser::cvArrow(&Limg_view,
-				cv::Point(((int)points[j].x),
-					((int)points[j].y)),
-				cv::Point(((int)newpoints[j].x),
-					((int)newpoints[j].y)),
-				cv::Scalar(0,200,200));//黄
 		}
 	}
 //publish用のcvbridge

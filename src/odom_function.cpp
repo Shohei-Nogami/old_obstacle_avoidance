@@ -48,7 +48,7 @@
 	}
 //set x,y,z,r,p,y
 	void ImageProcesser::setparam(void){
-		odom_queue.callOne(ros::WallDuration(100));
+		odom_queue.callOne(ros::WallDuration(1));
 	}
 	//set previous odometry
 	void ImageProcesser::setPrevodom(void){

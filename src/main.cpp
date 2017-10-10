@@ -15,6 +15,7 @@ int main(int argc,char **argv){
 		prc.pub_org_img();
 		prc.pub_left_img();
 		prc.clear_vectors();
+		prc.print_dt();
 	}
 	return 0;
 }

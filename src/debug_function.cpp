@@ -9,3 +9,6 @@
 	void ImageProcesser::show_speed(void){
 		ROS_INFO("(v,w:(%f,%f),(dz,dw,dt):(%f,%f,%f)",global_dx/dt,dyaw/dt,global_dz,dyaw,dt);
 	}
+	void ImageProcesser::print_dt(void){
+		ROS_INFO("(dt,fps):(%f,%f)",dt,1/dt);
+	}
