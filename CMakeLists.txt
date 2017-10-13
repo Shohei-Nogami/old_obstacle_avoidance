@@ -217,9 +217,6 @@ include_directories(
 #add_executable(NodeName src/sourcecode.cpp )
 #target_link_libraries(NodeName ${catkin_LIBRARIES} )
 
-add_executable(approx_test src/nannan_test.cpp)
-target_link_libraries(approx_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-
 add_executable(obst_dtct src/obst_dtct.cpp)
 target_link_libraries(obst_dtct ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 

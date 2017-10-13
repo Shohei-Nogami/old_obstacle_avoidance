@@ -15,216 +15,220 @@ cv_bridge::CvImagePtr depthimg;
 int width=672;
 int height=376;
 bool flag=true;
+int threshold=50;
+//int threshold_y=30;
+cv::Mat depth_img;
+
+void lng_dir_approx(const int& i,const int& j,const int& count,const int& threshold,const float& depth1,const float& depth2);
+
 void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
-  ros::NodeHandle nh;
-  image_transport::ImageTransport it(nh);
+	ros::NodeHandle nh;
+	image_transport::ImageTransport it(nh);
 
-  depthimg = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_32FC1);//BGR8);
-  cv::Mat depth_img;
-  cv::Mat edit_img = cv::Mat::zeros(cv::Size(width,height),CV_32FC1);
-  depth_img=depthimg->image.clone();
-  float depth;
-  float max_distance=10.0;
-  for(int i=0;i<width;i++){
-      for(int j=0;j<height;j++){
-    depth=depth_img.at<float>(j,i);
-    if(!std::isnan(depth)&&!std::isinf(depth))
-        edit_img.at<float>(j,i)=(int)(depth*10)/10.0;//10cmごとのdataに変換
-    if(std::isinf(depth))
-	edit_img.at<float>(j,i) = max_distance;
-      }
-  }
-  cv::Mat view_img1 = cv::Mat::zeros(cv::Size(width,height),CV_8UC3);
-  cv::Mat view_img2 = cv::Mat::zeros(cv::Size(width,height),CV_8UC3);
-  cv::Mat view_img3 = cv::Mat::zeros(cv::Size(width,height),CV_8UC3);
+	depthimg = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_32FC1);//BGR8);
 
-  cv::Vec3b color;
-  cv::Vec3b white_color;
-  white_color.val[0]=255;
-  white_color.val[1]=255;
-  white_color.val[2]=255;
+	cv::Mat edit_img = cv::Mat::zeros(cv::Size(width,height),CV_32FC1);
+	depth_img=depthimg->image.clone();
+	float depth;
+	float max_distance=10.0;
+	cv::Mat view_img1 = cv::Mat::zeros(cv::Size(width,height),CV_8UC3);
+	cv::Mat view_img2 = cv::Mat::zeros(cv::Size(width,height),CV_8UC3);
+	cv::Mat view_img3 = cv::Mat::zeros(cv::Size(width,height),CV_8UC3);
 
-  for(int i=0;i<width;i++){
-      for(int j=0;j<height;j++){
-      	if(edit_img.at<float>(j,i)==0){
-      	    color.val[0]=0;
-      	    color.val[1]=0;
-      	    color.val[2]=255;
-      	}
-      	else{//if(edit_img.at<float>(j,i)<=max_distance){
-      	    int color_temp=(int)(edit_img.at<float>(j,i)/max_distance*255);
-      	    if(color_temp>255)
-      	        color_temp=255;
-      	    color.val[0]=color_temp;
-      	    color.val[1]=color_temp;
-      	    color.val[2]=color_temp;
-      	}
-      	view_img1.at<cv::Vec3b>(j,i)=color;
-      }
-  }
-  //wheter depth value is nan
-  comp_nan=it.advertise("comp_nan",1);
-  cv_bridge::CvImagePtr PubDepth(new cv_bridge::CvImage);
-  PubDepth->encoding=sensor_msgs::image_encodings::BGR8;
-  PubDepth->image=view_img1.clone();
-  comp_nan.publish(PubDepth->toImageMsg());
- 
-/*  float depth1=0,depth2=0;
-  float fu=350.505;
-  //上から下に
-  if(edit_img.at<float>(0,0)!=0)
-    depth2=edit_img.at<float>(0,0);
-  int cy=(int)191.479;
-  float height_cam=0.215;
-  float height_all=0.7;
-  float y;
+	cv::Vec3b color;
+	cv::Vec3b white_color;
+	white_color.val[0]=255;
+	white_color.val[1]=255;
+	white_color.val[2]=255;
 
-  for(int j=0;j<height;j++){
-    for(int i=0;i<width-1;i++){
-      y=-(j-cy)*depth/fu+height_cam;
-	  if(y>=height_all||y<=0.10)
-		continue;
-      if(edit_img.at<float>(j,i+1)!=0)
-        depth2=edit_img.at<float>(j,i+1);
-//	std::cout<<"j,j+1"<<edit_img.at<float>(j,i)<<","<<edit_img.at<float>(j+1,i)<<std::endl;
-      if(depth2!=0&&edit_img.at<float>(j,i)==edit_img.at<float>(j,i+1)
-		&&edit_img.at<float>(j,i)!=0){
-//	std::cout<<"j,j+1"<<edit_img.at<float>(j,i)<<","<<edit_img.at<float>(j+1,i)<<std::endl;
-        depth1=depth2;
-        view_img2.at<cv::Vec3b>(j,i)=white_color;
-      }
-*/	
-  /*    if(edit_img.at<float>(j,i)==0
-        &&edit_img.at<float>(j,i+1)==depth1){
-          //calc number of nan
-//	std::cout<<"j,j+1"<<edit_img.at<float>(j,i)<<","<<edit_img.at<float>(j+1,i)<<std::endl;
-          int count_nan=0;
-    	    for(int k=i;edit_img.at<float>(j,k)==0;k--)
-           		 count_nan++;
-    	    double space= count_nan*depth/fu;//nanの距離
-    	    if(space<=0.10){//<=30cm
-	       	for(int k=i;edit_img.at<float>(j,k)==0;k--)
-                	view_img2.at<cv::Vec3b>(j,k)=white_color;
-          }//if(space<=thresold)
+	for(int i=0;i<height;i++){
+		for(int j=0,count=0;j<width;j++){
+			if(std::isinf(depth_img.at<float>(i,j))||std::isnan(depth_img.at<float>(i,j)))
+				depth_img.at<float>(i,j)=0;
+		}
+	}
+	float depth1,depth2;
+	for(int i=0;i<height;i++){
+		depth=0;
+		depth1=0;
+		depth2=0;
+		for(int j=0,count=0;j<width-1;j++){
+			depth=depth_img.at<float>(i,j);
+			//|val|nan|のとき
+			if(depth!=0 && depth_img.at<float>(i,j+1)==0){
+				depth1=depth;
+				count++;
+			}
 
-      }//if  |nan|nan|depth|
-      //各行ごとを白く塗りつぶす 完了
-    }
-  }
-
-
-  if(!std::isnan(edit_img.at<float>(0,0)))
-    depth2=edit_img.at<float>(0,0);
-  for(int j=0;j<width;j++){
-    for(int i=0;i<height-1;i++){
-      if(!std::isnan(edit_img.at<float>(j,i+1)))
-        depth2=edit_img.at<float>(j,i+1);
-      if(!std::isnan(depth2)&&edit_img.at<float>(j,i)==edit_img.at<float>(j,i+1)){
-        depth1=depth2;
-        view_img2.at<cv::Vec3b>(j,i)=white_color;
-      }
-      if(edit_img.at<float>(j,i)==0&&edit_img.at<float>(j,i+1)==depth1){
-          //calc number of nan
-          int count_nan=0;
-    	    for(int k=i;std::isnan(edit_img.at<float>(j,k));k--)
-            count_nan++;
-    	    double space= count_nan*depth/fu;//nanの距離
-    	    if(space<=0.30){//<=30cm
-        		for(int k=i;std::isnan(edit_img.at<float>(j,k));k--)
-              view_img2.at<cv::Vec3b>(j,i)=white_color;
-          }//if(space<=thresold)
-      }//if  |nan|nan|depth|
-      //各行ごとを白く塗りつぶす 完了
-    }
-  }
-
-//  cv_bridge::CvImagePtr PubDepth(new cv_bridge::CvImage);
-//  PubDepth->encoding=sensor_msgs::image_encodings::BGR8;
-  dtct_area=it.advertise("dtct_area",1);
-  PubDepth->image=view_img2.clone();
-  dtct_area.publish(PubDepth->toImageMsg());
-*/
-  for(int i=0;i<height;i++){
-      for(int j=0,count=0;j<width;j++){
-	if(std::isinf(depth_img.at<float>(i,j)))
-		depth_img.at<float>(i,j)=max_distance;
-      }
-  }
-  float depth1,depth2;
-    for(int i=0;i<height;i++){
-      depth=0;
-      depth1=0;
-      depth2=0;
-      for(int j=0,count=0;j<width-1;j++){
-        depth=depth_img.at<float>(i,j);
-        //|val|nan|のとき
-        if(!std::isnan(depth) && std::isnan(depth_img.at<float>(i,j+1))){
-          depth1=depth;
-          count++;
-        }
-        
-        if(std::isnan(depth)){
-          //|nan|nan|の区間
-          if(std::isnan(depth_img.at<float>(i,j+1)))
-            count++;
-          //|nan|val|のとき
-          else{
-            depth2=depth_img.at<float>(i,j+1);
-            //左端がnanのとき
-            if(depth1==0){
-              for(int k=0;k<count+1;k++)
-                depth_img.at<float>(i,j-k)=depth2;
-            }
-            else{
-              for(int k=0;k<count;k++)
-                depth_img.at<float>(i,j-k)=depth2-(depth2-depth1)/(count+1)*(k+1);
-              ROS_INFO("nan|val|:nancount=%d",count);
-            }
-            count=0;
-          }
-        }
-        //右端がnanのとき
-        if(j==(width-1)-1 &&std::isnan(depth_img.at<float>(i,j+1))){
-          for(int k=0;k<count;k++)
-            depth_img.at<float>(i,j+1-k)=depth1;
-          ROS_INFO("val|nan|nan|:nancount=%d",count);
-          count=0;
-        }
-      }
-    }
-  int nc=0;
-  for(int i=0;i<height;i++){
-      for(int j=0;j<width;j++){
-	if(std::isnan(depth_img.at<float>(i,j)))
-		nc++;
-      }
-  }
-  ROS_INFO("nan:%d",nc);
-  if(flag){
- 	 std::ofstream ofs("approx_depth_graph.csv",std::ios::app);	
-	  for(int i=0;i<height;i++){
- 	     for(int j=0;j<width;j++){
-	      ofs << ",";
+			if(depth==0){
+				//|nan|nan|の区間
+				if(depth_img.at<float>(i,j+1)==0)
+					count++;
+				//|nan|val|のとき
+				else{
+					depth2=depth_img.at<float>(i,j+1);
+					//左端がnanのとき
+					if(depth1==0){
+						if(threshold<=count)
+							lng_dir_approx(i,j,count,threshold,depth1,depth2);
+						else{
+							for(int k=0;k<count+1;k++)
+								depth_img.at<float>(i,j-k)=depth2;
+						}
+					}
+					else{
+						if(threshold<=count)
+							lng_dir_approx(i,j,count,threshold,depth1,depth2);
+						else{						
+							for(int k=0;k<count;k++)
+								depth_img.at<float>(i,j-k)=depth2-(depth2-depth1)/(count+1)*(k+1);
+						}
+					//ROS_INFO("nan|val|:nancount=%d",count);
+					}
+					count=0;
+				}
+			}
+		//右端がnanのとき
+			if(j==(width-1)-1 &&depth_img.at<float>(i,j+1)==0){
+				if(threshold<=count)
+					lng_dir_approx(i,j,count,threshold,depth1,depth2);
+				else{				
+					if(depth1==0)
+						std::cout<<"all nan:count("<<count<<")\n";
+				}
+				for(int k=0;k<count;k++)
+					depth_img.at<float>(i,j+1-k)=depth1;
+				//ROS_INFO("val|nan|nan|:nancount=%d",count);
+				count=0;
+			}
+		}
+	}
+	int nc=0;
+	for(int i=0;i<height;i++){
+		for(int j=0;j<width;j++){
+			if(depth_img.at<float>(i,j)==0)
+				nc++;
+		}
+	}
+	//ROS_INFO("nan:%d",nc);
+		flag=false;
+	if(flag){
+ 	 	std::ofstream ofs("approx_depth_graph.csv",std::ios::app);	
+		ofs << ",";
 		for(int j=0;j<width;j++)
-		    ofs << j << ",";
+			ofs << j << ",";
 		ofs << std::endl;
 		for(int i=0;i<height;i++){
-		    ofs << i << ",";
-		    for(int j=0;j<width;j++)
-		        ofs << depth_img.at<float>(i,j) << ",";
-		    ofs << std::endl;
+			ofs << i << ",";
+			for(int j=0;j<width;j++)
+				ofs << depth_img.at<float>(i,j) << ",";
+			ofs << std::endl;
 		}
-	      }
-	  }
-	  flag=false;
-  }
-  cv_bridge::CvImagePtr PubDepth2(new cv_bridge::CvImage);
-  PubDepth2->encoding=sensor_msgs::image_encodings::TYPE_32FC1;
-  approx_area=it.advertise("approx_area",1);
-  PubDepth2->image=depth_img.clone();
-  approx_area.publish(PubDepth2->toImageMsg());
+		flag=false;
+	}
+//	std::cout<<"(50,350):"<<depth_img.at<float>(350,50)<<"\n";
+	cv_bridge::CvImagePtr PubDepth2(new cv_bridge::CvImage);
+	PubDepth2->encoding=sensor_msgs::image_encodings::TYPE_32FC1;
+	approx_area=it.advertise("approx_area",1);
+	PubDepth2->image=depth_img.clone();
+	approx_area.publish(PubDepth2->toImageMsg());
 
+}
+
+void lng_dir_approx(const int& i,const int& j,const int& count,const int& threshold,const float& depth1,const float& depth2){
+//std::cout<<"called function\n";
+/*
+if threshold < count
+begin_j=j+1-count
+end_j=j
+//nanの始点から終点まで
+for l=begin_j l<=end_j l++
+//一番上の行のとき
+if i==0
+//上の値は左右のnanから求めた線形近似値を使用
+ab_p= (depth2-(depth2-depth1)/(count+1)*(l+1)) 
+//2行目からは一つ上の値を使用
+else
+ab_p=img(i-1,j)
+if i==height-1
+un_p= (depth2-(depth2-depth1)/(count+1)*(l+1)) 
+else
+//下のnanではない値を探索
+int m
+for m=1 ;; m++
+if !std::isnan(img(i+m,l))
+break
+un_p=img(i+m,j)
+//縦方向の探索範囲が閾値を以上なら
+if 1+m > threshold 
+//上下左右4点の平均値を使用
+img(i,l)=( (depth2-(depth2-depth1)/(count+1)*(l+1)) + (ab_p-(ab_p-un_p)/(m+1)*1)) /2.0
+//上下の値の線形近似を使用
+else
+img(i,l)=ab_p-(ab_p-un_p)/(m+1)*1 
+*/
+	int begin_j=j+1-count;
+	int end_j=j;
+	float ab_p,un_p;
+	//nanの始点から終点まで
+	for(int l=begin_j;l<=end_j;l++){
+	//std::cout<<"(i,j,l):"<<i<<","<<j<<","<<l<<std::endl;
+		//一番上の行のとき
+		if(i==0){
+	//std::cout<<"i==0"<<std::endl;
+			if(depth1!=0&&depth2!=0)
+				ab_p= (depth2-(depth2-depth1)/(count+1)*(l-j+1));
+			else if(depth1==0)
+				ab_p= depth2;
+			else
+				ab_p= depth1;
+		}
+		//2行目からは一つ上の値を使用
+		else
+			ab_p=depth_img.at<float>(i-1,j);
+		//一番下の行のとき
+		if(i==height-1){
+	//std::cout<<"i==height-1"<<std::endl;			
+			if(depth1!=0&&depth2!=0)
+				un_p= (depth2-(depth2-depth1)/(count+1)*(l-j+1));
+			else if(depth1==0)
+				un_p= depth2;
+			else
+				un_p= depth1;
+			depth_img.at<float>(i,l)=(ab_p+un_p)/2.0;
+		}
+		else{
+	//std::cout<<"else"<<std::endl;
+			//下のnanではない値を探索
+			int m;
+			for (m=1;;m++){
+				if(i+m>=height){
+					un_p=ab_p;//
+					break;
+				}
+				if(depth_img.at<float>(i+m,l)!=0){
+					un_p=depth_img.at<float>(i+m,l);
+					break;
+				}
+			}
+//			un_p=depth_img.at<float>(i+m,l);
+			//縦方向の探索範囲が閾値を以上なら
+			if(1+m>threshold && depth1!=0 && depth2!=0){
+				//std::cout<<"1+m>threshold && depth1!=0 && depth2!=0"<<std::endl;
+				//上下左右の線形近似で得られた2点の平均値を使用
+				depth_img.at<float>(i,l)=( (depth2-(depth2-depth1)/(count+1)*(l-j+1)) + (ab_p-(ab_p-un_p)/(m+1)*1)) /2.0;
+			}
+				//上下の値の線形近似を使用
+			else{
+				//std::cout<<"else"<<std::endl;
+				depth_img.at<float>(i,l)=ab_p-(ab_p-un_p)/(m)*1;
+				if(depth_img.at<float>(i,l)>=10)
+					ROS_INFO("(i,j,l,m,ab,un,depth):(%d,%d,%d,%d,%f,%f,%f)",i,j,l,m,ab_p,un_p,depth_img.at<float>(i,l));
+			}
+		}
+	}
+	//std::cout<<"end function\n";
 }
 
 int main(int argc,char **argv)
