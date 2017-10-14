@@ -11,18 +11,30 @@ image_transport::Subscriber sub_depth;
 image_transport::Publisher comp_nan;
 image_transport::Publisher dtct_area;
 image_transport::Publisher approx_area;
+image_transport::Publisher fileter_area;
 cv_bridge::CvImagePtr depthimg;
 int width=672;
 int height=376;
 bool flag=true;
-int threshold=50;
+int threshold=20;
 //int threshold_y=30;
 cv::Mat depth_img;
+//ros::CallbackQueue depth_queue;
+
+//depth_queue.callOne(ros::WallDuration(1));
+//subscribe options 
+
+   ros::SubscribeOptions depth_option; 
+
+
+
 
 void lng_dir_approx(const int& i,const int& j,const int& count,const int& threshold,const float& depth1,const float& depth2);
 
 void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
+
+
 	ros::NodeHandle nh;
 	image_transport::ImageTransport it(nh);
 
@@ -70,20 +82,20 @@ void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 					depth2=depth_img.at<float>(i,j+1);
 					//左端がnanのとき
 					if(depth1==0){
-						if(threshold<=count)
-							lng_dir_approx(i,j,count,threshold,depth1,depth2);
-						else{
+						//if(threshold<=count)
+						//	lng_dir_approx(i,j,count,threshold,depth1,depth2);
+						//else{
 							for(int k=0;k<count+1;k++)
 								depth_img.at<float>(i,j-k)=depth2;
-						}
+						//}
 					}
 					else{
-						if(threshold<=count)
-							lng_dir_approx(i,j,count,threshold,depth1,depth2);
-						else{						
+						//if(threshold<=count)
+						//	lng_dir_approx(i,j,count,threshold,depth1,depth2);
+						//else{						
 							for(int k=0;k<count;k++)
 								depth_img.at<float>(i,j-k)=depth2-(depth2-depth1)/(count+1)*(k+1);
-						}
+						//}
 					//ROS_INFO("nan|val|:nancount=%d",count);
 					}
 					count=0;
@@ -91,16 +103,17 @@ void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 			}
 		//右端がnanのとき
 			if(j==(width-1)-1 &&depth_img.at<float>(i,j+1)==0){
-				if(threshold<=count)
-					lng_dir_approx(i,j,count,threshold,depth1,depth2);
-				else{				
+				//if(threshold<=count)
+				//	lng_dir_approx(i,j,count,threshold,depth1,depth2);
+				//else{				
 					if(depth1==0)
 						std::cout<<"all nan:count("<<count<<")\n";
-				}
+				
 				for(int k=0;k<count;k++)
 					depth_img.at<float>(i,j+1-k)=depth1;
 				//ROS_INFO("val|nan|nan|:nancount=%d",count);
 				count=0;
+				//}
 			}
 		}
 	}
@@ -111,7 +124,7 @@ void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 				nc++;
 		}
 	}
-	//ROS_INFO("nan:%d",nc);
+	ROS_INFO("nan:%d",nc);
 		flag=false;
 	if(flag){
  	 	std::ofstream ofs("approx_depth_graph.csv",std::ios::app);	
@@ -133,6 +146,8 @@ void depthImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	approx_area=it.advertise("approx_area",1);
 	PubDepth2->image=depth_img.clone();
 	approx_area.publish(PubDepth2->toImageMsg());
+
+//filter
 
 }
 
@@ -228,6 +243,12 @@ img(i,l)=ab_p-(ab_p-un_p)/(m+1)*1
 			}
 		}
 	}
+	for(int i=0;i<height;i++){
+		for(int j=0;j<width;j++){
+			if(std::isnan(depth_img.at<float>(i,j)))
+				std::cout<<"nan!\n!";
+		}
+	}
 	//std::cout<<"end function\n";
 }
 
@@ -236,6 +257,7 @@ int main(int argc,char **argv)
 	ros::init(argc,argv,"obstacle_detection");
 	ros::NodeHandle nh;
 	image_transport::ImageTransport it(nh);
+//	nh.setCallbackQueue(&depth_queue);
 	sub_depth=it.subscribe("/zed/depth/depth_registered",1,
 		&depthImageCallback);
 	ros::spin();
