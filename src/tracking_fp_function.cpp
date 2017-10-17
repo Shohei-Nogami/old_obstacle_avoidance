@@ -28,7 +28,7 @@ void ImageProcesser::add_feature_points(void){
 		   if(flag)
 		     continue;
 		
-		   ptz=depth_img.at<float>(
+		   ptz=Predepth.at<float>(
 		        itk->pt.y,
 		        itk->pt.x
 		        );

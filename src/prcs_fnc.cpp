@@ -48,11 +48,14 @@ void ImageProcesser::imageProcess()
 //---オプティカルフローを得る-----------------------------
 	cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 0);
 //Delete the point that not be matched
+	float pnz;
 	for(int i=0,k=0;i<pts.size();i++){
-		if(sts[i]){
+		
+		if(sts[i]&&!std::isnan(depth_img.at<float>(npts[i].y,npts[i].x))){
 			points.push_back(pts[i]);
 			newpoints.push_back(npts[i]);
 			z.push_back(pz[i]);
+			nz.push_back(depth_img.at<float>(npts[i].y,npts[i].x));
 		}
 	}
 //memory release

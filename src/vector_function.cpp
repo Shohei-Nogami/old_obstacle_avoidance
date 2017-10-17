@@ -34,6 +34,6 @@
 		pts.clear();
 		pz.clear();
 		pts.insert(pts.end(),newpoints.begin(),newpoints.end());
-		pz.insert(pz.end(),z.begin(),z.end());
+		pz.insert(pz.end(),nz.begin(),nz.end());
 		
 	}
