@@ -1,4 +1,4 @@
-#include"ros/ros.h"
+ #include"ros/ros.h"
 #include <ros/callback_queue.h>
 //画像取得用
 #include<image_transport/image_transport.h>
@@ -57,7 +57,8 @@ public:
 //variable
 //画像
 	cv::Mat Limg,depth_img,Limg_view;
-	cv::Mat PreLimg,PreRimg;//1つ前のフレームを格納
+	cv::Mat PreLimg,Predepth;//1つ前のフレームを格納
+	cv::Mat Lgray,PreLgray;
 	cv_bridge::CvImagePtr org_img;// Subscriber change zed topic
 	cv_bridge::CvImagePtr depthimg;// Subscriber change zed topic
 	cv_bridge::CvImagePtr PubLimg;
@@ -66,8 +67,7 @@ public:
 	double prev_time;	//for image jacobian
 	double new_time;	//
 	double dt;			//delta time
-//	int f=(int)350.505;
-	int f=699.209;
+	int f=(int)350.505;
 	int cx=(int)354.676;
 	int cy=(int)191.479;
 	double vl=0.0;		//velocity left
@@ -79,7 +79,13 @@ public:
 	double roll,pitch,yaw;
 	double prev_roll,prev_pitch,prev_yaw;
 	double droll,dpitch,dyaw;
-	int img_srv_count=0;
+//detector
+	const int max_points=500;
+	const int point_size=max_points*2;
+	const float th_opt=1.0;
+//特徴点追加の閾値
+	const int threshold_fp=(int)(max_points*0.8);
+//	auto detector = cv::ORB(max_points, 1.25f, 4, 7, 0, 2, 0, 7);
 //vector point,z
 	std::vector<cv::Point2f> pts;   //特徴点
 	std::vector<cv::Point2f> npts;  //移動後の特徴点
@@ -89,9 +95,11 @@ public:
 //Provisional z
 	std::vector<float> pz;
 
-    std::vector<cv::Point2f> points;    //特徴点
-    std::vector<cv::Point2f> newpoints; //移動後の特徴点
-	std::vector<float> z;
+	std::vector<cv::Point2f> points;    //特徴点
+	std::vector<cv::Point2f> newpoints; //移動後の特徴点
+	std::vector<float> z;//current z
+	std::vector<float> nz;//new z
+	
 
 //debug
 	float max_value_x,min_value_x,max_value_y,min_value_y;
@@ -107,7 +115,6 @@ public:
 //callback function
 	void image_callback(const sensor_msgs::ImageConstPtr& msg);
 	void depth_callback(const sensor_msgs::ImageConstPtr& msg);
-
 	void odom_callback(const nav_msgs::Odometry::ConstPtr& msg);
 //image,depth,odometry取り込み用メソッド
 //---image----
@@ -128,12 +135,20 @@ public:
 	void pub_left_img(void);
 
 //----depth----
-//set depth image
-	void setdepth(void);
+	//manege depth function
+	void set_depth(void);
+	//wheater depth exist
+	bool isdepth(void);
+   	//set previous image
+	void setPrevdepth(void);
+	//set depth cv_bridge image
+	void setcvdepth(void);
 	//set mat depth image
-	void setdepth_img(void);
+	void setmtdepth(void);
 	//publish depth image
 	void pub_depthimg(void);
+	//Linear approximation
+	void approx_depth_img(void);
 //-----odometry----
 //set previous odometry
 	void setPrevodom(void);
@@ -153,22 +168,27 @@ public:
 	void dxsignchange(void);
 //進行の向きを取得
 	bool pose_detection(double position_x,double position_y,double prev_yaw);
-//----------debug-------------
-	void print_odom(void);
-	//show current speed
-	void show_speed(void);
-	void print_dt(void);
 //-----画像処理----
 //画像処理
 	void imageProcess();
+//特徴点追跡
+	bool judge_feature_points(void);
+	void add_feature_points(void);
 //矢印描写用関数
 	void cvArrow(cv::Mat* img, cv::Point2i pt1, cv::Point2i pt2, cv::Scalar color);
 //----time----
 	void gettime(void);
 	void getprevtime(void);
 	void culcdt(void);
-//memory
+//vector 
 	void reserve_vectors(void);
 	void clear_vectors(void);
+	void renew_vectors(void);
+//----------debug-------------
+	void print_odom(void);
+	//show current speed
+	void show_speed(void);
+	void print_dt(void);
+	void print_points_size(void);
 
 };

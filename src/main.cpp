@@ -8,13 +8,17 @@ int main(int argc,char **argv){
 	//while文でloop
 	while(ros::ok()){
 		prc.setimage();
-		prc.setdepth();
+		prc.set_depth();
 		prc.setodom();
-		prc.setdepth_img();
+//		prc.approx_depth_img();
 		prc.imageProcess();
 		prc.pub_org_img();
 		prc.pub_left_img();
+//		prc.print_points_size();
+		prc.renew_vectors();
+//		prc.print_points_size();
 		prc.clear_vectors();
+//		prc.print_points_size();
 		prc.print_dt();
 	}
 	return 0;

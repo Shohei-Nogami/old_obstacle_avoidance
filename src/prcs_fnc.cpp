@@ -16,38 +16,48 @@ void ImageProcesser::imageProcess()
 	cv::cvtColor(PreLimg,PreLgray,CV_BGR2GRAY);
 //参照URL:http://opencv.jp/opencv-2svn/cpp/motion_analysis_and_object_tracking.html#cv-calcopticalflowpyrlk
 //---特徴点(keypoints)を得る-------------
-	auto detector = cv::ORB(8000, 1.25f, 4, 7, 0, 2, 0, 7);
-	detector.detect(PreLgray, keypoints);
+//	auto detector = cv::ORB(max_points, 1.25f, 4, 7, 0, 2, 0, 7);
+//	detector.detect(PreLgray, keypoints);
 
 //---keypointsをpointsにコピー-----------
-    float ptz;
-    for(std::vector<cv::KeyPoint>::iterator itk = keypoints.begin();
+/*	float ptz;
+	for(std::vector<cv::KeyPoint>::iterator itk = keypoints.begin();
 		 itk != keypoints.end(); ++itk){
 		ptz=depth_img.at<float>(
-		        itk->pt.y,
-		        itk->pt.x
-		        );
+				itk->pt.y,
+				itk->pt.x
+				);
 		if(!std::isnan(ptz)){
 			pts.push_back(itk->pt);
 			pz.push_back(ptz);
 		}
-   }
+	}
+
+	if(!pts.size()){
+		return ;
+	}*/
+	if(judge_feature_points()){
+		auto detector = cv::ORB(max_points, 1.25f, 4, 7, 0, 2, 0, 7);
+		detector.detect(PreLgray, keypoints);
+		add_feature_points();
+	}
 	if(!pts.size()){
 		return ;
 	}
+	std::cout<<"points size:"<<pts.size()<<"\n";
 //---オプティカルフローを得る-----------------------------
 	cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 0);
 //Delete the point that not be matched
 	for(int i=0,k=0;i<pts.size();i++){
-	    if(sts[i]){
+		if(sts[i]){
 			points.push_back(pts[i]);
 			newpoints.push_back(npts[i]);
 			z.push_back(pz[i]);
-	    }
+		}
 	}
 //memory release
-	PreLgray.release();
-	Lgray.release();
+//	PreLgray.release();
+//	Lgray.release();
 //-----画像ヤコビアンを用いて--------------------
 //-----ロボットの移動によるnewpointsの求める-----
 	double d=0.276;//車輪幅
@@ -63,13 +73,13 @@ void ImageProcesser::imageProcess()
 		float value_x;
 		float value_y;
 		value_x=(float)((
-	      	dx/z[j]-X/z[j]*v
-	      	-(1+pow(X,2.0)/f)*w
-	      	));
+		  	dx/z[j]-X/z[j]*v
+		  	-(1+pow(X,2.0)/f)*w
+		  	));
 		value_y=(float)(
-		      	-(Y/z[j]*v)
-		      	-(X*Y*w/f
-		      	));
+			  	-(Y/z[j]*v)
+			  	-(X*Y*w/f
+			  	));
 	
 //----矢印描写---
 		float opticalflow_size_prev=sqrt(
@@ -83,7 +93,7 @@ void ImageProcesser::imageProcess()
 			std::pow((newpoints[j].y-points[j].y+value_y)
 					,2.0));
 //opticaleflowが一定サイズ以下のとき
-		if(opticalflow_size<5){
+		if(opticalflow_size<th_opt){
 			ImageProcesser::cvArrow(&Limg_view,
 				cv::Point(((int)points[j].x),
 					(+(int)points[j].y)),
@@ -106,6 +116,25 @@ void ImageProcesser::imageProcess()
 					((int)points[j].y+(int)value_y)),
 				cv::Scalar(200,0,200));//紫
 		}
+//output file
+/*		std::ofstream ofss("./Documents/output_opticalflow.csv",std::ios::app);
+		ofss<<points[j].x+width<<","//X
+			<<points[j].y+height<<","//Y
+			<<z[j]<<","//z
+			<<dx<<","//dx
+			<<v<<","//dz
+			<<w<<","//dw
+			<<dt<<","//dt
+			<<","
+			<<newpoints[j].x-points[j].x<<","//観測x
+			<<newpoints[j].y-points[j].y<<","//観測y
+			<<(double)value_x<<","//ヤコビx
+			<<(double)value_y<<","//ヤコビy
+			<<","
+			<<newpoints[j].x-points[j].x-value_x<<","//観測x-jacobi
+			<<newpoints[j].y-points[j].y-value_y<<","//観測y-jacobi
+			<<std::endl;
+*/
 	}
 //publish用のcvbridge
 //	cv_bridge::CvImagePtr PubLimg(new cv_bridge::CvImage);
