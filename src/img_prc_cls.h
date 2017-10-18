@@ -60,7 +60,7 @@ public:
 	cv::Mat PreLimg,Predepth;//1つ前のフレームを格納
 	cv::Mat Lgray,PreLgray;
 
-	cv_bridge::CvImagePtr org_img;// Subscriber change zed topic
+//	cv_bridge::CvImagePtr org_img;// Subscriber change zed topic
 	cv_bridge::CvImagePtr depthimg;// Subscriber change zed topic
 	cv_bridge::CvImagePtr PubLimg;
 	int width,height;			//image size
@@ -108,7 +108,13 @@ public:
 	std::vector<cv::Point2f> newpoints; //移動後の特徴点
 	std::vector<float> z;//current z
 	std::vector<float> nz;//new z
-	
+//LPF
+	static const int lpf_value=2;
+	int lpf_count;
+	cv::Mat prv_img[lpf_value];
+	cv::Mat lpf_img[lpf_value];
+	cv::Mat sum_img,ave_img;
+	cv_bridge::CvImagePtr org_img[lpf_value];// Subscriber change zed topic
 //particle filter
 	const double sig=2.0;
 	std::vector<double> prvp;
