@@ -27,7 +27,7 @@ void ImageProcesser::add_feature_points(void){
 					ppts.y=i*height/cn+itk->pt.y;
 					for(int k=0;k<pts.size();k++){
 						if(cp[i][j][k].x==ppts.x&&cp[i][j][k].y==ppts.y){
-							std::cout<<"points[i].x==itk->pt.x&&points[i].y==itk->pt.y::"<<pts[i].x<<"=="<<itk->pt.x<<"&&"<<pts[i].y<<"=="<<itk->pt.y<<"\n";
+						//	std::cout<<"points[i].x==itk->pt.x&&points[i].y==itk->pt.y::"<<pts[i].x<<"=="<<itk->pt.x<<"&&"<<pts[i].y<<"=="<<itk->pt.y<<"\n";
 						    	flag=true;
 						    	break;
 						}

@@ -54,7 +54,7 @@ void ImageProcesser::imageProcess()
 	if(!pts.size()){
 		return ;
 	}
-	std::cout<<"points size:"<<pts.size()<<"\n";
+//	std::cout<<"points size:"<<pts.size()<<"\n";
 //---オプティカルフローを得る-----------------------------
 	cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 0);
 //Delete the point that not be matched
@@ -108,8 +108,40 @@ void ImageProcesser::imageProcess()
 */
 		float L1=(std::abs(newpoints[j].x-points[j].x+value_x)
 				+std::abs(newpoints[j].y-points[j].y+value_y))*z[j];
+
+/*		if(std::isnan(prvp[j]))
+			prvp[j]=1;
+		curp.push_back(prvp[j]*
+			(1/(sqrt(2*PI)*sig*sig)*exp(-(L1/(2*sig*sig)) ) ) );
+		std::cout<<"current P"<<j<<":"<<curp[j]<<"\n";
 //opticaleflowが一定サイズ以下のとき
-		if(L1<th_opt){
+		if(curp[j]>0.20){
+			ImageProcesser::cvArrow(&Limg_view,
+				cv::Point(((int)points[j].x),
+					(+(int)points[j].y)),
+				cv::Point(((int)newpoints[j].x+(int)value_x),
+					(+(int)newpoints[j].y)+(int)value_y),
+				cv::Scalar(255,255,255));//白
+		}
+		else{
+			ImageProcesser::cvArrow(&Limg_view,
+				cv::Point(((int)points[j].x),
+					((int)points[j].y)),
+				cv::Point(((int)newpoints[j].x),
+					((int)newpoints[j].y)),
+				cv::Scalar(0,200,200));//黄
+			ImageProcesser::cvArrow(&Limg_view,
+				cv::Point(((int)points[j].x
+					),
+					((int)points[j].y)),
+				cv::Point(((int)points[j].x+(int)value_x),
+					((int)points[j].y+(int)value_y)),
+				cv::Scalar(200,0,200));//紫
+		}*/
+		double th_optt=th_opt;
+		if(std::abs(dyaw)>0.01)
+			th_optt=th_opt*(dyaw/0.01);
+		if(L1<th_optt){
 			ImageProcesser::cvArrow(&Limg_view,
 				cv::Point(((int)points[j].x),
 					(+(int)points[j].y)),
@@ -132,6 +164,7 @@ void ImageProcesser::imageProcess()
 					((int)points[j].y+(int)value_y)),
 				cv::Scalar(200,0,200));//紫
 		}
+
 /*		if(opticalflow_size<th_opt){
 			ImageProcesser::cvArrow(&Limg_view,
 				cv::Point(((int)points[j].x),
@@ -157,7 +190,7 @@ void ImageProcesser::imageProcess()
 		}
 */
 //output file
-/*		std::ofstream ofss("./Documents/output_opticalflow.csv",std::ios::app);
+		std::ofstream ofss("./Documents/output_opticalflow.csv",std::ios::app);
 		ofss<<points[j].x-width/2<<","//X
 			<<points[j].y-height/2<<","//Y
 			<<z[j]<<","//z
@@ -175,7 +208,7 @@ void ImageProcesser::imageProcess()
 			<<newpoints[j].y-points[j].y-value_y<<","//観測y-jacobi
 			<<std::endl;
 
-	}*/
+	}
 //publish用のcvbridge
 //	cv_bridge::CvImagePtr PubLimg(new cv_bridge::CvImage);
 //	PubLimg->encoding=sensor_msgs::image_encodings::BGR8;

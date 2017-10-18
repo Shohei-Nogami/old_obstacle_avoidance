@@ -109,7 +109,10 @@ public:
 	std::vector<float> z;//current z
 	std::vector<float> nz;//new z
 	
-
+//particle filter
+	const double sig=2.0;
+	std::vector<double> prvp;
+	std::vector<double> curp;
 //debug
 	float max_value_x,min_value_x,max_value_y,min_value_y;
 	double current_z;
