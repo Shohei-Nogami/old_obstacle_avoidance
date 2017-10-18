@@ -11,7 +11,7 @@ void ImageProcesser::imageProcess()
 		return ;
 
 //グレースケール化
-	cv::Mat Lgray,PreLgray;
+//	cv::Mat Lgray,PreLgray;
 	cv::cvtColor(Limg,Lgray,CV_BGR2GRAY);
 	cv::cvtColor(PreLimg,PreLgray,CV_BGR2GRAY);
 //参照URL:http://opencv.jp/opencv-2svn/cpp/motion_analysis_and_object_tracking.html#cv-calcopticalflowpyrlk
@@ -36,11 +36,21 @@ void ImageProcesser::imageProcess()
 	if(!pts.size()){
 		return ;
 	}*/
-	if(judge_feature_points()){
+/*	if(judge_feature_points()){
 		auto detector = cv::ORB(max_points, 1.25f, 4, 7, 0, 2, 0, 7);
 		detector.detect(PreLgray, keypoints);
 		add_feature_points();
 	}
+*/
+	for(int i=0;i<cn;i++){
+		for(int j=0;j<cn;j++){
+			clp_img[i][j]=PreLgray(cv::Rect((int)(j*(width)/cn),(int)(i*(height)/cn),(int)(width/cn),(int)(height/cn)));
+		}
+	}
+	count_feature_points();
+//	auto detector = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
+//	detector = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
+	add_feature_points();
 	if(!pts.size()){
 		return ;
 	}
@@ -85,7 +95,7 @@ void ImageProcesser::imageProcess()
 			  	));
 	
 //----矢印描写---
-		float opticalflow_size_prev=sqrt(
+/*		float opticalflow_size_prev=sqrt(
 			std::pow((newpoints[j].x-points[j].x)
 					,2.0)+
 			std::pow((newpoints[j].y-points[j].y)
@@ -95,8 +105,11 @@ void ImageProcesser::imageProcess()
 					,2.0)+
 			std::pow((newpoints[j].y-points[j].y+value_y)
 					,2.0));
+*/
+		float L1=(std::abs(newpoints[j].x-points[j].x+value_x)
+				+std::abs(newpoints[j].y-points[j].y+value_y))*z[j];
 //opticaleflowが一定サイズ以下のとき
-		if(opticalflow_size<th_opt){
+		if(L1<th_opt){
 			ImageProcesser::cvArrow(&Limg_view,
 				cv::Point(((int)points[j].x),
 					(+(int)points[j].y)),
@@ -119,10 +132,34 @@ void ImageProcesser::imageProcess()
 					((int)points[j].y+(int)value_y)),
 				cv::Scalar(200,0,200));//紫
 		}
+/*		if(opticalflow_size<th_opt){
+			ImageProcesser::cvArrow(&Limg_view,
+				cv::Point(((int)points[j].x),
+					(+(int)points[j].y)),
+				cv::Point(((int)newpoints[j].x+(int)value_x),
+					(+(int)newpoints[j].y)+(int)value_y),
+				cv::Scalar(255,255,255));//白
+		}
+		else{
+			ImageProcesser::cvArrow(&Limg_view,
+				cv::Point(((int)points[j].x),
+					((int)points[j].y)),
+				cv::Point(((int)newpoints[j].x),
+					((int)newpoints[j].y)),
+				cv::Scalar(0,200,200));//黄
+			ImageProcesser::cvArrow(&Limg_view,
+				cv::Point(((int)points[j].x
+					),
+					((int)points[j].y)),
+				cv::Point(((int)points[j].x+(int)value_x),
+					((int)points[j].y+(int)value_y)),
+				cv::Scalar(200,0,200));//紫
+		}
+*/
 //output file
 /*		std::ofstream ofss("./Documents/output_opticalflow.csv",std::ios::app);
-		ofss<<points[j].x+width<<","//X
-			<<points[j].y+height<<","//Y
+		ofss<<points[j].x-width/2<<","//X
+			<<points[j].y-height/2<<","//Y
 			<<z[j]<<","//z
 			<<dx<<","//dx
 			<<v<<","//dz
@@ -137,8 +174,8 @@ void ImageProcesser::imageProcess()
 			<<newpoints[j].x-points[j].x-value_x<<","//観測x-jacobi
 			<<newpoints[j].y-points[j].y-value_y<<","//観測y-jacobi
 			<<std::endl;
-*/
-	}
+
+	}*/
 //publish用のcvbridge
 //	cv_bridge::CvImagePtr PubLimg(new cv_bridge::CvImage);
 //	PubLimg->encoding=sensor_msgs::image_encodings::BGR8;

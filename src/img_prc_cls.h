@@ -59,6 +59,7 @@ public:
 	cv::Mat Limg,depth_img,Limg_view;
 	cv::Mat PreLimg,Predepth;//1つ前のフレームを格納
 	cv::Mat Lgray,PreLgray;
+
 	cv_bridge::CvImagePtr org_img;// Subscriber change zed topic
 	cv_bridge::CvImagePtr depthimg;// Subscriber change zed topic
 	cv_bridge::CvImagePtr PubLimg;
@@ -80,12 +81,20 @@ public:
 	double prev_roll,prev_pitch,prev_yaw;
 	double droll,dpitch,dyaw;
 //detector
-	const int max_points=500;
-	const int point_size=max_points*2;
-	const float th_opt=1.0;
+	static const int max_points=500;
+	const int point_size=max_points*2.5;
+	static const int cn=2;
+	const int clp_max_points=max_points/(cn*cn);
+	const int clp_point_size=(int)(clp_max_points*2.5);
+	const float th_opt=2.0;
 //特徴点追加の閾値
 	const int threshold_fp=(int)(max_points*0.8);
+	const int th_clpimg=(int)(max_points/(cn*cn)*0.8);
+//	int cp_s[cn][cn];
+	std::vector<cv::Point2i> cp[cn][cn];
+	cv::Mat clp_img[cn][cn];
 //	auto detector = cv::ORB(max_points, 1.25f, 4, 7, 0, 2, 0, 7);
+//	cv::Ptr<cv::Feature2D> detector=cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
 //vector point,z
 	std::vector<cv::Point2f> pts;   //特徴点
 	std::vector<cv::Point2f> npts;  //移動後の特徴点
@@ -174,6 +183,7 @@ public:
 //特徴点追跡
 	bool judge_feature_points(void);
 	void add_feature_points(void);
+	void count_feature_points(void);
 //矢印描写用関数
 	void cvArrow(cv::Mat* img, cv::Point2i pt1, cv::Point2i pt2, cv::Scalar color);
 //----time----

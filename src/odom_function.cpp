@@ -63,7 +63,12 @@
 	void ImageProcesser::setdpose(void){
 		droll=roll-prev_roll;
 		dpitch=pitch-prev_pitch;
-		dyaw=yaw-prev_yaw;
+		if(prev_yaw>0&&yaw<0&&prev_yaw>PI/2)
+			dyaw=(yaw+2*PI)-prev_yaw;
+		else if(prev_yaw<0&&yaw>0&&yaw>PI/2)
+			dyaw=(yaw-2*PI)-prev_yaw;
+		else
+			dyaw=yaw-prev_yaw;
 	}
 //set global dx,dy
 	void ImageProcesser::setglobalodom(void){

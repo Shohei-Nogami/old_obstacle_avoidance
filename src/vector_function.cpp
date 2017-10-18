@@ -14,7 +14,12 @@
 		newpoints.reserve(point_size);
 		z.reserve(point_size);
 		nz.reserve(point_size);
-		
+		for(int i=0;i<cn;i++){
+			for(int j=0;j<cn;j++){
+				cp[i][j].reserve(clp_point_size);
+//				cp_s[i][j].reserve(clp_point_size);
+			}
+		}
 	}
 	void ImageProcesser::clear_vectors(void){
 //		pts.clear();   //特徴点
@@ -28,7 +33,13 @@
 		points.clear();
 		newpoints.clear();
 		z.clear();	
-		nz.clear();	
+		nz.clear();
+		for(int i=0;i<cn;i++){
+			for(int j=0;j<cn;j++){
+				cp[i][j].clear();
+//				cp_s[i][j].clear();
+			}
+		}	
 	}
 	void ImageProcesser::renew_vectors(void){
 		pts.clear();
