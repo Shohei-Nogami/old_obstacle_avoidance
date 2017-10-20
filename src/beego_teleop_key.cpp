@@ -46,6 +46,18 @@ void twistCallback(const geometry_msgs::Twist::ConstPtr& msg){
 		else
 			wheelMsg.vel_data="00000000";
 	}
+	if(vel==150){
+		if(msg->linear.x==0&&msg->angular.z==0)
+			wheelMsg.vel_data="00000000";
+		else if(msg->linear.x>0&&msg->angular.z==0)
+			wheelMsg.vel_data="02000200";
+		else if(msg->linear.x==0&&msg->angular.z<0)
+			wheelMsg.vel_data="01000200";//left=100,right=000 curve
+		else if(msg->linear.x==0&&msg->angular.z>0)
+			wheelMsg.vel_data="02000100";//left=000,right=100 curve
+		else
+			wheelMsg.vel_data="00000000";
+	}
 
 
 		std::cout<<"ready to publish\n";

@@ -74,7 +74,7 @@ void ImageProcesser::imageProcess()
 	}
 	npts.insert(npts.end(),jnpts.begin(),jnpts.end());
 //---オプティカルフローを得る-----------------------------
-	cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
+	cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(15,15), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
 //Delete the point that not be matched
 	float pnz;
 	for(int i=0,k=0;i<pts.size();i++){
@@ -86,17 +86,20 @@ void ImageProcesser::imageProcess()
 			nz.push_back(depth_img.at<float>(npts[i].y,npts[i].x));
 		}
 	}
+	double sum_flow=0;
+	double ave_flow=0;
 
 	for(int j=0;j<points.size();j++){
 //----矢印描写---
-		float L1=std::abs(newpoints[j].x-jnewpoints[j].x)*z[j];
+		float L1=std::abs(newpoints[j].x-jnewpoints[j].x)*sqrt(z[j]);
 //newpoints==points+LK
 //jnewpoints==points+jacobi
 //newpoints-jnewpoints==LK-jacobi
 //2*points-jnewpoint==points-jacobi
 		double th_optt=th_opt;
-		if(std::abs(dyaw)>0.01)
-			th_optt=th_opt*(dyaw/0.01);
+//		if(std::abs(dyaw)>0.01)
+//			th_optt=th_opt*(std::abs(dyaw)/0.01);
+//	std::cout<<"th:"<<th_optt<<"\n";
 		if(L1<th_optt){
 			ImageProcesser::cvArrow(&Limg_view,
 				cv::Point((int)points[j].x,
@@ -140,6 +143,7 @@ void ImageProcesser::imageProcess()
 			<<newpoints[j].y-jnewpoints[j].y<<","//観測y-jacobi
 			<<std::endl;
 
+			std::cout<<"delta flow:"<<newpoints[j].x-jnewpoints[j].x<<"\n";
 	}
 
 }
