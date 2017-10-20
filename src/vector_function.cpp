@@ -22,6 +22,8 @@
 		}
 		prvp.reserve(point_size);
 		curp.reserve(point_size);
+		jnpts.reserve(point_size);
+		jnewpoints.reserve(point_size);
 	}
 	void ImageProcesser::clear_vectors(void){
 //		pts.clear();   //特徴点
@@ -43,6 +45,8 @@
 			}
 		}	
 //		curp.clear();
+		jnpts.clear();
+		jnewpoints.clear();
 	}
 	void ImageProcesser::renew_vectors(void){
 		pts.clear();

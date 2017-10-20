@@ -60,7 +60,7 @@ public:
 	cv::Mat PreLimg,Predepth;//1つ前のフレームを格納
 	cv::Mat Lgray,PreLgray;
 
-//	cv_bridge::CvImagePtr org_img;// Subscriber change zed topic
+	cv_bridge::CvImagePtr org_img;// Subscriber change zed topic
 	cv_bridge::CvImagePtr depthimg;// Subscriber change zed topic
 	cv_bridge::CvImagePtr PubLimg;
 	int width,height;			//image size
@@ -68,11 +68,18 @@ public:
 	double prev_time;	//for image jacobian
 	double new_time;	//
 	double dt;			//delta time
+	double prev_img_time;
+	double new_img_time;
+	double img_dt;
 	int f=(int)350.505;
 	int cx=(int)354.676;
 	int cy=(int)191.479;
-	double vl=0.0;		//velocity left
-	double vr=0.0;		//right
+	double vr;
+	double vl;
+	double d=0.276;//車輪幅
+	double w_w;
+	double w_dyaw;
+
 //odometry
 	double position_x,position_y,position_z;
 	double prev_position_x,prev_position_y,prev_position_z;
@@ -108,13 +115,9 @@ public:
 	std::vector<cv::Point2f> newpoints; //移動後の特徴点
 	std::vector<float> z;//current z
 	std::vector<float> nz;//new z
-//LPF
-	static const int lpf_value=2;
-	int lpf_count;
-	cv::Mat prv_img[lpf_value];
-	cv::Mat lpf_img[lpf_value];
-	cv::Mat sum_img,ave_img;
-	cv_bridge::CvImagePtr org_img[lpf_value];// Subscriber change zed topic
+	std::vector<cv::Point2f> jnpts;
+	std::vector<cv::Point2f> jnewpoints;
+	
 //particle filter
 	const double sig=2.0;
 	std::vector<double> prvp;
@@ -199,6 +202,9 @@ public:
 	void gettime(void);
 	void getprevtime(void);
 	void culcdt(void);
+	void getimgtime(void);
+	void getprevimgtime(void);
+	void culcimgdt(void);
 //vector 
 	void reserve_vectors(void);
 	void clear_vectors(void);
@@ -208,6 +214,7 @@ public:
 	//show current speed
 	void show_speed(void);
 	void print_dt(void);
+	void print_imgdt(void);
 	void print_points_size(void);
 
 };
