@@ -120,26 +120,26 @@ void ImageProcesser::imageProcess()
 					(int)(2*points[j].y-jnewpoints[j].y)),
 				cv::Scalar(200,0,200));//紫
 		}
-/*
+
 //output file
 		std::ofstream ofss("./Documents/output_opticalflow.csv",std::ios::app);
 		ofss<<points[j].x-width/2<<","//X
 			<<points[j].y-height/2<<","//Y
 			<<z[j]<<","//z
 			<<dx<<","//dx
-			<<v<<","//dz
-			<<w<<","//dw
+			<<dz<<","//dz
+			<<dyaw<<","//dw
 			<<dt<<","//dt
 			<<","
 			<<newpoints[j].x-points[j].x<<","//観測x
 			<<newpoints[j].y-points[j].y<<","//観測y
-			<<(double)value_x<<","//ヤコビx
-			<<(double)value_y<<","//ヤコビy
+			<<jnewpoints[j].x-points[j].x<<","//ヤコビx
+			<<jnewpoints[j].y-points[j].y<<","//ヤコビy
 			<<","
-			<<newpoints[j].x-points[j].x-value_x<<","//観測x-jacobi
-			<<newpoints[j].y-points[j].y-value_y<<","//観測y-jacobi
+			<<newpoints[j].x-jnewpoints[j].x<<","//観測x-jacobi
+			<<newpoints[j].y-jnewpoints[j].y<<","//観測y-jacobi
 			<<std::endl;
-*/
+
 	}
 
 }
