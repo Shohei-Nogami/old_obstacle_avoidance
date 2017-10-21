@@ -63,11 +63,11 @@ void ImageProcesser::imageProcess()
 		float value_x;
 		float value_y;
 		ppt.x=pts[j].x- (float)(
-		  	dx/z[j]-X/z[j]*dz
+		  	dx/pz[j]-X/pz[j]*dz
 		  	-(1+pow(X,2.0)/f)*dyaw
 		  	);
 		ppt.y=pts[j].y-(float)(
-			  	-(Y/z[j]*dz)
+			  	-(Y/pz[j]*dz)
 			  	-(X*Y*dyaw/f
 			  	));
 		jnpts.push_back(ppt) ;
