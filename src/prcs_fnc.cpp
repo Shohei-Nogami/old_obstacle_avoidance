@@ -95,7 +95,7 @@ void ImageProcesser::imageProcess()
 	}
 //remove bias noise of jacobi
 //case1
-	if(points.empty())
+/*	if(points.empty())
 		std::cout<<"empty points\n";
 	double sum_bias=0;
 	double ave_bias;
@@ -127,9 +127,9 @@ void ImageProcesser::imageProcess()
 	for(int j=0;j<points.size();j++){
 		newpoints[j].x=newpoints[j].x-ave_bias;
 	}
-
+*/
 //case2
-/*	double sum_bias=0;
+	double sum_bias=0;
 	double sum_dis=0;
 	double ave_bias,dis_bias;//dis_bias is sqrt(Dispersion)
 	int fcount=0;
@@ -141,12 +141,12 @@ void ImageProcesser::imageProcess()
 	ave_bias=sum_bias/points.size();
 	//culculate Dispersion
 	for(int j=0;j<points.size();j++){
-		sum_dis+=(newpoints[j].x-ave_bias)*(newpoints[j].x-ave_bias);
+		sum_dis+=(newpoints[j].x-points[j].x-ave_bias)*(newpoints[j].x-points[j].x-ave_bias);
 	}
 	dis_bias=sqrt(sum_dis/points.size());
 	for(int j=0;j<points.size();j++){
-		if(std::abs(newpoints[j].x) < std::abs(ave_bias)+dis_bias)
-			p_bias0.push_back(newpoints[j].x);
+		if(std::abs(newpoints[j].x-points[j].x) < std::abs(ave_bias)+dis_bias)
+			p_bias0.push_back(newpoints[j].x-points[j].x);
 	}
 	while(ros::ok()&&fcount++<th_count){
 		sum_bias=0;
@@ -159,7 +159,7 @@ void ImageProcesser::imageProcess()
 		sum_dis=0;
 		//culculate Dispersion
 		for(int j=0;j<p_bias0.size();j++){
-			sum_dis+=(p_bias0[j].x-ave_bias)*(p_bias0[j].x-ave_bias);
+			sum_dis+=(p_bias0[j]-ave_bias)*(p_bias0[j]-ave_bias);
 		}
 		dis_bias=sqrt(sum_dis/p_bias0.size());
 		//Dispersion < threshold -> break
@@ -167,8 +167,8 @@ void ImageProcesser::imageProcess()
 			break;
 		//Removal Outliers
 		for(int j=0;j<p_bias0.size();j++){
-			if(std::abs(newpoints[j].x) < std::(ave_bias)+dis_bias)
-				p_bias.push_back(newpoints[j].x);
+			if(std::abs(newpoints[j].x-points[j].x) < std::abs(ave_bias)+dis_bias)
+				p_bias.push_back(newpoints[j].x-points[j].x);
 		}
 		p_bias0.clear();
 		//renew p_bias0 and clear p_bias
@@ -178,7 +178,7 @@ void ImageProcesser::imageProcess()
 	//remove bias
 	for(int j=0;j<points.size();j++)
 		newpoints[j].x=newpoints[j].x-ave_bias;
-*/	
+	
 
 
 	for(int j=0;j<points.size();j++){
