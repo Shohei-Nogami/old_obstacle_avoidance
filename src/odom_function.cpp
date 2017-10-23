@@ -17,6 +17,13 @@
 		pitch=p;
 		yaw=y;
 	}
+	void ImageProcesser::wheelodom_callback(const obst_avoid::wheel_msg::ConstPtr& msg){
+		vr=msg->vel_r;
+		vl=msg->vel_l;
+	}
+	void ImageProcesser::setwodom(void){
+		wodom_queue.callOne(ros::WallDuration(0.001));
+	}
 	//set odometry
 	void ImageProcesser::setodom(void){
 		if(isOdom()){

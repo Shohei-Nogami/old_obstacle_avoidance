@@ -12,8 +12,10 @@ ImageProcesser::ImageProcesser()//
 		nh1.setCallbackQueue(&image_queue);
 		nh2.setCallbackQueue(&depth_queue);
 		nh.setCallbackQueue(&odom_queue);
+		nh3.setCallbackQueue(&wodom_queue);
 		
 		sub_Limg=nh1.subscribe("/zed/left/image_rect_color",1,&ImageProcesser::image_callback,this);
 		sub_depth=nh2.subscribe("/zed/depth/depth_registered",1,&ImageProcesser::depth_callback,this);
 		sub_odom=nh.subscribe("/zed/odom",1,&ImageProcesser::odom_callback,this);
+		sub_wodom=nh3.subscribe("/wheel_data",1,&ImageProcesser::wheelodom_callback,this);
 	}

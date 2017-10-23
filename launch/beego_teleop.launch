@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="obst_avoid" name="udpipreceiver" type="udpipreceiver"/>
+  <node pkg="obst_avoid" name="beego_teleop_key" type="beego_teleop_key"/>
+  <node pkg="turtlesim" name="turtle_teleop_key" type="turtle_teleop_key" output="screen"/>
+</launch>
+

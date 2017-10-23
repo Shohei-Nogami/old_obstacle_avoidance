@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include "ros/ros.h"
 #include <obst_avoid/wheel_msg.h>
+#include <ros/callback_queue.h>
 #define BUFFER_SIZE 2048 //256 = 1 byte, 64bit OS -> 2048 , 32bit OS -> 1024
 #define DATABUFFER 1024 
 #define IP_Number "192.168.0.2"
@@ -68,6 +69,8 @@ inet_addr(*) : *の文字列を32ビットのバイナリ値に変換
  int numrcv, numscv;
  char buffer[BUFFER_SIZE];
  unsigned long on = 1;
+//message of wheel velocity 
+ ::obst_avoid::wheel_msg w_odm;
 void pwmCallback(const obst_avoid::wheel_msg::ConstPtr& msg);
 
 int main(int argc, char** argv) 
@@ -112,13 +115,23 @@ int main(int argc, char** argv)
       perror("bind() failed" );
        return -1;
      }
-
+/*ros publisher and subscriber*/
+ ros::SubscribeOptions w_opsion;
+ ros::CallbackQueue w_queue;
  ros::NodeHandle nh;
+ nh.setCallbackQueue(&w_queue);
  ros::Subscriber sub_pwm;
- ros::Publisher pub_encoder;
+ ros::Publisher pub_encoder=nh.advertise<obst_avoid::wheel_msg>("wheel_odm",1);
  std::cout<<"ready subscribe\n";
  sub_pwm=nh.subscribe("wheel_data",1,pwmCallback);
- ros::spin();
+
+ w_odm.vel_r=0;
+ w_odm.vel_l=0;
+ while(ros::ok()){
+ 	w_queue.callOne(ros::WallDuration(0.1));
+	pub_encoder.publish(w_odm);
+ }
+// ros::spin();
   //ソケットのクローズ
     close(recvSocket);
     close(sock);
@@ -126,6 +139,8 @@ int main(int argc, char** argv)
 void pwmCallback(const obst_avoid::wheel_msg::ConstPtr& msg){
 /* パケット受信 */
 	std::cout<<"msg is "<<msg->vel_data.c_str()<<'\n';
+	w_odm.vel_r=msg->vel_r;
+	w_odm.vel_l=msg->vel_l;
    numrcv = recvfrom(recvSocket, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&from_addr, &sin_size);
     if(numrcv < 0){
            status = close(recvSocket); 

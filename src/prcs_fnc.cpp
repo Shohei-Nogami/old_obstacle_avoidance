@@ -1,7 +1,7 @@
 #include"img_prc_cls.h"
 
-bool wf_f=false;
-bool wfo_f=true;//
+bool wf_f=true;
+bool wfo_f=false;//
 int wfo_c=0;
 const int wfo_cmax=10;
 bool wfo_cf=true;
@@ -59,12 +59,13 @@ void ImageProcesser::imageProcess()
 	double dx=global_dy;//visual odometry x座標
 	w_w=(vr-vl)/d;//回転角速度
 	w_dyaw=w_w*dt;//回転角
-	
+	std::cout<<"wh:(w,dyaw):"<<"("<<w_w<<","<<w_dyaw<<")\n";
+	std::cout<<"vs:(w,dyaw):"<<"("<<dyaw/dt<<","<<dyaw<<")\n";
 //	w=dyaw;
 //culc jacobi
 	float X,Y;
 	cv::Point2f ppt;
-	for(int j=0;j<pts.size();j++){
+/*	for(int j=0;j<pts.size();j++){
 		X=(float)(pts[j].x-width/2.0);//-width;
 		Y=(float)(pts[j].y-height/2.0);//-height;
 		float value_x;
@@ -79,13 +80,28 @@ void ImageProcesser::imageProcess()
 			  	));
 		jnpts.push_back(ppt) ;
 	}
+*/
+	for(int j=0;j<pts.size();j++){
+		X=(float)(pts[j].x-width/2.0);//-width;
+		Y=(float)(pts[j].y-height/2.0);//-height;
+		ppt.x=pts[j].x- (float)(
+		  	dx/pz[j]-X/pz[j]*w_w*dt
+		  	-(1+pow(X,2.0)/f)*w_dyaw
+		  	);
+		ppt.y=pts[j].y-(float)(
+			  	-(Y/pz[j]*w_w*dt)
+			  	-(X*Y*w_dyaw/f
+			  	));
+		jnpts.push_back(ppt) ;
+	}
+
 	npts.insert(npts.end(),jnpts.begin(),jnpts.end());
 //---オプティカルフローを得る-----------------------------
 	cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
 //Delete the point that not be matched
 	float pnz;
 	for(int i=0,k=0;i<pts.size();i++){
-		if(sts[i]&&!std::isnan(depth_img.at<float>(npts[i].y,npts[i].x))){
+		if(sts[i]&&!std::isnan(depth_img.at<float>(npts[i].y,npts[i].x))&&!std::isinf(depth_img.at<float>(npts[i].y,npts[i].x))){
 			points.push_back(pts[i]);
 			newpoints.push_back(npts[i]);
 			z.push_back(pz[i]);
@@ -175,10 +191,12 @@ void ImageProcesser::imageProcess()
 		p_bias0.insert(p_bias0.end(),p_bias.begin(),p_bias.end());
 		p_bias.clear();
 	}
-	//remove bias
+//remove bias
+//	for(int j=0;j<points.size();j++)
+//		newpoints[j].x=newpoints[j].x-ave_bias;
+//add bias	
 	for(int j=0;j<points.size();j++)
-		newpoints[j].x=newpoints[j].x-ave_bias;
-	
+		jnewpoints[j].x=jnewpoints[j].x+ave_bias;
 
 
 	for(int j=0;j<points.size();j++){

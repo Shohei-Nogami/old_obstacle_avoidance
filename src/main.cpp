@@ -10,6 +10,7 @@ int main(int argc,char **argv){
 		prc.setimage();
 		prc.set_depth();
 		prc.setodom();
+		prc.setwodom();
 //		prc.approx_depth_img();
 		prc.imageProcess();
 //		prc.pub_org_img();

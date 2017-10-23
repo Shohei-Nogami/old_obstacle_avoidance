@@ -23,40 +23,85 @@ void twistCallback(const geometry_msgs::Twist::ConstPtr& msg){
 			wheelMsg.vel_data="00000000";
 */
 	if(vel==100){
-		if(msg->linear.x==0&&msg->angular.z==0)
+		if(msg->linear.x==0&&msg->angular.z==0){
 			wheelMsg.vel_data="00000000";
-		else if(msg->linear.x>0&&msg->angular.z==0)
+			wheelMsg.vel_l=0;
+			wheelMsg.vel_r=0;
+		}
+		else if(msg->linear.x>0&&msg->angular.z==0){
 			wheelMsg.vel_data="01000100";
-		else if(msg->linear.x==0&&msg->angular.z<0)
+			wheelMsg.vel_l=0.1;
+			wheelMsg.vel_r=0.1;
+		}
+		else if(msg->linear.x==0&&msg->angular.z<0){
 			wheelMsg.vel_data="00000100";//left=100,right=000 curve
-		else if(msg->linear.x==0&&msg->angular.z>0)
+			wheelMsg.vel_l=0.0;
+			wheelMsg.vel_r=0.1;
+		}
+		else if(msg->linear.x==0&&msg->angular.z>0){
 			wheelMsg.vel_data="01000000";//left=000,right=100 curve
-		else
+			wheelMsg.vel_l=0.1;
+			wheelMsg.vel_r=0.0;
+		}
+		else{
 			wheelMsg.vel_data="00000000";
+			wheelMsg.vel_l=0.0;
+			wheelMsg.vel_r=0.0;
+		}
 	}
 	if(vel==200){
-		if(msg->linear.x==0&&msg->angular.z==0)
+		if(msg->linear.x==0&&msg->angular.z==0){
 			wheelMsg.vel_data="00000000";
-		else if(msg->linear.x>0&&msg->angular.z==0)
+			wheelMsg.vel_l=0;
+			wheelMsg.vel_r=0;
+		}
+		else if(msg->linear.x>0&&msg->angular.z==0){
 			wheelMsg.vel_data="02000200";
-		else if(msg->linear.x==0&&msg->angular.z<0)
+			wheelMsg.vel_l=0.2;
+			wheelMsg.vel_r=0.2;
+		}
+		else if(msg->linear.x==0&&msg->angular.z<0){
 			wheelMsg.vel_data="00000200";//left=100,right=000 curve
-		else if(msg->linear.x==0&&msg->angular.z>0)
+			wheelMsg.vel_l=0.0;
+			wheelMsg.vel_r=0.2;
+		}
+		else if(msg->linear.x==0&&msg->angular.z>0){
 			wheelMsg.vel_data="02000000";//left=000,right=100 curve
-		else
+			wheelMsg.vel_l=0.2;
+			wheelMsg.vel_r=0.0;
+		}
+		else{
 			wheelMsg.vel_data="00000000";
+			wheelMsg.vel_l=0.0;
+			wheelMsg.vel_r=0.0;
+		}
 	}
 	if(vel==150){
-		if(msg->linear.x==0&&msg->angular.z==0)
+		if(msg->linear.x==0&&msg->angular.z==0){
 			wheelMsg.vel_data="00000000";
-		else if(msg->linear.x>0&&msg->angular.z==0)
+			wheelMsg.vel_l=0;
+			wheelMsg.vel_r=0;
+		}
+		else if(msg->linear.x>0&&msg->angular.z==0){
 			wheelMsg.vel_data="02000200";
-		else if(msg->linear.x==0&&msg->angular.z<0)
+			wheelMsg.vel_l=0.2;
+			wheelMsg.vel_r=0.2;
+		}
+		else if(msg->linear.x==0&&msg->angular.z<0){
 			wheelMsg.vel_data="01000200";//left=100,right=000 curve
-		else if(msg->linear.x==0&&msg->angular.z>0)
+			wheelMsg.vel_l=0.1;
+			wheelMsg.vel_r=0.2;
+		}
+		else if(msg->linear.x==0&&msg->angular.z>0){
 			wheelMsg.vel_data="02000100";//left=000,right=100 curve
-		else
+			wheelMsg.vel_l=0.2;
+			wheelMsg.vel_r=0.1;
+		}
+		else{
 			wheelMsg.vel_data="00000000";
+			wheelMsg.vel_l=0.0;
+			wheelMsg.vel_r=0.0;
+		}
 	}
 
 

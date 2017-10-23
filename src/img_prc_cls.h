@@ -19,6 +19,7 @@
 #include"obst_avoid/points.h"
 #include"obst_avoid/moving_points.h"
 #include"obst_avoid/moving_pointsArray.h"
+#include"obst_avoid/wheel_msg.h"
 //service
 #include<obst_avoid/image.h>
 #include<obst_avoid/odometry.h>
@@ -32,20 +33,23 @@ class ImageProcesser
 	ros::NodeHandle nh;
 	ros::NodeHandle nh1;
 	ros::NodeHandle nh2;
+	ros::NodeHandle nh3;
 //subscriber
 	image_transport::ImageTransport it;
 	ros::Subscriber sub_Limg;//LeftImage
 	ros::Subscriber sub_depth;//DepthImage
 	ros::Subscriber sub_odom;
+	ros::Subscriber sub_wodom;
 //callbackqueue
 	ros::CallbackQueue image_queue;
 	ros::CallbackQueue depth_queue;
 	ros::CallbackQueue odom_queue;
+	ros::CallbackQueue wodom_queue;
 //subscribe options
 	ros::SubscribeOptions image_option;
 	ros::SubscribeOptions depth_option;
 	ros::SubscribeOptions odom_option;
-
+	ros::SubscribeOptions wodom_option;
 	ros::Time start_time;
 public:
 //publisher
@@ -136,6 +140,7 @@ public:
 	void image_callback(const sensor_msgs::ImageConstPtr& msg);
 	void depth_callback(const sensor_msgs::ImageConstPtr& msg);
 	void odom_callback(const nav_msgs::Odometry::ConstPtr& msg);
+	void wheelodom_callback(const obst_avoid::wheel_msg::ConstPtr& msg);
 //image,depth,odometry取り込み用メソッド
 //---image----
 //set original image	要改善(1つ前の画像の有無等)
@@ -170,6 +175,8 @@ public:
 	//Linear approximation
 	void approx_depth_img(void);
 //-----odometry----
+//set wheel odometry
+	void setwodom(void);
 //set previous odometry
 	void setPrevodom(void);
 //set odometry
