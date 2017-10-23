@@ -97,11 +97,8 @@ public:
 //特徴点追加の閾値
 	const int threshold_fp=(int)(max_points*0.8);
 	const int th_clpimg=(int)(max_points/(cn*cn)*0.8);
-//	int cp_s[cn][cn];
 	std::vector<cv::Point2i> cp[cn][cn];
 	cv::Mat clp_img[cn][cn];
-//	auto detector = cv::ORB(max_points, 1.25f, 4, 7, 0, 2, 0, 7);
-//	cv::Ptr<cv::Feature2D> detector=cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
 //vector point,z
 	std::vector<cv::Point2f> pts;   //特徴点
 	std::vector<cv::Point2f> npts;  //移動後の特徴点
@@ -118,13 +115,15 @@ public:
 	std::vector<cv::Point2f> jnpts;
 	std::vector<cv::Point2f> jnewpoints;
 	
+///Removal bias valueable
+	std::vector<double> p_bias,p_bias0;
 //particle filter
-	const double sig=2.0;
-	std::vector<double> prvp;
-	std::vector<double> curp;
+//	const double sig=2.0;
+//	std::vector<double> prvp;
+//	std::vector<double> curp;
 //debug
-	float max_value_x,min_value_x,max_value_y,min_value_y;
-	double current_z;
+//	float max_value_x,min_value_x,max_value_y,min_value_y;
+//	double current_z;
 //ファイル出力
 	std::ofstream ofs;
 

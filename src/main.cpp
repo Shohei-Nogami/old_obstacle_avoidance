@@ -12,7 +12,7 @@ int main(int argc,char **argv){
 		prc.setodom();
 //		prc.approx_depth_img();
 		prc.imageProcess();
-		prc.pub_org_img();
+//		prc.pub_org_img();
 		prc.pub_left_img();
 //		prc.print_points_size();
 		prc.renew_vectors();
@@ -20,7 +20,7 @@ int main(int argc,char **argv){
 		prc.clear_vectors();
 //		prc.print_points_size();
 //		prc.print_dt();
-//		prc.print_imgdt();
+		prc.print_imgdt();
 //		prc.show_speed();
 	}
 	return 0;
