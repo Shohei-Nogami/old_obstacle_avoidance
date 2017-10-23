@@ -20,7 +20,7 @@ int main(int argc,char **argv){
 		prc.clear_vectors();
 //		prc.print_points_size();
 //		prc.print_dt();
-		prc.print_imgdt();
+//		prc.print_imgdt();
 //		prc.show_speed();
 	}
 	return 0;

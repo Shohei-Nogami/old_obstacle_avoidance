@@ -1,7 +1,7 @@
 #include"img_prc_cls.h"
 
 bool wf_f=false;
-bool wfo_f=true;
+bool wfo_f=true;//
 int wfo_c=0;
 const int wfo_cmax=10;
 bool wfo_cf=true;
@@ -95,31 +95,39 @@ void ImageProcesser::imageProcess()
 	}
 //remove bias noise of jacobi
 //case1
-/*	double sum_bias=0;
+	if(points.empty())
+		std::cout<<"empty points\n";
+	double sum_bias=0;
 	double ave_bias;
 //	std::vector<double> p_bias;//img_prc_cls.h
 	//culculate average bias
 	for(int j=0;j<points.size();j++){
-		sum_bias+=newpoints[j].x-jnewpoints[j].x
+		sum_bias+=newpoints[j].x-jnewpoints[j].x;
 	}
-	ave_bias=sum_bias/points.size();
-	std::cout<<"ave_bias:"<<ave_bias<<"\n";
+	ave_bias=sum_bias/(int)points.size();
+	std::cout<<"ave_bias1:"<<ave_bias<<"\n";
 	//Removal Outliers
 	for(int j=0;j<points.size();j++){
-		if(std::abs(newpoints[j].x-ave_bias) > std::abs(ave_bias)/2)
-			p_bias.push_back(newpoints[j].x);
+		if(std::abs(newpoints[j].x-points[j].x-ave_bias) < std::abs(ave_bias)/2)
+			p_bias.push_back(newpoints[j].x-points[j].x);
 	}
 	//culculate average bias again
 	sum_bias=0;
 	for(int j=0;j<p_bias.size();j++){
 		sum_bias+=p_bias[j];
 	}
-	ave_bias=sum_bias/p_bias.size();
+	if(p_bias.size()!=0)
+		ave_bias=sum_bias/(int)p_bias.size();
+	std::cout<<"ave_bias2:"<<ave_bias<<"\n";
+	if(std::abs(ave_bias)>50)
+		show_speed();
+	if(std::isnan(ave_bias))
+		std::cout<<"ave,sum,pbias_size:"<<ave_bias<<","<<sum_bias<<","<<(int)p_bias.size()<<"\n";
 	//Removal average bias
 	for(int j=0;j<points.size();j++){
 		newpoints[j].x=newpoints[j].x-ave_bias;
 	}
-*/
+
 //case2
 /*	double sum_bias=0;
 	double sum_dis=0;
@@ -271,7 +279,7 @@ void ImageProcesser::imageProcess()
 				<<newpoints[j].y-jnewpoints[j].y<<","//観測y-jacobi
 				<<std::endl;
 		}
-		std::cout<<"delta flow:"<<newpoints[j].x-jnewpoints[j].x<<"\n";
+//		std::cout<<"delta flow:"<<newpoints[j].x-jnewpoints[j].x<<"\n";
 	}
 	wfo_c++;
 	wfo_cf=true;
