@@ -94,10 +94,10 @@ public:
 //detector
 	static const int max_points=500;
 	const int point_size=max_points*2.5;
-	static const int cn=2;
+	static const int cn=3;
 	const int clp_max_points=max_points/(cn*cn);
 	const int clp_point_size=(int)(clp_max_points*2.5);
-	const float th_opt=2.0;
+	const float th_opt=3.0;
 //特徴点追加の閾値
 	const int threshold_fp=(int)(max_points*0.8);
 	const int th_clpimg=(int)(max_points/(cn*cn)*0.8);

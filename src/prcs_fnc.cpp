@@ -1,11 +1,11 @@
 #include"img_prc_cls.h"
 
-bool wf_f=true;
-bool wfo_f=false;//
+bool wf_f=false;
+bool wfo_f=true;//
 int wfo_c=0;
 const int wfo_cmax=10;
 bool wfo_cf=true;
-const int th_dis_bias=5;
+const int th_dis_bias=2;
 const int th_count=5;
 //画像フレーム取得後呼び出される関数
 void ImageProcesser::imageProcess()
@@ -59,28 +59,32 @@ void ImageProcesser::imageProcess()
 	double dx=global_dy;//visual odometry x座標
 	w_w=(vr-vl)/d;//回転角速度
 	w_dyaw=w_w*dt;//回転角
-	std::cout<<"wh:(w,dyaw):"<<"("<<w_w<<","<<w_dyaw<<")\n";
-	std::cout<<"vs:(w,dyaw):"<<"("<<dyaw/dt<<","<<dyaw<<")\n";
+//	std::cout<<"wh:(w,dyaw):"<<"("<<w_w<<","<<w_dyaw<<")\n";
+//	std::cout<<"vs:(w,dyaw):"<<"("<<dyaw/dt<<","<<dyaw<<")\n";
 //	w=dyaw;
 //culc jacobi
 	float X,Y;
 	cv::Point2f ppt;
-/*	for(int j=0;j<pts.size();j++){
+	for(int j=0;j<pts.size();j++){
 		X=(float)(pts[j].x-width/2.0);//-width;
 		Y=(float)(pts[j].y-height/2.0);//-height;
 		float value_x;
 		float value_y;
 		ppt.x=pts[j].x- (float)(
 		  	dx/pz[j]-X/pz[j]*dz
-		  	-(1+pow(X,2.0)/f)*dyaw
+		  	-(f+pow(X,2.0)/f)*dyaw
 		  	);
+		if(std::isnan(ppt.x)){
+			std::cout<<"ppt.x is nan\n";
+			std::cout<<"pts.x,pz:"<<pts[j].x<<","<<pz[j]<<"\n";
+		}
 		ppt.y=pts[j].y-(float)(
 			  	-(Y/pz[j]*dz)
 			  	-(X*Y*dyaw/f
 			  	));
 		jnpts.push_back(ppt) ;
 	}
-*/
+/*
 	for(int j=0;j<pts.size();j++){
 		X=(float)(pts[j].x-width/2.0);//-width;
 		Y=(float)(pts[j].y-height/2.0);//-height;
@@ -94,14 +98,15 @@ void ImageProcesser::imageProcess()
 			  	));
 		jnpts.push_back(ppt) ;
 	}
-
+*/
 	npts.insert(npts.end(),jnpts.begin(),jnpts.end());
 //---オプティカルフローを得る-----------------------------
 	cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
 //Delete the point that not be matched
 	float pnz;
 	for(int i=0,k=0;i<pts.size();i++){
-		if(sts[i]&&!std::isnan(depth_img.at<float>(npts[i].y,npts[i].x))&&!std::isinf(depth_img.at<float>(npts[i].y,npts[i].x))){
+		float depth_np=depth_img.at<float>(npts[i].y,npts[i].x);
+		if(sts[i]&&!std::isnan(depth_np)&&!std::isinf(depth_np)&&depth_np>=0.5){
 			points.push_back(pts[i]);
 			newpoints.push_back(npts[i]);
 			z.push_back(pz[i]);
@@ -145,7 +150,7 @@ void ImageProcesser::imageProcess()
 	}
 */
 //case2
-	double sum_bias=0;
+/*	double sum_bias=0;
 	double sum_dis=0;
 	double ave_bias,dis_bias;//dis_bias is sqrt(Dispersion)
 	int fcount=0;
@@ -153,13 +158,18 @@ void ImageProcesser::imageProcess()
 	//culculate average bias
 	for(int j=0;j<points.size();j++){
 		sum_bias+=newpoints[j].x-jnewpoints[j].x;
+//		if(std::isnan(newpoints[j].x)||std::isnan(jnewpoints[j].x))
+//			std::cout<<"newpoints("<<newpoints[j].x<<","<<jnewpoints[j].x<<")\n";
 	}
-	ave_bias=sum_bias/points.size();
+
+	ave_bias=sum_bias/(int)points.size();
+//	if(std::isnan(ave_bias))
+//		std::cout<<"nan0\n";
 	//culculate Dispersion
 	for(int j=0;j<points.size();j++){
 		sum_dis+=(newpoints[j].x-points[j].x-ave_bias)*(newpoints[j].x-points[j].x-ave_bias);
 	}
-	dis_bias=sqrt(sum_dis/points.size());
+	dis_bias=sqrt(sum_dis/(int)points.size());
 	for(int j=0;j<points.size();j++){
 		if(std::abs(newpoints[j].x-points[j].x) < std::abs(ave_bias)+dis_bias)
 			p_bias0.push_back(newpoints[j].x-points[j].x);
@@ -168,11 +178,13 @@ void ImageProcesser::imageProcess()
 		sum_bias=0;
 		//culc sum
 		for(int j=0;j<p_bias0.size();j++){
-			sum_bias+=newpoints[j].x-jnewpoints[j].x;
+			sum_bias+=p_bias0[j];//newpoints[j].x-jnewpoints[j].x;
 		}
 		//culc ave
 		ave_bias=sum_bias/p_bias0.size();
 		sum_dis=0;
+//		if(std::isnan(ave_bias))
+//			std::cout<<"nan1\n";
 		//culculate Dispersion
 		for(int j=0;j<p_bias0.size();j++){
 			sum_dis+=(p_bias0[j]-ave_bias)*(p_bias0[j]-ave_bias);
@@ -183,8 +195,8 @@ void ImageProcesser::imageProcess()
 			break;
 		//Removal Outliers
 		for(int j=0;j<p_bias0.size();j++){
-			if(std::abs(newpoints[j].x-points[j].x) < std::abs(ave_bias)+dis_bias)
-				p_bias.push_back(newpoints[j].x-points[j].x);
+			if(std::abs(p_bias0[j]) < std::abs(ave_bias)+dis_bias)
+				p_bias.push_back(p_bias0[j]);
 		}
 		p_bias0.clear();
 		//renew p_bias0 and clear p_bias
@@ -197,11 +209,13 @@ void ImageProcesser::imageProcess()
 //add bias	
 	for(int j=0;j<points.size();j++)
 		jnewpoints[j].x=jnewpoints[j].x+ave_bias;
-
-
+*/
+//	std::cout<<"ave_bias:"<<ave_bias<<"\n";
 	for(int j=0;j<points.size();j++){
 //----矢印描写---
-		float L1=std::abs(newpoints[j].x-jnewpoints[j].x)*sqrt(z[j]);
+		float L1=std::abs(newpoints[j].x-jnewpoints[j].x);//*sqrt(z[j]);
+		float L2=sqrt((newpoints[j].x-jnewpoints[j].x)*(newpoints[j].x-jnewpoints[j].x)
+			+(newpoints[j].y-jnewpoints[j].y)*(newpoints[j].y-jnewpoints[j].y));//*sqrt(z[j]);
 //newpoints==points+LK
 //jnewpoints==points+jacobi
 //newpoints-jnewpoints==LK-jacobi

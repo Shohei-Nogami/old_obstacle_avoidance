@@ -39,7 +39,7 @@ void ImageProcesser::add_feature_points(void){
 						ppts.y,
 						ppts.x
 						);
-					if(!std::isnan(ptz)&&!std::isinf(ptz)){
+					if(!std::isnan(ptz)&&!std::isinf(ptz)&&ptz>=0.5){
 					   	pts.push_back(ppts);
 						pz.push_back(ptz);
 					}
