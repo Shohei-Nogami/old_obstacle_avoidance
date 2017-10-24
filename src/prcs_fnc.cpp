@@ -1,7 +1,7 @@
 #include"img_prc_cls.h"
 
 bool wf_f=false;
-bool wfo_f=true;//true;//
+bool wfo_f=false;//true;//
 int wfo_c=0;
 const int wfo_cmax=10;
 bool wfo_cf=true;
@@ -216,7 +216,7 @@ void ImageProcesser::imageProcess()
 //	std::cout<<"ave_bias:"<<ave_bias<<"\n";
 	for(int j=0;j<points.size();j++){
 //----矢印描写---
-		float L1=std::abs(newpoints[j].x-jnewpoints[j].x);//*sqrt(z[j]);
+		float L1=std::abs(newpoints[j].x-jnewpoints[j].x)*sqrt(z[j]);
 		float L2=sqrt((newpoints[j].x-jnewpoints[j].x)*(newpoints[j].x-jnewpoints[j].x)
 			+(newpoints[j].y-jnewpoints[j].y)*(newpoints[j].y-jnewpoints[j].y));//*sqrt(z[j]);
 //newpoints==points+LK
@@ -224,10 +224,10 @@ void ImageProcesser::imageProcess()
 //newpoints-jnewpoints==LK-jacobi
 //2*points-jnewpoint==points-jacobi
 		double th_optt=th_opt;
-//		if(std::abs(dyaw)>0.01)
-//			th_optt=th_opt*(std::abs(dyaw)/0.01);
+		if(std::abs(dyaw)>0.01)
+			th_optt=th_opt*(std::abs(dyaw)/0.01);
 //	std::cout<<"th:"<<th_optt<<"\n";
-		if(L2<th_optt){
+		if(L1<th_optt){
 			ImageProcesser::cvArrow(&Limg_view,
 				cv::Point((int)points[j].x,
 					(int)points[j].y),
