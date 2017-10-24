@@ -18,5 +18,7 @@
 	void ImageProcesser::print_points_size(void){
 		std::cout<<"points size:(prev,cur)-"<<points.size()<<","<<newpoints.size()<<"\n";
 	}
-	
+	void ImageProcesser::print_bias(void){
+		std::cout<<"bias:(visual,order,delta)-"<<dyaw*f<<","<<w_dyaw*f<<","<<std::abs(dyaw-w_dyaw)*f<<"\n";
+	}
 

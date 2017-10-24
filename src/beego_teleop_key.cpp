@@ -4,7 +4,7 @@
 	
 	ros::Subscriber sub_twist;
 	ros::Publisher pub_wheel;
-	int vel=200;
+	int vel=300;
 void twistCallback(const geometry_msgs::Twist::ConstPtr& msg){
 	ros::NodeHandle n;
 	pub_wheel=n.advertise<obst_avoid::wheel_msg>("wheel_data",1000);
@@ -83,19 +83,19 @@ void twistCallback(const geometry_msgs::Twist::ConstPtr& msg){
 			wheelMsg.vel_r=0;
 		}
 		else if(msg->linear.x>0&&msg->angular.z==0){
-			wheelMsg.vel_data="03000300";
-			wheelMsg.vel_l=0.3;
-			wheelMsg.vel_r=0.3;
+			wheelMsg.vel_data="02000200";
+			wheelMsg.vel_l=0.2;
+			wheelMsg.vel_r=0.2;
 		}
 		else if(msg->linear.x==0&&msg->angular.z<0){
-			wheelMsg.vel_data="00000300";//left=100,right=000 curve
-			wheelMsg.vel_l=0.0;
+			wheelMsg.vel_data="01000300";//left=100,right=000 curve
+			wheelMsg.vel_l=0.1;
 			wheelMsg.vel_r=0.3;
 		}
 		else if(msg->linear.x==0&&msg->angular.z>0){
-			wheelMsg.vel_data="00000000";//left=000,right=100 curve
-			wheelMsg.vel_l=0.0;
-			wheelMsg.vel_r=0.0;
+			wheelMsg.vel_data="03000100";//left=000,right=100 curve
+			wheelMsg.vel_l=0.3;
+			wheelMsg.vel_r=0.1;
 		}
 		else{
 			wheelMsg.vel_data="00000000";

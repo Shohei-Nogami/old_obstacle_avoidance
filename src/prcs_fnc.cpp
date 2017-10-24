@@ -1,7 +1,7 @@
 #include"img_prc_cls.h"
 
 bool wf_f=false;
-bool wfo_f=true;//
+bool wfo_f=true;//true;//
 int wfo_c=0;
 const int wfo_cmax=10;
 bool wfo_cf=true;
@@ -57,12 +57,15 @@ void ImageProcesser::imageProcess()
 
 	double dz=global_dx;//visual odometry z座標
 	double dx=global_dy;//visual odometry x座標
-	w_w=(vr-vl)/d;//回転角速度
+	w_w=-(vr-vl)/d;//回転角速度
 	w_dyaw=w_w*dt;//回転角
 //	std::cout<<"wh:(w,dyaw):"<<"("<<w_w<<","<<w_dyaw<<")\n";
 //	std::cout<<"vs:(w,dyaw):"<<"("<<dyaw/dt<<","<<dyaw<<")\n";
 //	w=dyaw;
 //culc jacobi
+//odometry 
+	
+//
 	float X,Y;
 	cv::Point2f ppt;
 	for(int j=0;j<pts.size();j++){
@@ -224,7 +227,7 @@ void ImageProcesser::imageProcess()
 //		if(std::abs(dyaw)>0.01)
 //			th_optt=th_opt*(std::abs(dyaw)/0.01);
 //	std::cout<<"th:"<<th_optt<<"\n";
-		if(L1<th_optt){
+		if(L2<th_optt){
 			ImageProcesser::cvArrow(&Limg_view,
 				cv::Point((int)points[j].x,
 					(int)points[j].y),
