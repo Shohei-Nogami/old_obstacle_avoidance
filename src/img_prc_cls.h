@@ -1,4 +1,4 @@
- #include"ros/ros.h"
+#include"ros/ros.h"
 #include <ros/callback_queue.h>
 //画像取得用
 #include<image_transport/image_transport.h>
@@ -91,6 +91,10 @@ public:
 	double roll,pitch,yaw;
 	double prev_roll,prev_pitch,prev_yaw;
 	double droll,dpitch,dyaw;
+	bool lpf_sf;
+	static const int lpf_value=10;
+	double w_lpf[lpf_value];
+	int lpf_count;
 //detector
 	static const int max_points=500;
 	const int point_size=max_points*2.5;
@@ -100,7 +104,7 @@ public:
 	const float th_opt=2.0;
 //特徴点追加の閾値
 	const int threshold_fp=(int)(max_points*0.8);
-	const int th_clpimg=(int)(max_points/(cn*cn)*0.8);
+	const int th_clpimg=(int)(clp_max_points*0.8);
 	std::vector<cv::Point2i> cp[cn][cn];
 	cv::Mat clp_img[cn][cn];
 //vector point,z
@@ -223,4 +227,6 @@ public:
 	void print_imgdt(void);
 	void print_points_size(void);
 	void print_bias(void);
+	void print_w(void);
+	void print_clpsize(void);
 };

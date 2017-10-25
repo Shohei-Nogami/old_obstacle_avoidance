@@ -76,6 +76,21 @@
 			dyaw=(yaw-2*PI)-prev_yaw;
 		else
 			dyaw=yaw-prev_yaw;
+/*		w_lpf[lpf_count++]=dyaw/dt;
+		if(lpf_count>=lpf_value){
+			lpf_sf=true;
+			lpf_count=0;
+		}
+		if(lpf_sf){
+			double w_sum=0;
+			for(int i=0;i<lpf_value;i++)
+				w_sum+=w_lpf[i];
+			dyaw=w_sum/lpf_value*dt;
+		}*/
+		w_w=-(vr-vl)/d;//回転角速度
+		w_dyaw=w_w*dt;//回転角
+//		if(std::abs(dyaw-w_dyaw)>0)
+//			dyaw=dyaw+(w_dyaw-dyaw)/dyaw*w_dyaw;
 	}
 //set global dx,dy
 	void ImageProcesser::setglobalodom(void){

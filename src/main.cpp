@@ -12,7 +12,9 @@ int main(int argc,char **argv){
 		prc.setodom();
 		prc.setwodom();
 //		prc.approx_depth_img();
+//		prc.show_speed();
 		prc.imageProcess();
+//		prc.print_points_size();
 //		prc.pub_org_img();
 		prc.pub_left_img();
 //		prc.print_points_size();
@@ -23,7 +25,9 @@ int main(int argc,char **argv){
 //		prc.print_dt();
 //		prc.print_imgdt();
 //		prc.show_speed();
-		prc.print_bias();
+//		prc.print_bias();
+//		prc.print_w();
+//		prc.print_clpsize();
 	}
 	return 0;
 }

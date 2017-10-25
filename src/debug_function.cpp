@@ -21,4 +21,17 @@
 	void ImageProcesser::print_bias(void){
 		std::cout<<"bias:(visual,order,delta)-"<<dyaw*f<<","<<w_dyaw*f<<","<<std::abs(dyaw-w_dyaw)*f<<"\n";
 	}
+	void ImageProcesser::print_w(void){
+		std::cout<<"(w_w,v_w):"<<w_dyaw/dt<<","<<dyaw/dt<<"\n";
+	}
+	void ImageProcesser::print_clpsize(void){
+		for(int i=0;i<cn;i++){
+			for(int j=0;j<cn;j++){
+				std::cout<<"cp_size["<<i<<","<<j<<"]:"<<(int)cp[i][j].size()<<"\n";
+				int size=(int)cp[i][j].size();
+				if(size >= clp_point_size)
+					std::cout<<"size over\n";
+			}
+		}
+	}
 

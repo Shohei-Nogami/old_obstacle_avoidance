@@ -28,6 +28,7 @@ void ImageProcesser::imageProcess()
 			clp_img[i][j]=PreLgray(cv::Rect((int)(j*(width)/cn),(int)(i*(height)/cn),(int)(width/cn),(int)(height/cn)));
 		}
 	}
+//	std::cout<<"count\n";
 	count_feature_points();
 	add_feature_points();
 	if(!pts.size()){
@@ -57,8 +58,8 @@ void ImageProcesser::imageProcess()
 
 	double dz=global_dx;//visual odometry z座標
 	double dx=global_dy;//visual odometry x座標
-	w_w=-(vr-vl)/d;//回転角速度
-	w_dyaw=w_w*dt;//回転角
+//	w_w=-(vr-vl)/d;//回転角速度
+//	w_dyaw=w_w*dt;//回転角
 //	std::cout<<"wh:(w,dyaw):"<<"("<<w_w<<","<<w_dyaw<<")\n";
 //	std::cout<<"vs:(w,dyaw):"<<"("<<dyaw/dt<<","<<dyaw<<")\n";
 //	w=dyaw;
@@ -102,6 +103,7 @@ void ImageProcesser::imageProcess()
 		jnpts.push_back(ppt) ;
 	}
 */
+//	std::cout<<"insert\n"; bagu from here
 	npts.insert(npts.end(),jnpts.begin(),jnpts.end());
 //---オプティカルフローを得る-----------------------------
 	cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
@@ -117,6 +119,7 @@ void ImageProcesser::imageProcess()
 			nz.push_back(depth_img.at<float>(npts[i].y,npts[i].x));
 		}
 	}
+//	std::cout<<"pushback\n";  bagu so far
 //remove bias noise of jacobi
 //case1
 /*	if(points.empty())
@@ -216,7 +219,7 @@ void ImageProcesser::imageProcess()
 //	std::cout<<"ave_bias:"<<ave_bias<<"\n";
 	for(int j=0;j<points.size();j++){
 //----矢印描写---
-		float L1=std::abs(newpoints[j].x-jnewpoints[j].x)*sqrt(z[j]);
+		float L1=std::abs(newpoints[j].x-jnewpoints[j].x);//*sqrt(z[j]);
 		float L2=sqrt((newpoints[j].x-jnewpoints[j].x)*(newpoints[j].x-jnewpoints[j].x)
 			+(newpoints[j].y-jnewpoints[j].y)*(newpoints[j].y-jnewpoints[j].y));//*sqrt(z[j]);
 //newpoints==points+LK
@@ -227,7 +230,7 @@ void ImageProcesser::imageProcess()
 		if(std::abs(dyaw)>0.01)
 			th_optt=th_opt*(std::abs(dyaw)/0.01);
 //	std::cout<<"th:"<<th_optt<<"\n";
-		if(L1<th_optt){
+		if(L1<th_optt/z[j]+1.0){
 			ImageProcesser::cvArrow(&Limg_view,
 				cv::Point((int)points[j].x,
 					(int)points[j].y),

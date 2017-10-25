@@ -39,7 +39,7 @@ void ImageProcesser::add_feature_points(void){
 						ppts.y,
 						ppts.x
 						);
-					if(!std::isnan(ptz)&&!std::isinf(ptz)&&ptz>=0.5){
+					if(!std::isnan(ptz)&&!std::isinf(ptz)&&ptz>=0.5&&(int)pts.size()<point_size){
 					   	pts.push_back(ppts);
 						pz.push_back(ptz);
 					}
@@ -67,17 +67,23 @@ for s s<p_s s++
          for(int j=0;j<n;j++)
            cp_s[i][j]=0;
        */
+//			std::cout<<"aaa\n";
     for(int k=0;k<pts.size();k++){
       for(int j=0;j<cn;j++){
         if((int)(j*width/cn) < (int)pts[k].x && (int)pts[k].x < (int)((j+1)*width/cn)){
           for(int i=0;i<cn;i++){
             if((int)(i*height/cn)<(int)pts[k].y&&(int)pts[k].y<(int)((i+1)*height/cn)){
 //              cp_s[i][j]++;
-              cp[i][j].push_back(pts[k]);
+		if((int)cp[i][j].size()>=clp_point_size)
+			continue;
+
+		cp[i][j].push_back(pts[k]);
+
             }
           }
         }
       }
     }
+//			print_clpsize();
 }
   
