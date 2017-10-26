@@ -26,6 +26,9 @@
 		jnewpoints.reserve(point_size);
 		p_bias.reserve(point_size);
 		p_bias0.reserve(point_size);
+		pmpf.reserve(point_size);
+		mpf.reserve(point_size);
+		
 	}
 	void ImageProcesser::clear_vectors(void){
 //		pts.clear();   //特徴点
@@ -48,12 +51,15 @@
 		jnewpoints.clear();
 		p_bias.clear();
 		p_bias0.clear();
+		mpf.clear();
 	}
 	void ImageProcesser::renew_vectors(void){
 		pts.clear();
 		pz.clear();
 		pts.insert(pts.end(),newpoints.begin(),newpoints.end());
 		pz.insert(pz.end(),nz.begin(),nz.end());
+		pmpf.clear();
+		pmpf.insert(pmpf.end(),mpf.begin(),mpf.end());
 /*		double sum=0;
 		for(int i=0;i<curp.size();i++)
 			sum+=curp[i];

@@ -65,7 +65,7 @@ void ImageProcesser::imageProcess()
 //	w=dyaw;
 //culc jacobi
 //odometry 
-	
+
 //
 	float X,Y;
 	cv::Point2f ppt;
@@ -103,125 +103,51 @@ void ImageProcesser::imageProcess()
 		jnpts.push_back(ppt) ;
 	}
 */
-//	std::cout<<"insert\n"; bagu from here
-	npts.insert(npts.end(),jnpts.begin(),jnpts.end());
-//---オプティカルフローを得る-----------------------------
-	cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
-//Delete the point that not be matched
-	float pnz;
-	for(int i=0,k=0;i<pts.size();i++){
-		float depth_np=depth_img.at<float>(npts[i].y,npts[i].x);
-		if(sts[i]&&!std::isnan(depth_np)&&!std::isinf(depth_np)&&depth_np>=0.5){
-			points.push_back(pts[i]);
-			newpoints.push_back(npts[i]);
-			z.push_back(pz[i]);
-			jnewpoints.push_back(jnpts[i]);
-			nz.push_back(depth_img.at<float>(npts[i].y,npts[i].x));
+	std::cout<<"insert\n";// bagu from here
+	try{
+		std::cout<<"npts,jnpts:"<<npts.size()<<","<<jnpts.size()<<"\n";
+		npts.insert(npts.end(),jnpts.begin(),jnpts.end());
+		std::cout<<"1";
+	//---オプティカルフローを得る-----------------------------
+		cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
+	//Delete the point that not be matched
+		std::cout<<"2";
+		float pnz;
+		for(int i=0;i<pts.size();i++){
+			std::cout<<"2.5 ";
+			float depth_np=depth_img.at<float>(npts[i].y,npts[i].x);
+			std::cout<<"3";
+			if(sts[i]&&!std::isnan(depth_np)&&!std::isinf(depth_np)&&depth_np>=0.5){
+			std::cout<<"4";
+				points.push_back(pts[i]);
+			std::cout<<"5";
+				newpoints.push_back(npts[i]);
+			std::cout<<"6";
+				z.push_back(pz[i]);
+			std::cout<<"7";
+				jnewpoints.push_back(jnpts[i]);
+			std::cout<<"8";
+				nz.push_back(depth_img.at<float>(npts[i].y,npts[i].x));
+			std::cout<<"9";
+				mpf.push_back(pmpf[i]);
+			std::cout<<"10\n";
+			std::cout<<"i,pts.size():"<<i<<","<<pts.size()<<"\n";
+			}
 		}
+		std::cout<<"pushback\n"; // bagu so far 
+	}//try
+/*	catch(const std::exception& ex) {
+		std::cerr << ex.what() << std::endl;
+	}//catch
+*/	catch(cv::Exception& e){
+		std::cerr << e.what() << std::endl;
 	}
-//	std::cout<<"pushback\n";  bagu so far
-//remove bias noise of jacobi
-//case1
-/*	if(points.empty())
-		std::cout<<"empty points\n";
-	double sum_bias=0;
-	double ave_bias;
-//	std::vector<double> p_bias;//img_prc_cls.h
-	//culculate average bias
-	for(int j=0;j<points.size();j++){
-		sum_bias+=newpoints[j].x-jnewpoints[j].x;
-	}
-	ave_bias=sum_bias/(int)points.size();
-	std::cout<<"ave_bias1:"<<ave_bias<<"\n";
-	//Removal Outliers
-	for(int j=0;j<points.size();j++){
-		if(std::abs(newpoints[j].x-points[j].x-ave_bias) < std::abs(ave_bias)/2)
-			p_bias.push_back(newpoints[j].x-points[j].x);
-	}
-	//culculate average bias again
-	sum_bias=0;
-	for(int j=0;j<p_bias.size();j++){
-		sum_bias+=p_bias[j];
-	}
-	if(p_bias.size()!=0)
-		ave_bias=sum_bias/(int)p_bias.size();
-	std::cout<<"ave_bias2:"<<ave_bias<<"\n";
-	if(std::abs(ave_bias)>50)
-		show_speed();
-	if(std::isnan(ave_bias))
-		std::cout<<"ave,sum,pbias_size:"<<ave_bias<<","<<sum_bias<<","<<(int)p_bias.size()<<"\n";
-	//Removal average bias
-	for(int j=0;j<points.size();j++){
-		newpoints[j].x=newpoints[j].x-ave_bias;
-	}
-*/
-//case2
-/*	double sum_bias=0;
-	double sum_dis=0;
-	double ave_bias,dis_bias;//dis_bias is sqrt(Dispersion)
-	int fcount=0;
-//	std::vector<double> p_bias,p_bias0;//img_prc_cls.h
-	//culculate average bias
-	for(int j=0;j<points.size();j++){
-		sum_bias+=newpoints[j].x-jnewpoints[j].x;
-//		if(std::isnan(newpoints[j].x)||std::isnan(jnewpoints[j].x))
-//			std::cout<<"newpoints("<<newpoints[j].x<<","<<jnewpoints[j].x<<")\n";
-	}
-
-	ave_bias=sum_bias/(int)points.size();
-//	if(std::isnan(ave_bias))
-//		std::cout<<"nan0\n";
-	//culculate Dispersion
-	for(int j=0;j<points.size();j++){
-		sum_dis+=(newpoints[j].x-points[j].x-ave_bias)*(newpoints[j].x-points[j].x-ave_bias);
-	}
-	dis_bias=sqrt(sum_dis/(int)points.size());
-	for(int j=0;j<points.size();j++){
-		if(std::abs(newpoints[j].x-points[j].x) < std::abs(ave_bias)+dis_bias)
-			p_bias0.push_back(newpoints[j].x-points[j].x);
-	}
-	while(ros::ok()&&fcount++<th_count){
-		sum_bias=0;
-		//culc sum
-		for(int j=0;j<p_bias0.size();j++){
-			sum_bias+=p_bias0[j];//newpoints[j].x-jnewpoints[j].x;
-		}
-		//culc ave
-		ave_bias=sum_bias/p_bias0.size();
-		sum_dis=0;
-//		if(std::isnan(ave_bias))
-//			std::cout<<"nan1\n";
-		//culculate Dispersion
-		for(int j=0;j<p_bias0.size();j++){
-			sum_dis+=(p_bias0[j]-ave_bias)*(p_bias0[j]-ave_bias);
-		}
-		dis_bias=sqrt(sum_dis/p_bias0.size());
-		//Dispersion < threshold -> break
-		if(dis_bias<th_dis_bias)
-			break;
-		//Removal Outliers
-		for(int j=0;j<p_bias0.size();j++){
-			if(std::abs(p_bias0[j]) < std::abs(ave_bias)+dis_bias)
-				p_bias.push_back(p_bias0[j]);
-		}
-		p_bias0.clear();
-		//renew p_bias0 and clear p_bias
-		p_bias0.insert(p_bias0.end(),p_bias.begin(),p_bias.end());
-		p_bias.clear();
-	}
-//remove bias
-//	for(int j=0;j<points.size();j++)
-//		newpoints[j].x=newpoints[j].x-ave_bias;
-//add bias	
-	for(int j=0;j<points.size();j++)
-		jnewpoints[j].x=jnewpoints[j].x+ave_bias;
-*/
-//	std::cout<<"ave_bias:"<<ave_bias<<"\n";
+	
 	for(int j=0;j<points.size();j++){
 //----矢印描写---
-		float L1=std::abs(newpoints[j].x-jnewpoints[j].x);//*sqrt(z[j]);
+		float L1=std::abs(newpoints[j].x-jnewpoints[j].x);//sqrt(z[j]);
 		float L2=sqrt((newpoints[j].x-jnewpoints[j].x)*(newpoints[j].x-jnewpoints[j].x)
-			+(newpoints[j].y-jnewpoints[j].y)*(newpoints[j].y-jnewpoints[j].y));//*sqrt(z[j]);
+			+(newpoints[j].y-jnewpoints[j].y)*(newpoints[j].y-jnewpoints[j].y));//sqrt(z[j]);
 //newpoints==points+LK
 //jnewpoints==points+jacobi
 //newpoints-jnewpoints==LK-jacobi
@@ -237,8 +163,20 @@ void ImageProcesser::imageProcess()
 				cv::Point((int)(newpoints[j].x-jnewpoints[j].x+points[j].x),
 					(int)(newpoints[j].y-jnewpoints[j].y+points[j].y)),
 				cv::Scalar(255,255,255));//白
+				mpf[j]=0;
 		}
 		else{
+			
+			if(mpf[j]>=mth){
+			  ImageProcesser::cvArrow(&Limg_view,
+				cv::Point((int)points[j].x,
+					(int)points[j].y),
+				cv::Point((int)(newpoints[j].x-jnewpoints[j].x+points[j].x),
+					(int)(newpoints[j].y-jnewpoints[j].y+points[j].y)),
+				cv::Scalar(0,255,0));//緑
+			}
+			
+			else{
 			ImageProcesser::cvArrow(&Limg_view,
 				cv::Point((int)points[j].x,
 					(int)points[j].y),
@@ -252,6 +190,9 @@ void ImageProcesser::imageProcess()
 				cv::Point((int)(2*points[j].x-jnewpoints[j].x),
 					(int)(2*points[j].y-jnewpoints[j].y)),
 				cv::Scalar(200,0,200));//紫
+				
+			}
+			mpf[j]++;
 		}
 
 //output file

@@ -1,13 +1,5 @@
 #include"img_prc_cls.h"
 
-bool ImageProcesser::judge_feature_points(void){
-  
-  if(threshold_fp>(int)pts.size())
-    return true;
-  else
-    return false;
-}
-
 void ImageProcesser::add_feature_points(void){
 //	std::cout<<"add_fp\n";
 	auto detector = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
@@ -18,7 +10,7 @@ void ImageProcesser::add_feature_points(void){
 	bool flag;
 	for(int i=0;i<cn;i++){
 		for(int j=0;j<cn;j++){
-			if(cp[i][j].size()<th_clpimg){
+			if((int)cp[i][j].size()<th_clpimg){
 				detector.detect(clp_img[i][j], keypoints);	
 				for(std::vector<cv::KeyPoint>::iterator itk = keypoints.begin();
 		 			itk != keypoints.end(); ++itk){
@@ -26,7 +18,7 @@ void ImageProcesser::add_feature_points(void){
 				   	ppts.x=j*width/cn+itk->pt.x;
 					ppts.y=i*height/cn+itk->pt.y;
 					for(int k=0;k<pts.size();k++){
-						if(cp[i][j][k].x==ppts.x&&cp[i][j][k].y==ppts.y){
+						if(std::abs(cp[i][j][k].x-ppts.x)<1&&std::abs(cp[i][j][k].y-ppts.y)<1){
 						//	std::cout<<"points[i].x==itk->pt.x&&points[i].y==itk->pt.y::"<<pts[i].x<<"=="<<itk->pt.x<<"&&"<<pts[i].y<<"=="<<itk->pt.y<<"\n";
 						    	flag=true;
 						    	break;
@@ -34,7 +26,7 @@ void ImageProcesser::add_feature_points(void){
 					}
 					if(flag)
 						continue;
-		
+
 					   ptz=Predepth.at<float>(
 						ppts.y,
 						ppts.x
@@ -42,6 +34,7 @@ void ImageProcesser::add_feature_points(void){
 					if(!std::isnan(ptz)&&!std::isinf(ptz)&&ptz>=0.5&&(int)pts.size()<point_size){
 					   	pts.push_back(ppts);
 						pz.push_back(ptz);
+						pmpf.push_back(0);
 					}
 				}
 			}
@@ -67,15 +60,12 @@ for s s<p_s s++
          for(int j=0;j<n;j++)
            cp_s[i][j]=0;
        */
-//			std::cout<<"aaa\n";
+
     for(int k=0;k<pts.size();k++){
       for(int j=0;j<cn;j++){
         if((int)(j*width/cn) < (int)pts[k].x && (int)pts[k].x < (int)((j+1)*width/cn)){
           for(int i=0;i<cn;i++){
             if((int)(i*height/cn)<(int)pts[k].y&&(int)pts[k].y<(int)((i+1)*height/cn)){
-//              cp_s[i][j]++;
-		if((int)cp[i][j].size()>=clp_point_size)
-			continue;
 
 		cp[i][j].push_back(pts[k]);
 
@@ -86,4 +76,3 @@ for s s<p_s s++
     }
 //			print_clpsize();
 }
-  

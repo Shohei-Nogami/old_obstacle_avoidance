@@ -98,9 +98,9 @@ public:
 //detector
 	static const int max_points=500;
 	const int point_size=max_points*2.5;
-	static const int cn=4;
+	static const int cn=2;
 	const int clp_max_points=max_points/(cn*cn);
-	const int clp_point_size=(int)(clp_max_points*3);
+	const int clp_point_size=(int)(clp_max_points);
 	const float th_opt=2.0;
 //特徴点追加の閾値
 	const int threshold_fp=(int)(max_points*0.8);
@@ -122,7 +122,9 @@ public:
 	std::vector<float> nz;//new z
 	std::vector<cv::Point2f> jnpts;
 	std::vector<cv::Point2f> jnewpoints;
-	
+		std::vector<int> pmpf;//provision moving point flag
+	std::vector<int> mpf;//moving point flag
+	static const int mth=4;//
 ///Removal bias valueable
 	std::vector<double> p_bias,p_bias0;
 //particle filter
@@ -203,7 +205,6 @@ public:
 //画像処理
 	void imageProcess();
 //特徴点追跡
-	bool judge_feature_points(void);
 	void add_feature_points(void);
 	void count_feature_points(void);
 //矢印描写用関数
