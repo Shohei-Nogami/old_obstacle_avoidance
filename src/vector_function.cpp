@@ -24,7 +24,7 @@
 		jnewpoints.reserve(point_size);
 		pmpf.reserve(point_size);
 		mpf.reserve(point_size);
-		
+		mov.reserve(point_size);
 	}
 	void ImageProcesser::clear_vectors(void){
 //		pts.clear();   //特徴点
@@ -46,6 +46,7 @@
 		jnpts.clear();
 		jnewpoints.clear();
 		mpf.clear();
+		mov.clear();
 	}
 	void ImageProcesser::renew_vectors(void){
 		pts.clear();

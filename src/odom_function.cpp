@@ -83,7 +83,7 @@
 		std::cout<<"w:"<<w<<"\n";
 		if(std::abs(w_w)>=0.01){
 //			T=2*PI/std::abs(w);
-			T=2*PI*d/std::abs(w_w*0.8);
+			T=2*PI*d/std::abs(w_w);
 			std::cout<<"T,dt,f:("<<T<<","<<dt<<","<<w/(2*PI)<<"\n";
 			w=(T*pw+dt*w)/(T+dt);
 			dyaw=w*dt;

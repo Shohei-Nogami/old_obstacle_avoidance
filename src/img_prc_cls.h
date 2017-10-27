@@ -86,6 +86,8 @@ public:
 	double T;
 	double pw;
 	double w;
+	//debug
+	std::vector<double> mov;
 //odometry
 	double position_x,position_y,position_z;
 	double prev_position_x,prev_position_y,prev_position_z;
@@ -127,7 +129,7 @@ public:
 	std::vector<cv::Point2f> jnewpoints;
 	std::vector<int> pmpf;//provision moving point flag
 	std::vector<int> mpf;//moving point flag
-	static const int mth=4;//
+	static const int mth=3;//
 //particle filter
 //	const double sig=2.0;
 //	std::vector<double> prvp;

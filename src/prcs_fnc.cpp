@@ -156,6 +156,7 @@ void ImageProcesser::imageProcess()
 //		if(std::abs(dyaw)>0.01)
 //			th_optt=th_opt*(std::abs(dyaw)/0.01);
 //	//std::cout<<"th:"<<th_optt<<"\n";
+		
 		if(L1<th_optt/z[j]+0.5){
 			ImageProcesser::cvArrow(&Limg_view,
 				cv::Point((int)points[j].x,
@@ -174,6 +175,7 @@ void ImageProcesser::imageProcess()
 				cv::Point((int)(newpoints[j].x-jnewpoints[j].x+points[j].x),
 					(int)(newpoints[j].y-jnewpoints[j].y+points[j].y)),
 				cv::Scalar(0,255,0));//緑
+				mov.push_back((newpoints[j].x-jnewpoints[j].x)*z[j]/f);
 			}
 			
 			else{
@@ -260,6 +262,10 @@ void ImageProcesser::imageProcess()
 		}
 //		//std::cout<<"delta flow:"<<newpoints[j].x-jnewpoints[j].x<<"\n";
 	}
+	double mov_sum=0;
+	for(int i=0;i<mov.size();i++)
+		mov_sum+=mov[i];
+	std::cout<<"mov:"<<mov_sum/(int)mov.size()<<"\n";
 	wfo_c++;
 	wfo_cf=true;
 }
