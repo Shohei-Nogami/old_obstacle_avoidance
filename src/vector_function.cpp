@@ -20,12 +20,8 @@
 //				cp_s[i][j].reserve(clp_point_size);
 			}
 		}
-//		prvp.reserve(point_size);
-//		curp.reserve(point_size);
 		jnpts.reserve(point_size);
 		jnewpoints.reserve(point_size);
-		p_bias.reserve(point_size);
-		p_bias0.reserve(point_size);
 		pmpf.reserve(point_size);
 		mpf.reserve(point_size);
 		
@@ -49,8 +45,6 @@
 //		curp.clear();
 		jnpts.clear();
 		jnewpoints.clear();
-		p_bias.clear();
-		p_bias0.clear();
 		mpf.clear();
 	}
 	void ImageProcesser::renew_vectors(void){
@@ -69,4 +63,5 @@
 		}
 		prvp.clear();
 		prvp.insert(prvp.end(),curp.begin(),curp.end());
-*/	}
+*/
+	}

@@ -28,7 +28,7 @@ void ImageProcesser::imageProcess()
 			clp_img[i][j]=PreLgray(cv::Rect((int)(j*(width)/cn),(int)(i*(height)/cn),(int)(width/cn),(int)(height/cn)));
 		}
 	}
-//	std::cout<<"count\n";
+//	//std::cout<<"count\n";
 	count_feature_points();
 	add_feature_points();
 	if(!pts.size()){
@@ -60,8 +60,8 @@ void ImageProcesser::imageProcess()
 	double dx=global_dy;//visual odometry x座標
 //	w_w=-(vr-vl)/d;//回転角速度
 //	w_dyaw=w_w*dt;//回転角
-//	std::cout<<"wh:(w,dyaw):"<<"("<<w_w<<","<<w_dyaw<<")\n";
-//	std::cout<<"vs:(w,dyaw):"<<"("<<dyaw/dt<<","<<dyaw<<")\n";
+//	//std::cout<<"wh:(w,dyaw):"<<"("<<w_w<<","<<w_dyaw<<")\n";
+//	//std::cout<<"vs:(w,dyaw):"<<"("<<dyaw/dt<<","<<dyaw<<")\n";
 //	w=dyaw;
 //culc jacobi
 //odometry 
@@ -79,8 +79,8 @@ void ImageProcesser::imageProcess()
 		  	-(f+pow(X,2.0)/f)*dyaw
 		  	);
 		if(std::isnan(ppt.x)){
-			std::cout<<"ppt.x is nan\n";
-			std::cout<<"pts.x,pz:"<<pts[j].x<<","<<pz[j]<<"\n";
+			//std::cout<<"ppt.x is nan\n";
+			//std::cout<<"pts.x,pz:"<<pts[j].x<<","<<pz[j]<<"\n";
 		}
 		ppt.y=pts[j].y-(float)(
 			  	-(Y/pz[j]*dz)
@@ -103,38 +103,38 @@ void ImageProcesser::imageProcess()
 		jnpts.push_back(ppt) ;
 	}
 */
-	std::cout<<"insert\n";// bagu from here
+	//std::cout<<"insert\n";// bagu from here
 	try{
-		std::cout<<"npts,jnpts:"<<npts.size()<<","<<jnpts.size()<<"\n";
+		//std::cout<<"npts,jnpts:"<<npts.size()<<","<<jnpts.size()<<"\n";
 		npts.insert(npts.end(),jnpts.begin(),jnpts.end());
-		std::cout<<"1";
+		//std::cout<<"1";
 	//---オプティカルフローを得る-----------------------------
 		cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
 	//Delete the point that not be matched
-		std::cout<<"2";
+		//std::cout<<"2";
 		float pnz;
 		for(int i=0;i<pts.size();i++){
-			std::cout<<"2.5 ";
+			//std::cout<<"2.5 ";
 			float depth_np=depth_img.at<float>(npts[i].y,npts[i].x);
-			std::cout<<"3";
+			//std::cout<<"3";
 			if(sts[i]&&!std::isnan(depth_np)&&!std::isinf(depth_np)&&depth_np>=0.5){
-			std::cout<<"4";
+			//std::cout<<"4";
 				points.push_back(pts[i]);
-			std::cout<<"5";
+			//std::cout<<"5";
 				newpoints.push_back(npts[i]);
-			std::cout<<"6";
+			//std::cout<<"6";
 				z.push_back(pz[i]);
-			std::cout<<"7";
+			//std::cout<<"7";
 				jnewpoints.push_back(jnpts[i]);
-			std::cout<<"8";
+			//std::cout<<"8";
 				nz.push_back(depth_img.at<float>(npts[i].y,npts[i].x));
-			std::cout<<"9";
+			//std::cout<<"9";
 				mpf.push_back(pmpf[i]);
-			std::cout<<"10\n";
-			std::cout<<"i,pts.size():"<<i<<","<<pts.size()<<"\n";
+			//std::cout<<"10\n";
+			//std::cout<<"i,pts.size():"<<i<<","<<pts.size()<<"\n";
 			}
 		}
-		std::cout<<"pushback\n"; // bagu so far 
+		//std::cout<<"pushback\n"; // bagu so far 
 	}//try
 /*	catch(const std::exception& ex) {
 		std::cerr << ex.what() << std::endl;
@@ -153,10 +153,10 @@ void ImageProcesser::imageProcess()
 //newpoints-jnewpoints==LK-jacobi
 //2*points-jnewpoint==points-jacobi
 		double th_optt=th_opt;
-		if(std::abs(dyaw)>0.01)
-			th_optt=th_opt*(std::abs(dyaw)/0.01);
-//	std::cout<<"th:"<<th_optt<<"\n";
-		if(L1<th_optt/z[j]+1.0){
+//		if(std::abs(dyaw)>0.01)
+//			th_optt=th_opt*(std::abs(dyaw)/0.01);
+//	//std::cout<<"th:"<<th_optt<<"\n";
+		if(L1<th_optt/z[j]+0.5){
 			ImageProcesser::cvArrow(&Limg_view,
 				cv::Point((int)points[j].x,
 					(int)points[j].y),
@@ -258,7 +258,7 @@ void ImageProcesser::imageProcess()
 				<<newpoints[j].y-jnewpoints[j].y<<","//観測y-jacobi
 				<<std::endl;
 		}
-//		std::cout<<"delta flow:"<<newpoints[j].x-jnewpoints[j].x<<"\n";
+//		//std::cout<<"delta flow:"<<newpoints[j].x-jnewpoints[j].x<<"\n";
 	}
 	wfo_c++;
 	wfo_cf=true;

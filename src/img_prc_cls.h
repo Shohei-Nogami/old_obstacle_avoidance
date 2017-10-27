@@ -83,7 +83,9 @@ public:
 	double d=0.276;//車輪幅
 	double w_w;
 	double w_dyaw;
-
+	double T;
+	double pw;
+	double w;
 //odometry
 	double position_x,position_y,position_z;
 	double prev_position_x,prev_position_y,prev_position_z;
@@ -91,6 +93,7 @@ public:
 	double roll,pitch,yaw;
 	double prev_roll,prev_pitch,prev_yaw;
 	double droll,dpitch,dyaw;
+	double pdyaw;
 	bool lpf_sf;
 	static const int lpf_value=10;
 	double w_lpf[lpf_value];
@@ -122,11 +125,9 @@ public:
 	std::vector<float> nz;//new z
 	std::vector<cv::Point2f> jnpts;
 	std::vector<cv::Point2f> jnewpoints;
-		std::vector<int> pmpf;//provision moving point flag
+	std::vector<int> pmpf;//provision moving point flag
 	std::vector<int> mpf;//moving point flag
 	static const int mth=4;//
-///Removal bias valueable
-	std::vector<double> p_bias,p_bias0;
 //particle filter
 //	const double sig=2.0;
 //	std::vector<double> prvp;

@@ -68,6 +68,8 @@
 	}
 //set delta r,p,y
 	void ImageProcesser::setdpose(void){
+		pw=w;
+		pdyaw=dyaw;
 		droll=roll-prev_roll;
 		dpitch=pitch-prev_pitch;
 		if(prev_yaw>0&&yaw<0&&prev_yaw>PI/2)
@@ -76,7 +78,18 @@
 			dyaw=(yaw-2*PI)-prev_yaw;
 		else
 			dyaw=yaw-prev_yaw;
-/*		w_lpf[lpf_count++]=dyaw/dt;
+//LPF
+		w=dyaw/dt;
+		std::cout<<"w:"<<w<<"\n";
+		if(std::abs(w_w)>=0.01){
+//			T=2*PI/std::abs(w);
+			T=2*PI*d/std::abs(w_w*0.8);
+			std::cout<<"T,dt,f:("<<T<<","<<dt<<","<<w/(2*PI)<<"\n";
+			w=(T*pw+dt*w)/(T+dt);
+			dyaw=w*dt;
+		}
+		
+/*FIR		w_lpf[lpf_count++]=dyaw/dt;
 		if(lpf_count>=lpf_value){
 			lpf_sf=true;
 			lpf_count=0;
