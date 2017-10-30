@@ -2,7 +2,7 @@
 
 void ImageProcesser::add_feature_points(void){
 //	std::cout<<"add_fp\n";
-	auto detector = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
+	auto detector = cv::ORB(clp_max_points, 1.25f, 4, /*7*/31, 0, 2, 0, 31);
 //	detector.detect(PreLgray, keypoints);
 //	std::cout<<"keypoints size:"<<keypoints.size()<<"\n";
 	cv::Point2i ppts;

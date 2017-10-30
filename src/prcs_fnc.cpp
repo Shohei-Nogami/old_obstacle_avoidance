@@ -35,6 +35,17 @@ void ImageProcesser::imageProcess()
 		return ;
 	}
 	//memory release
+	for(int i=0;i<cn;i++){
+		for(int j=0;j<cn;j++){
+			clp_img[i][j].release();
+		}
+	}
+//	keypoints.clear();
+/*	for(int i=0;i<cn;i++){
+		for(int j=0;j<cn;j++){
+			cp[i][j].clear();
+		}
+	}*/
 //	PreLgray.release();
 //	Lgray.release();
 //-----画像ヤコビアンを用いて--------------------
@@ -127,7 +138,7 @@ void ImageProcesser::imageProcess()
 			//std::cout<<"7";
 				jnewpoints.push_back(jnpts[i]);
 			//std::cout<<"8";
-				nz.push_back(depth_img.at<float>(npts[i].y,npts[i].x));
+				nz.push_back(depth_np);
 			//std::cout<<"9";
 				mpf.push_back(pmpf[i]);
 			//std::cout<<"10\n";
@@ -195,6 +206,12 @@ void ImageProcesser::imageProcess()
 				
 			}
 			mpf[j]++;
+			//detect moving area	
+			pmpts.push_back(points[j]);
+			cmpts.push_back(newpoints[j]-jnewpoints[j]+points[j]);
+			pmz.push_back(z[j]);
+			cmz.push_back(nz[j]);
+			
 		}
 
 //output file
@@ -268,4 +285,7 @@ void ImageProcesser::imageProcess()
 	std::cout<<"mov:"<<mov_sum/(int)mov.size()<<"\n";
 	wfo_c++;
 	wfo_cf=true;
+
+	
 }
+

@@ -17,11 +17,15 @@ int main(int argc,char **argv){
 		prc.imageProcess();
 //		prc.print_points_size();
 //		prc.pub_org_img();
-		prc.pub_left_img();
+//		prc.pub_left_img();
 //		prc.print_points_size();
 		prc.renew_vectors();
 //		prc.print_points_size();
 		prc.clear_vectors();
+		prc.print_mpsize();
+		prc.prd_prcess();
+		prc.clear_dtctvectors();
+		prc.pub_left_img();
 //		rate.sleep();
 //		prc.print_points_size();
 //		prc.print_dt();
@@ -33,3 +37,4 @@ int main(int argc,char **argv){
 	}
 	return 0;
 }
+

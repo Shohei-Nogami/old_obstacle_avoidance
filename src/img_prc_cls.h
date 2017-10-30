@@ -30,7 +30,7 @@
  
 class ImageProcesser
 {
-	ros::NodeHandle nh;
+  ros::NodeHandle nh;
 	ros::NodeHandle nh1;
 	ros::NodeHandle nh2;
 	ros::NodeHandle nh3;
@@ -102,8 +102,8 @@ public:
 	int lpf_count;
 //detector
 	static const int max_points=500;
-	const int point_size=max_points*2.5;
-	static const int cn=2;
+	const int point_size=max_points*2;
+	static const int cn=3;
 	const int clp_max_points=max_points/(cn*cn);
 	const int clp_point_size=(int)(clp_max_points);
 	const float th_opt=2.0;
@@ -134,6 +134,13 @@ public:
 //	const double sig=2.0;
 //	std::vector<double> prvp;
 //	std::vector<double> curp;
+//moving points
+	std::vector<cv::Point2f> pmpts;
+	std::vector<cv::Point2f> cmpts;
+	std::vector<float> pmz;
+	std::vector<float> cmz;
+	std::vector< std::vector<cv::Point2f> > area_mpt;
+	std::vector<cv::Point2f> onearea_mpt;
 //debug
 //	float max_value_x,min_value_x,max_value_y,min_value_y;
 //	double current_z;
@@ -210,6 +217,8 @@ public:
 //特徴点追跡
 	void add_feature_points(void);
 	void count_feature_points(void);
+//移動物体予測,目標点算出
+	void prd_prcess(void);
 //矢印描写用関数
 	void cvArrow(cv::Mat* img, cv::Point2i pt1, cv::Point2i pt2, cv::Scalar color);
 //----time----
@@ -223,6 +232,7 @@ public:
 	void reserve_vectors(void);
 	void clear_vectors(void);
 	void renew_vectors(void);
+  void clear_dtctvectors(void);
 //----------debug-------------
 	void print_odom(void);
 	//show current speed
@@ -233,4 +243,6 @@ public:
 	void print_bias(void);
 	void print_w(void);
 	void print_clpsize(void);
+	void print_mpsize(void);
 };
+

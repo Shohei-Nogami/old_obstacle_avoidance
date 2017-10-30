@@ -25,6 +25,10 @@
 		pmpf.reserve(point_size);
 		mpf.reserve(point_size);
 		mov.reserve(point_size);
+		cmpts.reserve(point_size);
+		pmpts.reserve(point_size);
+		area_mpt.reserve(point_size);
+		onearea_mpt.reserve(point_size);
 	}
 	void ImageProcesser::clear_vectors(void){
 //		pts.clear();   //特徴点
@@ -65,4 +69,12 @@
 		prvp.clear();
 		prvp.insert(prvp.end(),curp.begin(),curp.end());
 */
+  }
+	void ImageProcesser::clear_dtctvectors(void){
+		cmpts.clear();
+		pmpts.clear();
+		onearea_mpt.clear();
+		area_mpt.clear();
 	}
+
+
