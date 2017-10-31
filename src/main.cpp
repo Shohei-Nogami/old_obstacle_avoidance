@@ -23,7 +23,7 @@ int main(int argc,char **argv){
 //		prc.print_points_size();
 		prc.clear_vectors();
 		prc.print_mpsize();
-		prc.prd_prcess();
+//		prc.prd_prcess();
 		prc.clear_dtctvectors();
 		prc.pub_left_img();
 //		rate.sleep();

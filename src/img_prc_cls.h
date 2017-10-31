@@ -75,7 +75,7 @@ public:
 	double prev_img_time;
 	double new_img_time;
 	double img_dt;
-	int f=(int)350.505;
+	float f=350.505;
 	int cx=(int)354.676;
 	int cy=(int)191.479;
 	double vr;
@@ -86,6 +86,7 @@ public:
 	double T;
 	double pw;
 	double w;
+	double dz,dx;
 	//debug
 	std::vector<double> mov;
 //odometry
@@ -101,12 +102,12 @@ public:
 	double w_lpf[lpf_value];
 	int lpf_count;
 //detector
-	static const int max_points=500;
+	static const int max_points=800;//500
 	const int point_size=max_points*2;
-	static const int cn=3;
+	static const int cn=10;
 	const int clp_max_points=max_points/(cn*cn);
 	const int clp_point_size=(int)(clp_max_points);
-	const float th_opt=2.0;
+	const float th_opt=1.0;
 //特徴点追加の閾値
 	const int threshold_fp=(int)(max_points*0.8);
 	const int th_clpimg=(int)(clp_max_points*0.8);
@@ -127,9 +128,11 @@ public:
 	std::vector<float> nz;//new z
 	std::vector<cv::Point2f> jnpts;
 	std::vector<cv::Point2f> jnewpoints;
+	std::vector<float> jpnz;
+	std::vector<float> jnz;
 	std::vector<int> pmpf;//provision moving point flag
 	std::vector<int> mpf;//moving point flag
-	static const int mth=3;//
+	static const int mth=2;//
 //particle filter
 //	const double sig=2.0;
 //	std::vector<double> prvp;
@@ -211,6 +214,8 @@ public:
 	void dxsignchange(void);
 //進行の向きを取得
 	bool pose_detection(double position_x,double position_y,double prev_yaw);
+//set dz dx
+	void setdzdx(void);
 //-----画像処理----
 //画像処理
 	void imageProcess();

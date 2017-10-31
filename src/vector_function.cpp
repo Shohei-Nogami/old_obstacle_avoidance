@@ -22,6 +22,8 @@
 		}
 		jnpts.reserve(point_size);
 		jnewpoints.reserve(point_size);
+		jpnz.reserve(point_size);
+		jnz.reserve(point_size);
 		pmpf.reserve(point_size);
 		mpf.reserve(point_size);
 		mov.reserve(point_size);
@@ -49,6 +51,8 @@
 //		curp.clear();
 		jnpts.clear();
 		jnewpoints.clear();
+		jpnz.clear();
+		jnz.clear();
 		mpf.clear();
 		mov.clear();
 	}

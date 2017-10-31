@@ -2,7 +2,7 @@
 
 void ImageProcesser::add_feature_points(void){
 //	std::cout<<"add_fp\n";
-	auto detector = cv::ORB(clp_max_points, 1.25f, 4, /*7*/31, 0, 2, 0, 31);
+	auto detector = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
 //	detector.detect(PreLgray, keypoints);
 //	std::cout<<"keypoints size:"<<keypoints.size()<<"\n";
 	cv::Point2i ppts;
@@ -30,11 +30,31 @@ void ImageProcesser::add_feature_points(void){
 					   ptz=Predepth.at<float>(
 						ppts.y,
 						ppts.x
-						);
+						);					
 					if(!std::isnan(ptz)&&!std::isinf(ptz)&&ptz>=0.5&&(int)pts.size()<point_size){
-					   	pts.push_back(ppts);
+						pts.push_back(ppts);
 						pz.push_back(ptz);
 						pmpf.push_back(0);
+/*						//culculation jacobi
+						float X,Y;
+						cv::Point2f ppt;
+						X=(float)(ppts.x-width/2.0);//-width;
+						Y=(float)(ppts.y-height/2.0);//-height;
+						ppt.x=ppts.x- (float)(
+						  	dx/ptz-X/ptz*dz
+						  	-(f+pow(X,2.0)/f)*dyaw
+						  	);
+						ppt.y=ppts.y-(float)(
+						  	-(Y/ptz*dz)
+						  	-(X*Y*dyaw/f
+						  	));
+						
+						float jdepth=depth_img.at<float>((int)ppt.y,(int)ppt.x);
+						if(!std::isnan(jdepth)&&!std::isinf(jdepth)&&jdepth>=0.5){
+							jnpts.push_back(ppt) ;
+							jpnz.push_back(jdepth);
+						}   	
+*/						
 					}
 				}
 			}

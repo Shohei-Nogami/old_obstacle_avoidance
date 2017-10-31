@@ -44,6 +44,7 @@
 			bool front=pose_detection(position_x,position_y,prev_yaw);
 			if(!front)
 				dxsignchange();
+//			setdzdx();
 		}
 		else{
 			//現在のodometryを格納
@@ -80,11 +81,11 @@
 			dyaw=yaw-prev_yaw;
 //LPF
 		w=dyaw/dt;
-		std::cout<<"w:"<<w<<"\n";
+//		std::cout<<"w:"<<w<<"\n";
 		if(std::abs(w_w)>=0.01){
 //			T=2*PI/std::abs(w);
 			T=2*PI*d/std::abs(w_w);
-			std::cout<<"T,dt,f:("<<T<<","<<dt<<","<<w/(2*PI)<<"\n";
+			//std::cout<<"T,dt,f:("<<T<<","<<dt<<","<<w/(2*PI)<<"\n";
 			w=(T*pw+dt*w)/(T+dt);
 			dyaw=w*dt;
 		}
@@ -115,6 +116,10 @@
 			+prev_position_y*prev_position_y));
 		global_dx=-r*cos(-dyaw);
 		global_dy=r*sin(-dyaw);
+	}
+	void ImageProcesser::setdzdx(void){
+		dz=global_dx;//visual odometry z座標
+		dx=global_dy;//visual odometry x座標
 	}
 //wheater image exist
 	bool ImageProcesser::isOdom(void){
