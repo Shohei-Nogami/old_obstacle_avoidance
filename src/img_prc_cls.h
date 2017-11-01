@@ -125,6 +125,9 @@ public:
 	
 //--detect area exist moving objects
 	std::vector<cv::Point2d> cpt[cn][cn];
+	std::vector<cv::Point2d> cnpt[cn][cn];
+//	double p_mvarea[cn][cn];
+	double p_pmvarea[cn][cn];
 //ファイル出力
 	std::ofstream ofs;
 

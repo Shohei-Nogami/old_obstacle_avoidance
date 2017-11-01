@@ -17,6 +17,7 @@
 			for(int j=0;j<cn;j++){
 				cp[i][j].reserve(clp_point_size);
 				cpt[i][j].reserve(clp_point_size);
+				cnpt[i][j].reserve(clp_point_size);
 			}
 		}
 		jnpts.reserve(point_size);
@@ -30,18 +31,13 @@
 		ers.clear();
 //-----特徴点抽出用変数-----
 		keypoints.clear();
-		points.clear();
-		newpoints.clear();
-		z.clear();	
-		nz.clear();
 		for(int i=0;i<cn;i++){
 			for(int j=0;j<cn;j++){
 				cp[i][j].clear();
-				cpt[i][j].clear();
 			}
 		}	
 		jnpts.clear();
-		jnewpoints.clear();
+
 	}
 	void ImageProcesser::renew_vectors(void){
 		pts.clear();
@@ -49,9 +45,19 @@
 		pts.insert(pts.end(),newpoints.begin(),newpoints.end());
 		pz.insert(pz.end(),nz.begin(),nz.end());
 
-  }
+	}
 	void ImageProcesser::clear_dtctvectors(void){
-	  
+		points.clear();
+		newpoints.clear();
+		jnewpoints.clear();
+		z.clear();	
+		nz.clear();
+		for(int i=0;i<cn;i++){
+			for(int j=0;j<cn;j++){
+				cpt[i][j].clear();
+				cnpt[i][j].clear();
+			}
+		}
 	}
 
 

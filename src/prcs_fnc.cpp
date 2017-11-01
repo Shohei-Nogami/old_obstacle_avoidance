@@ -44,26 +44,25 @@ void ImageProcesser::imageProcess()
 		float value_x;
 		float value_y;
 		ppt.x=pts[j].x- (float)(
-		  	dx/pz[j]-X/pz[j]*dz
-		  	-(f+pow(X,2.0)/f)*dyaw
-		  	);
+			dx/pz[j]-X/pz[j]*dz
+			-(f+pow(X,2.0)/f)*dyaw
+			);
 		ppt.y=pts[j].y-(float)(
-			  	-(Y/pz[j]*dz)
-			  	-(X*Y*dyaw/f
-			  	));
+				-(Y/pz[j]*dz)
+				-(X*Y*dyaw/f
+				));
 		jnpts.push_back(ppt) ;
 	}
 		npts.insert(npts.end(),jnpts.begin(),jnpts.end());
 	//---オプティカルフローを得る-----------------------------
-		cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
+		cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(15,15), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
 
 		float pnz;
 		for(int i=0;i<pts.size();i++){
 			float depth_np=depth_img.at<float>(npts[i].y,npts[i].x);
 			if(sts[i]&&!std::isnan(depth_np)&&!std::isinf(depth_np)&&depth_np>=0.5){
-			  
-			   points.push_back(pts[i]);
-		  newpoints.push_back(npts[i]);
+				points.push_back(pts[i]);
+				newpoints.push_back(npts[i]);
 				z.push_back(pz[i]);
 				jnewpoints.push_back(jnpts[i]);
 				nz.push_back(depth_np);
@@ -86,7 +85,7 @@ void ImageProcesser::imageProcess()
 					(int)points[j].y),
 				cv::Point((int)(newpoints[j].x-jnewpoints[j].x+points[j].x),
 					(int)(newpoints[j].y-jnewpoints[j].y+points[j].y)),
-				cv::Scalar(255,255,0));//白
+				cv::Scalar(0,200,200));//
 				
 			//detect moving area	
 			
