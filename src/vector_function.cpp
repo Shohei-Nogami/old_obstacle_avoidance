@@ -1,7 +1,6 @@
 #include"img_prc_cls.h"
 //memory
 	void ImageProcesser::reserve_vectors(void){
-//		int size=80;
 		pts.reserve(point_size);   //特徴点
 		npts.reserve(point_size);  //移動後の特徴点
 		sts.reserve(point_size);
@@ -17,20 +16,12 @@
 		for(int i=0;i<cn;i++){
 			for(int j=0;j<cn;j++){
 				cp[i][j].reserve(clp_point_size);
-//				cp_s[i][j].reserve(clp_point_size);
+				cpt[i][j].reserve(clp_point_size);
 			}
 		}
 		jnpts.reserve(point_size);
 		jnewpoints.reserve(point_size);
-		jpnz.reserve(point_size);
-		jnz.reserve(point_size);
-		pmpf.reserve(point_size);
-		mpf.reserve(point_size);
-		mov.reserve(point_size);
-		cmpts.reserve(point_size);
-		pmpts.reserve(point_size);
-		area_mpt.reserve(point_size);
-		onearea_mpt.reserve(point_size);
+
 	}
 	void ImageProcesser::clear_vectors(void){
 //		pts.clear();   //特徴点
@@ -46,39 +37,21 @@
 		for(int i=0;i<cn;i++){
 			for(int j=0;j<cn;j++){
 				cp[i][j].clear();
+				cpt[i][j].clear();
 			}
 		}	
-//		curp.clear();
 		jnpts.clear();
 		jnewpoints.clear();
-		jpnz.clear();
-		jnz.clear();
-		mpf.clear();
-		mov.clear();
 	}
 	void ImageProcesser::renew_vectors(void){
 		pts.clear();
 		pz.clear();
 		pts.insert(pts.end(),newpoints.begin(),newpoints.end());
 		pz.insert(pz.end(),nz.begin(),nz.end());
-		pmpf.clear();
-		pmpf.insert(pmpf.end(),mpf.begin(),mpf.end());
-/*		double sum=0;
-		for(int i=0;i<curp.size();i++)
-			sum+=curp[i];
-		if(sum!=1){
-			for(int i=0;i<curp.size();i++)
-				curp[i]*=1/sum;
-		}
-		prvp.clear();
-		prvp.insert(prvp.end(),curp.begin(),curp.end());
-*/
+
   }
 	void ImageProcesser::clear_dtctvectors(void){
-		cmpts.clear();
-		pmpts.clear();
-		onearea_mpt.clear();
-		area_mpt.clear();
+	  
 	}
 
 

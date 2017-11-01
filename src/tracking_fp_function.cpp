@@ -1,10 +1,7 @@
 #include"img_prc_cls.h"
 
 void ImageProcesser::add_feature_points(void){
-//	std::cout<<"add_fp\n";
 	auto detector = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
-//	detector.detect(PreLgray, keypoints);
-//	std::cout<<"keypoints size:"<<keypoints.size()<<"\n";
 	cv::Point2i ppts;
 	float ptz;
 	bool flag;
@@ -19,7 +16,7 @@ void ImageProcesser::add_feature_points(void){
 					ppts.y=i*height/cn+itk->pt.y;
 					for(int k=0;k<pts.size();k++){
 						if(std::abs(cp[i][j][k].x-ppts.x)<1&&std::abs(cp[i][j][k].y-ppts.y)<1){
-						//	std::cout<<"points[i].x==itk->pt.x&&points[i].y==itk->pt.y::"<<pts[i].x<<"=="<<itk->pt.x<<"&&"<<pts[i].y<<"=="<<itk->pt.y<<"\n";
+
 						    	flag=true;
 						    	break;
 						}
@@ -34,7 +31,6 @@ void ImageProcesser::add_feature_points(void){
 					if(!std::isnan(ptz)&&!std::isinf(ptz)&&ptz>=0.5&&(int)pts.size()<point_size){
 						pts.push_back(ppts);
 						pz.push_back(ptz);
-						pmpf.push_back(0);
 /*						//culculation jacobi
 						float X,Y;
 						cv::Point2f ppt;
@@ -63,23 +59,9 @@ void ImageProcesser::add_feature_points(void){
 }
   
   void ImageProcesser::count_feature_points(void){
-    /*
+    
     //分割画像の各特徴点数を算出
-int cp_s[n][n]={0}  //in class
-for s s<p_s s++
-  for j j<n j++
-    if j×width/n<pts[s].x&&pts[s].x<(j+1)×width/n
-      for i i<n i++
-        if  i×height/n<pts[s]&&pts[s]<(i+1)×height/n
-          cp_s[i][j]++
-    */
- //   cp_s[cn][cn]={0};//nは任意
-       //std::vector<cv::Point2i> cp[n][n];
-       /*
-       for(int i=0;i<n;i++)
-         for(int j=0;j<n;j++)
-           cp_s[i][j]=0;
-       */
+
 
     for(int k=0;k<pts.size();k++){
       for(int j=0;j<cn;j++){
@@ -94,5 +76,5 @@ for s s<p_s s++
         }
       }
     }
-//			print_clpsize();
 }
+

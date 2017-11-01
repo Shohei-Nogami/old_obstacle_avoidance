@@ -34,51 +34,8 @@ void ImageProcesser::imageProcess()
 	if(!pts.size()){
 		return ;
 	}
-	//memory release
-/*	for(int i=0;i<cn;i++){
-		for(int j=0;j<cn;j++){
-			clp_img[i][j].release();
-		}
-	}
-*/
-//	keypoints.clear();
-/*	for(int i=0;i<cn;i++){
-		for(int j=0;j<cn;j++){
-			cp[i][j].clear();
-		}
-	}*/
-//	PreLgray.release();
-//	Lgray.release();
-//-----画像ヤコビアンを用いて--------------------
-//-----ロボットの移動によるnewpointsの求める-----
-//add img_prc_cls.h
-//  std::vector<cv::Point2i> jnpts;
-//  std::vector<cv::Point2i> jnewpoints;
-//  static const double vr;
-//  static const double vl;
-//  static const double d=0.276;//車輪幅
-//  static const double w_w;
-//  double w_dyaw;
-//add vector_function.cpp
-//in reserve_vectors
-//  jnpts.reserve(point_size);
-//  jnewpoints.reserve(point_size);
-//in clear_vectors
-//  jnpts.clear();
-//  jnewpoints.clear();
-//set param
-
-	double dz=global_dx;//visual odometry z座標
-	double dx=global_dy;//visual odometry x座標
-//	w_w=-(vr-vl)/d;//回転角速度
-//	w_dyaw=w_w*dt;//回転角
-//	//std::cout<<"wh:(w,dyaw):"<<"("<<w_w<<","<<w_dyaw<<")\n";
-//	//std::cout<<"vs:(w,dyaw):"<<"("<<dyaw/dt<<","<<dyaw<<")\n";
-//	w=dyaw;
-//culc jacobi
-//odometry 
-
 //
+//修正必要
 	float X,Y;
 	cv::Point2f ppt;
 	for(int j=0;j<pts.size();j++){
@@ -90,89 +47,32 @@ void ImageProcesser::imageProcess()
 		  	dx/pz[j]-X/pz[j]*dz
 		  	-(f+pow(X,2.0)/f)*dyaw
 		  	);
-		if(std::isnan(ppt.x)){
-			//std::cout<<"ppt.x is nan\n";
-			//std::cout<<"pts.x,pz:"<<pts[j].x<<","<<pz[j]<<"\n";
-		}
 		ppt.y=pts[j].y-(float)(
 			  	-(Y/pz[j]*dz)
 			  	-(X*Y*dyaw/f
 			  	));
 		jnpts.push_back(ppt) ;
-		float jdepth=depth_img.at<float>(ppt.y,ppt.x);
-		if(!std::isnan(jdepth)&&!std::isinf(jdepth)&&jdepth>=0.5){
-			jpnz.push_back(jdepth);
-		}
-		else
-			jpnz.push_back(pz[j]);
 	}
-
-/*
-	for(int j=0;j<pts.size();j++){
-		X=(float)(pts[j].x-width/2.0);//-width;
-		Y=(float)(pts[j].y-height/2.0);//-height;
-		ppt.x=pts[j].x- (float)(
-		  	dx/pz[j]-X/pz[j]*w_w*dt
-		  	-(1+pow(X,2.0)/f)*w_dyaw
-		  	);
-		ppt.y=pts[j].y-(float)(
-			  	-(Y/pz[j]*w_w*dt)
-			  	-(X*Y*w_dyaw/f
-			  	));
-		jnpts.push_back(ppt) ;
-	}
-*/
-	//std::cout<<"insert\n";// bagu from here
-	try{
-		//std::cout<<"npts,jnpts:"<<npts.size()<<","<<jnpts.size()<<"\n";
 		npts.insert(npts.end(),jnpts.begin(),jnpts.end());
-		//std::cout<<"1";
 	//---オプティカルフローを得る-----------------------------
 		cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(21,21), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
-	//Delete the point that not be matched
-		//std::cout<<"2";
+
 		float pnz;
 		for(int i=0;i<pts.size();i++){
-			//std::cout<<"2.5 ";
 			float depth_np=depth_img.at<float>(npts[i].y,npts[i].x);
-			//std::cout<<"3";
 			if(sts[i]&&!std::isnan(depth_np)&&!std::isinf(depth_np)&&depth_np>=0.5){
-			//std::cout<<"4";
-				points.push_back(pts[i]);
-			//std::cout<<"5";
-				newpoints.push_back(npts[i]);
-			//std::cout<<"6";
+			  
+			   points.push_back(pts[i]);
+		  newpoints.push_back(npts[i]);
 				z.push_back(pz[i]);
-			//std::cout<<"7";
 				jnewpoints.push_back(jnpts[i]);
-			//std::cout<<"8";
 				nz.push_back(depth_np);
-			//std::cout<<"9";
-				mpf.push_back(pmpf[i]);
-			//std::cout<<"10\n";
-				jnz.push_back(jpnz[i]);
-			//std::cout<<"i,pts.size():"<<i<<","<<pts.size()<<"\n";
 			}
 		}
-		//std::cout<<"pushback\n"; // bagu so far 
-	}//try
-/*	catch(const std::exception& ex) {
-		std::cerr << ex.what() << std::endl;
-	}//catch
-*/	catch(cv::Exception& e){
-		std::cerr << e.what() << std::endl;
-	}
+
 	
 	for(int j=0;j<points.size();j++){
 //----矢印描写---
-		float zz;
-		float depth=depth_img.at<float>((int)((newpoints[j].y-jnewpoints[j].y+points[j].y)),(int)(newpoints[j].x-jnewpoints[j].x+points[j].x));
-		if(std::isnan(depth))
-			zz=(nz[j]+jnz[j])/2.0;
-		else if(std::abs(nz[j]-jnz[j])>0.30)
-			zz=(nz[j]+jnz[j]+z[j])/3.0;
-		else
-			zz=depth;
 		float L1=std::abs(newpoints[j].x-jnewpoints[j].x);//sqrt(z[j]);
 		float L2=sqrt((newpoints[j].x-jnewpoints[j].x)*(newpoints[j].x-jnewpoints[j].x)
 			+(newpoints[j].y-jnewpoints[j].y)*(newpoints[j].y-jnewpoints[j].y));//sqrt(z[j]);
@@ -180,81 +80,17 @@ void ImageProcesser::imageProcess()
 //jnewpoints==points+jacobi
 //newpoints-jnewpoints==LK-jacobi
 //2*points-jnewpoint==points-jacobi
-		double th_optt=th_opt;
-//		if(std::abs(dyaw)>0.01)
-//			th_optt=th_opt*(std::abs(dyaw)/0.01);
-//	//std::cout<<"th:"<<th_optt<<"\n";
-/*		const double th_minsize=0.02;
-		const double th_size=0.05;
-		double jdx=jnewpoints[j].x-points[j].x;
-		double jdy=jnewpoints[j].y-points[j].y;
-		double jdz=jnz[j]-z[j];
-		double lkdx=newpoints[j].y-points[j].y;
-		double lkdy=newpoints[j].y-points[j].y;
-		double lkdz=nz[j]-z[j];
-		double jdx=(jnewpoints[j].x*jnz[j]-points[j].x*z[j])/f;
-		double jdy=(jnewpoints[j].y*jnz[j]-points[j].y*z[j])/f;
-		double jdz=jnz[j]-z[j];
-		double lkdx=(newpoints[j].y*nz[j]-points[j].y*z[j])/f;
-		double lkdy=(newpoints[j].y*nz[j]-points[j].y*z[j])/f;
-		double lkdz=nz[j]-z[j];
-		double jsize=sqrt( jdx*jdx + jdy*jdy);// + jdz*jdz);
-		double lksize=sqrt( lkdx*lkdx + lkdy*lkdy);// + lkdz*lkdz);
-		double dif_size=std::abs(jsize-lksize);
-		bool mvo_f=false;
-		if(dif_size<th_minsize)
-			mvo_f=false;
-		else{
-			double inpr=(jdx*lkdx + jdy*lkdy)/(lksize*jsize) ;//inner product
-			if(dif_size/inpr>=th_size||dif_size/inpr<0)
-				mvo_f=true;
-		}
-*/
-		if(/*!mvo_f*/L2<th_optt/zz+1){
-			ImageProcesser::cvArrow(&Limg_view,
+
+		ImageProcesser::cvArrow(&Limg_view,
 				cv::Point((int)points[j].x,
 					(int)points[j].y),
 				cv::Point((int)(newpoints[j].x-jnewpoints[j].x+points[j].x),
 					(int)(newpoints[j].y-jnewpoints[j].y+points[j].y)),
-				cv::Scalar(255,255,255));//白
-				mpf[j]=0;
-		}
-		else{
-			
-			if(mpf[j]>=mth){
-			  ImageProcesser::cvArrow(&Limg_view,
-				cv::Point((int)points[j].x,
-					(int)points[j].y),
-				cv::Point((int)(newpoints[j].x-jnewpoints[j].x+points[j].x),
-					(int)(newpoints[j].y-jnewpoints[j].y+points[j].y)),
-				cv::Scalar(0,255,0));//緑
-				mov.push_back((newpoints[j].x-jnewpoints[j].x)*z[j]/f);
-			}
-			
-			else{
-			ImageProcesser::cvArrow(&Limg_view,
-				cv::Point((int)points[j].x,
-					(int)points[j].y),
-				cv::Point((int)newpoints[j].x,
-					(int)newpoints[j].y),
-				cv::Scalar(0,200,200));//黄
-			ImageProcesser::cvArrow(&Limg_view,
-				cv::Point((int)points[j].x
-					,
-					(int)points[j].y),
-				cv::Point((int)(2*points[j].x-jnewpoints[j].x),
-					(int)(2*points[j].y-jnewpoints[j].y)),
-				cv::Scalar(200,0,200));//紫
+				cv::Scalar(255,255,0));//白
 				
-			}
-			mpf[j]++;
 			//detect moving area	
-			pmpts.push_back(points[j]);
-			cmpts.push_back(newpoints[j]-jnewpoints[j]+points[j]);
-			pmz.push_back(z[j]);
-			cmz.push_back(nz[j]);
 			
-		}
+		
 
 //output file
 		if(wf_f){
@@ -319,15 +155,10 @@ void ImageProcesser::imageProcess()
 				<<newpoints[j].y-jnewpoints[j].y<<","//観測y-jacobi
 				<<std::endl;
 		}
-//		//std::cout<<"delta flow:"<<newpoints[j].x-jnewpoints[j].x<<"\n";
 	}
-	double mov_sum=0;
-	for(int i=0;i<mov.size();i++)
-		mov_sum+=mov[i];
-	std::cout<<"mov:"<<mov_sum/(int)mov.size()<<"\n";
 	wfo_c++;
 	wfo_cf=true;
 
-	
+
 }
 

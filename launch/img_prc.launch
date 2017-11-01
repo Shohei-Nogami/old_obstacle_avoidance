@@ -1,6 +1,3 @@
 <launch>
-  <node pkg="obst_avoid" name="img_srv" type="img_srv" output="screen"/>
-  <node pkg="obst_avoid" name="dpt_srv" type="dpt_srv" output="screen"/>
-  <node pkg="obst_avoid" name="odm_srv" type="odm_srv" output="screen"/>
-  <node pkg="obst_avoid" name="img_prc" type="img_prc" output="screen"/>
+  <node pkg="obst_avoid" name="img_prc" type="img_prc" respawn="true" output="screen"/>
 </launch>

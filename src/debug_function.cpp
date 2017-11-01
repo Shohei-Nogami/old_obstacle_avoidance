@@ -34,7 +34,5 @@
 			}
 		}
 	}
-	void ImageProcesser::print_mpsize(void){
-		std::cout<<"size:(cmp,pmp)-("<<cmpts.size()<<","<<pmpts.size()<<")"<<cmpts.empty()<<"\n";
-	}
+
 

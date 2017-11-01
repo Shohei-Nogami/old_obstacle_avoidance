@@ -67,28 +67,28 @@ public:
 	cv_bridge::CvImagePtr org_img;// Subscriber change zed topic
 	cv_bridge::CvImagePtr depthimg;// Subscriber change zed topic
 	cv_bridge::CvImagePtr PubLimg;
-	int width,height;			//image size
+	static const int width=672;
+	static const int height=376;			//image size
 	bool ODOMETRY_RECEIVED;
 	double prev_time;	//for image jacobian
 	double new_time;	//
 	double dt;			//delta time
-	double prev_img_time;
-	double new_img_time;
-	double img_dt;
 	float f=350.505;
-	int cx=(int)354.676;
-	int cy=(int)191.479;
+//	int cx=(int)354.676;
+//	int cy=(int)191.479;
 	double vr;
 	double vl;
 	double d=0.276;//車輪幅
 	double w_w;
 	double w_dyaw;
-	double T;
+	double T;//LPF
 	double pw;
 	double w;
 	double dz,dx;
 	//debug
-	std::vector<double> mov;
+	double prev_img_time;
+	double new_img_time;
+	double img_dt;
 //odometry
 	double position_x,position_y,position_z;
 	double prev_position_x,prev_position_y,prev_position_z;
@@ -97,17 +97,12 @@ public:
 	double prev_roll,prev_pitch,prev_yaw;
 	double droll,dpitch,dyaw;
 	double pdyaw;
-	bool lpf_sf;
-	static const int lpf_value=10;
-	double w_lpf[lpf_value];
-	int lpf_count;
-//detector
+//--特徴点抽出
 	static const int max_points=800;//500
 	const int point_size=max_points*2;
-	static const int cn=10;
+	static const int cn=12;
 	const int clp_max_points=max_points/(cn*cn);
-	const int clp_point_size=(int)(clp_max_points);
-	const float th_opt=1.0;
+	const int clp_point_size=(int)(clp_max_points*3);
 //特徴点追加の閾値
 	const int threshold_fp=(int)(max_points*0.8);
 	const int th_clpimg=(int)(clp_max_points*0.8);
@@ -121,32 +116,15 @@ public:
 	std::vector<cv::KeyPoint> keypoints;
 //Provisional z
 	std::vector<float> pz;
-
 	std::vector<cv::Point2f> points;    //特徴点
 	std::vector<cv::Point2f> newpoints; //移動後の特徴点
 	std::vector<float> z;//current z
 	std::vector<float> nz;//new z
 	std::vector<cv::Point2f> jnpts;
 	std::vector<cv::Point2f> jnewpoints;
-	std::vector<float> jpnz;
-	std::vector<float> jnz;
-	std::vector<int> pmpf;//provision moving point flag
-	std::vector<int> mpf;//moving point flag
-	static const int mth=2;//
-//particle filter
-//	const double sig=2.0;
-//	std::vector<double> prvp;
-//	std::vector<double> curp;
-//moving points
-	std::vector<cv::Point2f> pmpts;
-	std::vector<cv::Point2f> cmpts;
-	std::vector<float> pmz;
-	std::vector<float> cmz;
-	std::vector< std::vector<cv::Point2f> > area_mpt;
-	std::vector<cv::Point2f> onearea_mpt;
-//debug
-//	float max_value_x,min_value_x,max_value_y,min_value_y;
-//	double current_z;
+	
+//--detect area exist moving objects
+	std::vector<cv::Point2d> cpt[cn][cn];
 //ファイル出力
 	std::ofstream ofs;
 
@@ -248,6 +226,6 @@ public:
 	void print_bias(void);
 	void print_w(void);
 	void print_clpsize(void);
-	void print_mpsize(void);
+	
 };
 

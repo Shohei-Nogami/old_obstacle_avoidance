@@ -22,7 +22,6 @@ int main(int argc,char **argv){
 		prc.renew_vectors();
 //		prc.print_points_size();
 		prc.clear_vectors();
-		prc.print_mpsize();
 //		prc.prd_prcess();
 		prc.clear_dtctvectors();
 		prc.pub_left_img();
