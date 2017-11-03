@@ -18,6 +18,7 @@
 				cp[i][j].reserve(clp_point_size);
 				cpt[i][j].reserve(clp_point_size);
 				cnpt[i][j].reserve(clp_point_size);
+				cz[i][j].reserve(clp_point_size);
 			}
 		}
 		jnpts.reserve(point_size);
@@ -56,6 +57,7 @@
 			for(int j=0;j<cnw;j++){
 				cpt[i][j].clear();
 				cnpt[i][j].clear();
+				cz[i][j].clear();
 			}
 		}
 	}

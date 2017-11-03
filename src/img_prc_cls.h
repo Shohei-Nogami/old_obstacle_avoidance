@@ -104,7 +104,7 @@ public:
 	static const int cnh=cn;
 	static const int cnw=cn*2;
 	const int clp_max_points=max_points/(cnh*cnw);
-	const int clp_point_size=(int)(clp_max_points*3);
+	const int clp_point_size=(int)(clp_max_points*10);
 //特徴点追加の閾値
 	const int threshold_fp=(int)(max_points*0.8);
 	const int th_clpimg=(int)(clp_max_points*0.8);
@@ -128,6 +128,7 @@ public:
 //--detect area exist moving objects
 	std::vector<cv::Point2d> cpt[cnh][cnw];
 	std::vector<cv::Point2d> cnpt[cnh][cnw];
+	std::vector<double> cz[cnh][cnw];
 //	double p_mvarea[cnh][cnh];
 	double p_pmvarea[cnh][cnw];
 	double pavesize[cnh][cnw];

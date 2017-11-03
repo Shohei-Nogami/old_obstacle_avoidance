@@ -27,7 +27,7 @@ int main(int argc,char **argv){
 		prc.pub_left_img();
 //		rate.sleep();
 //		prc.print_points_size();
-		prc.print_dt();
+//		prc.print_dt();
 //		prc.print_imgdt();
 //		prc.show_speed();
 //		prc.print_bias();

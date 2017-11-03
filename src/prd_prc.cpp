@@ -12,7 +12,10 @@
 		double avesize[cnh][cnw];		//sum->ave
 		cv::Point2d dsppt[cnh][cnw];	//sum->dsp
 		double dspsize[cnh][cnw];		//sum->dsp
+		double avez[cnh][cnw];
 		double p_mvarea[cnh][cnw];
+		bool ismvobj[cnh][cnw];
+		bool ismvline[cnw]={false};
 		//initialize
 
 		for(int i=0;i<cnh;i++){
@@ -20,9 +23,11 @@
 				avept[i][j].x=0;
 				avept[i][j].y=0;
 				avesize[i][j]=0;
+				avez[i][j]=0;
 				dsppt[i][j].x=0;
 				dsppt[i][j].y=0;
 				dspsize[i][j]=0;
+				ismvobj[i][j]=false;
 			}
 		}
 		//calculate sum
@@ -32,9 +37,11 @@
 					for(int i=0;i<cnh;i++){
 						if((int)(i*height/cnh)<(int)points[k].y&&(int)points[k].y<(int)((i+1)*height/cnh)){
 							cpt[i][j].push_back(points[k]);
+							cz[i][j].push_back(z[k]);
 							cnpt[i][j].push_back(newpoints[k]-jnewpoints[k]+points[k]);
 							avept[i][j].x+=newpoints[k].x-jnewpoints[k].x;
 							avept[i][j].y+=newpoints[k].y-jnewpoints[k].y;
+							avez[i][j]+=z[k];
 //							avesize[i][j]+=sqrt(pow(newpoints[k].x-jnewpoints[k].x,2.0)
 	//							+pow(newpoints[k].y-jnewpoints[k].y,2.0));
 						}
@@ -43,11 +50,12 @@
 			}
 		}
 		//calculate average
-		double ppT=dt*5;
+		double ppT=dt*10;//5;
 		for(int j=0;j<cnw;j++){
 			for(int i=0;i<cnh;i++){
 				avept[i][j].x=avept[i][j].x/(int)cpt[i][j].size();
 				avept[i][j].y=avept[i][j].y/(int)cpt[i][j].size();
+				avez[i][j]=avez[i][j]/(int)cpt[i][j].size();
 				if(!std::isnan(pavept[i][j].x)&&!std::isnan(pavept[i][j].x)){
 					avept[i][j].x=(ppT*pavept[i][j].x+dt*avept[i][j].x)/(ppT+dt);
 					avept[i][j].y=(ppT*pavept[i][j].y+dt*avept[i][j].y)/(ppT+dt);
@@ -75,72 +83,86 @@
 			}
 		}
 		
-//
-		double ave_area=0;
-		double dsp_area=0;
-		//calculate area average
-		int nan_count=0;
+		double p_mv;
+		double th_dsp;
+		double th_mv;
+//		double ddt=dt/0.045;
 		for(int i=0;i<cnh;i++){
 			for(int j=0;j<cnw;j++){
-//				if(std::isnan(avesize[i][j]))
-				if(std::isnan(avesize[i][j])||avesize[i][j]<1)
-//				if(std::isnan(avesize[i][j])||avesize[i][j]<1||dspsize[i][j]>avesize[i][j])
-					nan_count++;
-				else
-					ave_area+=avesize[i][j];
-			}
-		}
-		ave_area=ave_area/(cnh*cnw-nan_count);
-		//calculate area dispersion (standard deviation)
-		nan_count=0;
-		for(int i=0;i<cnh;i++){
-			for(int j=0;j<cnw;j++){
-//				if(std::isnan(avesize[i][j]))
-				if(std::isnan(avesize[i][j])||avesize[i][j]<1)
-//				if(std::isnan(avesize[i][j])||avesize[i][j]<1||dspsize[i][j]>avesize[i][j])
-					nan_count++;
-				else
-					dsp_area+=pow(avesize[i][j]-ave_area,2.0);
-			}
-		}
-		dsp_area=sqrt(dsp_area/(cnh*cnw-nan_count));
-		std::cout<<"avearea:"<<ave_area<<"\n";
-		//culculate probability of presence of moving objects
-//		double pT=dt*10;
-		for(int i=0;i<cnh;i++){
-			for(int j=0;j<cnw;j++){
-				if(!std::isnan(avesize[i][j])){
-					p_mvarea[i][j]=1-exp( -pow(avesize[i][j]-ave_area,2.0)/(2*pow(dsp_area,2.0)) );
-//					if(!std::isnan(p_pmvarea[i][j]))
-//						p_mvarea[i][j]=(pT*p_pmvarea[i][j]+dt*p_mvarea[i][j])/(pT+dt);
-//						std::cout<<"p_mvarea[i][j]:"<<p_mvarea[i][j]<<"\n";
-				}
-			}
-		}
-//		std::cout<<"p_mvarea:"<<p_mvarea[cn/2][cn/2]<<"\n";
-			//j*width/cn+itk->pt.x
-		for(int i=0;i<cnh;i++){
-			for(int j=0;j<cnw;j++){
-				if(std::isnan(avesize[i][j]))
+				th_dsp=1*std::abs(dyaw)/0.01*std::abs(j-cnw/2+0.5);
+				th_mv=2.0;///ddt;
+				if(std::abs(dyaw)>0.01)
+					th_mv=th_mv*std::abs(dyaw)/0.01;
+				if(std::isnan(avept[i][j].x)||avept[i][j].y*avez[i][j]/f+0.23<0.15||std::abs(avept[i][j].x)<th_mv/avez[i][j]||th_mv<dsppt[i][j].x)
+//				if(std::isnan(avesize[i][j]))//||dspsize[i][j]>th_dsp||avesize[i][j]<1||avesize[i][j]<th_dsp)
 					continue;
-				//サイズ一定以下
-				if(avesize[i][j]<1)
-				  continue;
-				//標準偏差一定以上
-//				if(dspsize[i][j]>avesize[i][j])
-//				  continue;
-				int color=200*p_mvarea[i][j];
-				for(int u=j*width/cnw;u<(j+1)*width/cnw;u++){
-					for(int v=i*height/cnh;v<(i+1)*height/cnh;v++){
-						Limg_view.at<cv::Vec3b>(v,u)[1]+=color;
+				else{
+					ismvobj[i][j]=true;
+//					std::cout<<"ddt:"<<ddt<<"\n";
+					std::cout<<"th_dsp:"<<th_dsp<<"\n";
+					std::cout<<"th_mv:"<<th_mv<<"\n";
+					std::cout<<"avept[i][j]:"<<avept[i][j]<<"\n";
+					std::cout<<"avesize[i][j]:"<<avesize[i][j]<<"\n";
+					std::cout<<"dspsize[i][j]:"<<dspsize[i][j]<<"\n";
+					std::cout<<"avez[i][j]:"<<avez[i][j]<<"\n";
+/*					p_mv=avesize[i][j];///th_dsp;
+					if(th_dsp>1)
+						p_mv/=th_dsp;
+					if(p_mv>1)
+						p_mv=1;
+					std::cout<<"p_mv:"<<p_mv<<"\n";
+*/
+					p_mv=1;
+					int color=100*p_mv;
+					for(int u=j*width/cnw;u<(j+1)*width/cnw;u++){
+						for(int v=i*height/cnh;v<(i+1)*height/cnh;v++){
+							Limg_view.at<cv::Vec3b>(v,u)[1]+=color;
+						}
 					}
 				}
 			}
 		}
-		for(int i=0;i<cnh;i++){
-			for(int j=0;j<cnw;j++){
-				p_pmvarea[i][j]=p_mvarea[i][j];
+		
+//	convert ismvobj->ismvline	
+		for(int j=0;j<cnw;j++){
+			for(int i=0;i<cnh;i++){
+				if(ismvobj[i][j]==true){
+					ismvline[j]=true;
+					break;
+				}				
 			}
 		}
+//	find spaces		
+		int space_begin;
+		int space_end;
+		int space_size=0;
+		int space_temp=0;
+		for(int j=0;j<cnw;j++){
+			std::cout<<ismvline[j];
+		}
+		std::cout<<"\n";
+		for(int j=0;j<cnw;j++){
+			if(!ismvline[j])
+				space_temp++;
+			if(ismvline[j]){
+				if(space_size<space_temp){
+					space_size=space_temp;
+					space_end=j;
+					space_begin=space_end-space_size;
+				}
+				space_temp=0;
+			}
+			if(space_temp==cnw-1){
+				space_size=space_temp;
+				space_end=space_temp;
+				space_begin=0;
+			}
+		}
+		std::cout<<"space:"<<space_size<<"["<<space_begin<<","<<space_end<<"]\n";
+//culculate target point
+		cv::Point2i target_point;
+		target_point.x=(space_begin+space_end+1)/2*width/cnw+width/cnw*0.5;
+		target_point.y=height/2;
+		cv::circle(Limg_view, target_point, 4, cv::Scalar(200,200,0),-1, CV_AA);
 	}
 
