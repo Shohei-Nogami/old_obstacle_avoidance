@@ -101,13 +101,15 @@ public:
 	static const int max_points=800;//500
 	const int point_size=max_points*2;
 	static const int cn=12;
-	const int clp_max_points=max_points/(cn*cn);
+	static const int cnh=cn;
+	static const int cnw=cn*2;
+	const int clp_max_points=max_points/(cnh*cnw);
 	const int clp_point_size=(int)(clp_max_points*3);
 //特徴点追加の閾値
 	const int threshold_fp=(int)(max_points*0.8);
 	const int th_clpimg=(int)(clp_max_points*0.8);
-	std::vector<cv::Point2i> cp[cn][cn];
-	cv::Mat clp_img[cn][cn];
+	std::vector<cv::Point2i> cp[cnh][cnw];
+	cv::Mat clp_img[cnh][cnw];
 //vector point,z
 	std::vector<cv::Point2f> pts;   //特徴点
 	std::vector<cv::Point2f> npts;  //移動後の特徴点
@@ -122,12 +124,14 @@ public:
 	std::vector<float> nz;//new z
 	std::vector<cv::Point2f> jnpts;
 	std::vector<cv::Point2f> jnewpoints;
-	
+
 //--detect area exist moving objects
-	std::vector<cv::Point2d> cpt[cn][cn];
-	std::vector<cv::Point2d> cnpt[cn][cn];
-//	double p_mvarea[cn][cn];
-	double p_pmvarea[cn][cn];
+	std::vector<cv::Point2d> cpt[cnh][cnw];
+	std::vector<cv::Point2d> cnpt[cnh][cnw];
+//	double p_mvarea[cnh][cnh];
+	double p_pmvarea[cnh][cnw];
+	double pavesize[cnh][cnw];
+	cv::Point2d pavept[cnh][cnw];
 //ファイル出力
 	std::ofstream ofs;
 
@@ -229,6 +233,7 @@ public:
 	void print_bias(void);
 	void print_w(void);
 	void print_clpsize(void);
-	
+	void print_cptsize(void);
+
 };
 

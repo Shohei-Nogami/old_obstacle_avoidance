@@ -23,9 +23,9 @@ void ImageProcesser::imageProcess()
 	cv::cvtColor(PreLimg,PreLgray,CV_BGR2GRAY);
 //参照URL:http://opencv.jp/opencv-2svn/cpp/motion_analysis_and_object_tracking.html#cv-calcopticalflowpyrlk
 
-	for(int i=0;i<cn;i++){
-		for(int j=0;j<cn;j++){
-			clp_img[i][j]=PreLgray(cv::Rect((int)(j*(width)/cn),(int)(i*(height)/cn),(int)(width/cn),(int)(height/cn)));
+	for(int i=0;i<cnh;i++){
+		for(int j=0;j<cnw;j++){
+			clp_img[i][j]=PreLgray(cv::Rect((int)(j*(width)/cnw),(int)(i*(height)/cnh),(int)(width/cnw),(int)(height/cnh)));
 		}
 	}
 //	//std::cout<<"count\n";
@@ -69,7 +69,7 @@ void ImageProcesser::imageProcess()
 			}
 		}
 
-	
+
 	for(int j=0;j<points.size();j++){
 //----矢印描写---
 		float L1=std::abs(newpoints[j].x-jnewpoints[j].x);//sqrt(z[j]);
@@ -86,10 +86,10 @@ void ImageProcesser::imageProcess()
 				cv::Point((int)(newpoints[j].x-jnewpoints[j].x+points[j].x),
 					(int)(newpoints[j].y-jnewpoints[j].y+points[j].y)),
 				cv::Scalar(0,200,200));//
-				
+
 			//detect moving area	
-			
-		
+
+
 
 //output file
 		if(wf_f){

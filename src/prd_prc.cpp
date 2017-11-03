@@ -6,17 +6,17 @@
 		//オプティカルフローがない領域なども考慮に入れること
 		//領域全体の平均と分散から、平均からより離れている領域に番号付け（ソート）を行い、移動物体領域を検出
 		//デバック::より移動物体として認識されている領域に色を加える
-		
+
 		//分割画像の各特徴点の平均と分散(x,y,size)
-		cv::Point2d avept[cn][cn];	//sum->ave
-		double avesize[cn][cn];		//sum->ave
-		cv::Point2d dsppt[cn][cn];	//sum->dsp
-		double dspsize[cn][cn];		//sum->dsp
-		double p_mvarea[cn][cn];
+		cv::Point2d avept[cnh][cnw];	//sum->ave
+		double avesize[cnh][cnw];		//sum->ave
+		cv::Point2d dsppt[cnh][cnw];	//sum->dsp
+		double dspsize[cnh][cnw];		//sum->dsp
+		double p_mvarea[cnh][cnw];
 		//initialize
 
-		for(int i=0;i<cn;i++){
-			for(int j=0;j<cn;j++){
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
 				avept[i][j].x=0;
 				avept[i][j].y=0;
 				avesize[i][j]=0;
@@ -27,96 +27,118 @@
 		}
 		//calculate sum
 		for(int k=0;k<points.size();k++){
-			for(int j=0;j<cn;j++){
-				if((int)(j*width/cn) < (int)points[k].x && (int)points[k].x < (int)((j+1)*width/cn)){
-					for(int i=0;i<cn;i++){
-						if((int)(i*height/cn)<(int)points[k].y&&(int)points[k].y<(int)((i+1)*height/cn)){
+			for(int j=0;j<cnw;j++){
+				if((int)(j*width/cnw) < (int)points[k].x && (int)points[k].x < (int)((j+1)*width/cnw)){
+					for(int i=0;i<cnh;i++){
+						if((int)(i*height/cnh)<(int)points[k].y&&(int)points[k].y<(int)((i+1)*height/cnh)){
 							cpt[i][j].push_back(points[k]);
 							cnpt[i][j].push_back(newpoints[k]-jnewpoints[k]+points[k]);
 							avept[i][j].x+=newpoints[k].x-jnewpoints[k].x;
 							avept[i][j].y+=newpoints[k].y-jnewpoints[k].y;
-							avesize[i][j]+=sqrt(pow(newpoints[k].x-jnewpoints[k].x,2.0)
-								+pow(newpoints[k].y-jnewpoints[k].y,2.0));
+//							avesize[i][j]+=sqrt(pow(newpoints[k].x-jnewpoints[k].x,2.0)
+	//							+pow(newpoints[k].y-jnewpoints[k].y,2.0));
 						}
 					}
 				}
 			}
 		}
 		//calculate average
-		for(int j=0;j<cn;j++){
-			for(int i=0;i<cn;i++){
+		double ppT=dt*5;
+		for(int j=0;j<cnw;j++){
+			for(int i=0;i<cnh;i++){
 				avept[i][j].x=avept[i][j].x/(int)cpt[i][j].size();
 				avept[i][j].y=avept[i][j].y/(int)cpt[i][j].size();
-				avesize[i][j]=avesize[i][j]/(int)cpt[i][j].size();
+				if(!std::isnan(pavept[i][j].x)&&!std::isnan(pavept[i][j].x)){
+					avept[i][j].x=(ppT*pavept[i][j].x+dt*avept[i][j].x)/(ppT+dt);
+					avept[i][j].y=(ppT*pavept[i][j].y+dt*avept[i][j].y)/(ppT+dt);
+				}
+				pavept[i][j]=avept[i][j];
+//				avesize[i][j]=avesize[i][j]/(int)cpt[i][j].size();
+				avesize[i][j]=sqrt( avept[i][j].x*avept[i][j].x +avept[i][j].y*avept[i][j].y );
+				if(!std::isnan(pavesize[i][j]))
+					avesize[i][j]=(ppT*pavesize[i][j]+dt*avesize[i][j])/(ppT+dt);
+				pavesize[i][j]=avesize[i][j];
 			}
 		}
 		//calculate dispersion
-		for(int j=0;j<cn;j++){
-			for(int i=0;i<cn;i++){
+		for(int j=0;j<cnw;j++){
+			for(int i=0;i<cnh;i++){
 				for(int k=0;k<cpt[i][j].size();k++){
-					dsppt[i][j].x+=(cpt[i][j][k].x-avept[i][j].x)*(cpt[i][j][k].x-avept[i][j].x);
-					dsppt[i][j].y+=(cpt[i][j][k].y-avept[i][j].y)*(cpt[i][j][k].y-avept[i][j].y);
-					dspsize[i][j]+=pow( sqrt(pow(newpoints[k].x-jnewpoints[k].x,2.0)
-							+pow(newpoints[k].y-jnewpoints[k].y,2.0)) -avesize[i][j],2.0);				
+					dsppt[i][j].x+=(cnpt[i][j][k].x-cpt[i][j][k].x-avept[i][j].x)*(cnpt[i][j][k].x-cpt[i][j][k].x-avept[i][j].x);
+					dsppt[i][j].y+=(cnpt[i][j][k].y-cpt[i][j][k].y-avept[i][j].y)*(cnpt[i][j][k].y-cpt[i][j][k].y-avept[i][j].y);
+					dspsize[i][j]+=pow( sqrt(pow(cnpt[i][j][k].x-cpt[i][j][k].x,2.0)
+							+pow(cnpt[i][j][k].y-cpt[i][j][k].y,2.0)) -avesize[i][j],2.0);				
 				}
 				dsppt[i][j].x=sqrt( dsppt[i][j].x/(int)cpt[i][j].size() );				
 				dsppt[i][j].y=sqrt( dsppt[i][j].y/(int)cpt[i][j].size() );
 				dspsize[i][j]=sqrt( dspsize[i][j]/(int)cpt[i][j].size() );
 			}
 		}
+		
+//
 		double ave_area=0;
 		double dsp_area=0;
 		//calculate area average
 		int nan_count=0;
-		for(int i=0;i<cn;i++){
-			for(int j=0;j<cn;j++){
-				if(std::isnan(avesize[i][j]))
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
+//				if(std::isnan(avesize[i][j]))
+				if(std::isnan(avesize[i][j])||avesize[i][j]<1)
+//				if(std::isnan(avesize[i][j])||avesize[i][j]<1||dspsize[i][j]>avesize[i][j])
 					nan_count++;
 				else
 					ave_area+=avesize[i][j];
 			}
 		}
-		ave_area=ave_area/(cn*cn-nan_count);
+		ave_area=ave_area/(cnh*cnw-nan_count);
 		//calculate area dispersion (standard deviation)
 		nan_count=0;
-		for(int i=0;i<cn;i++){
-			for(int j=0;j<cn;j++){
-				if(std::isnan(avesize[i][j]))
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
+//				if(std::isnan(avesize[i][j]))
+				if(std::isnan(avesize[i][j])||avesize[i][j]<1)
+//				if(std::isnan(avesize[i][j])||avesize[i][j]<1||dspsize[i][j]>avesize[i][j])
 					nan_count++;
 				else
 					dsp_area+=pow(avesize[i][j]-ave_area,2.0);
 			}
 		}
-		dsp_area=sqrt(dsp_area/(cn*cn-nan_count));
+		dsp_area=sqrt(dsp_area/(cnh*cnw-nan_count));
 		std::cout<<"avearea:"<<ave_area<<"\n";
 		//culculate probability of presence of moving objects
-		double pT=dt*10;
-		for(int i=0;i<cn;i++){
-			for(int j=0;j<cn;j++){
+//		double pT=dt*10;
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
 				if(!std::isnan(avesize[i][j])){
 					p_mvarea[i][j]=1-exp( -pow(avesize[i][j]-ave_area,2.0)/(2*pow(dsp_area,2.0)) );
-					if(!std::isnan(p_pmvarea[i][j]))
-						p_mvarea[i][j]=(pT*p_pmvarea[i][j]+dt*p_mvarea[i][j])/(pT+dt);
+//					if(!std::isnan(p_pmvarea[i][j]))
+//						p_mvarea[i][j]=(pT*p_pmvarea[i][j]+dt*p_mvarea[i][j])/(pT+dt);
 //						std::cout<<"p_mvarea[i][j]:"<<p_mvarea[i][j]<<"\n";
 				}
 			}
 		}
 //		std::cout<<"p_mvarea:"<<p_mvarea[cn/2][cn/2]<<"\n";
 			//j*width/cn+itk->pt.x
-		for(int i=0;i<cn;i++){
-			for(int j=0;j<cn;j++){
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
 				if(std::isnan(avesize[i][j]))
 					continue;
+				//サイズ一定以下
+				if(avesize[i][j]<1)
+				  continue;
+				//標準偏差一定以上
+//				if(dspsize[i][j]>avesize[i][j])
+//				  continue;
 				int color=200*p_mvarea[i][j];
-				for(int u=j*width/cn;u<(j+1)*width/cn;u++){
-					for(int v=i*height/cn;v<(i+1)*height/cn;v++){
+				for(int u=j*width/cnw;u<(j+1)*width/cnw;u++){
+					for(int v=i*height/cnh;v<(i+1)*height/cnh;v++){
 						Limg_view.at<cv::Vec3b>(v,u)[1]+=color;
 					}
 				}
 			}
 		}
-		for(int i=0;i<cn;i++){
-			for(int j=0;j<cn;j++){
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
 				p_pmvarea[i][j]=p_mvarea[i][j];
 			}
 		}

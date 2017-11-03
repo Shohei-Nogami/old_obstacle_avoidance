@@ -13,8 +13,8 @@
 		newpoints.reserve(point_size);
 		z.reserve(point_size);
 		nz.reserve(point_size);
-		for(int i=0;i<cn;i++){
-			for(int j=0;j<cn;j++){
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
 				cp[i][j].reserve(clp_point_size);
 				cpt[i][j].reserve(clp_point_size);
 				cnpt[i][j].reserve(clp_point_size);
@@ -31,8 +31,8 @@
 		ers.clear();
 //-----特徴点抽出用変数-----
 		keypoints.clear();
-		for(int i=0;i<cn;i++){
-			for(int j=0;j<cn;j++){
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
 				cp[i][j].clear();
 			}
 		}	
@@ -52,8 +52,8 @@
 		jnewpoints.clear();
 		z.clear();	
 		nz.clear();
-		for(int i=0;i<cn;i++){
-			for(int j=0;j<cn;j++){
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
 				cpt[i][j].clear();
 				cnpt[i][j].clear();
 			}

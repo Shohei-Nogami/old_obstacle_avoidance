@@ -25,8 +25,8 @@
 		std::cout<<"(w_w,v_w):"<<w_dyaw/dt<<","<<dyaw/dt<<"\n";
 	}
 	void ImageProcesser::print_clpsize(void){
-		for(int i=0;i<cn;i++){
-			for(int j=0;j<cn;j++){
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
 				std::cout<<"cp_size["<<i<<","<<j<<"]:"<<(int)cp[i][j].size()<<"\n";
 				int size=(int)cp[i][j].size();
 				if(size >= clp_point_size)
@@ -34,5 +34,13 @@
 			}
 		}
 	}
-
+	void ImageProcesser::print_cptsize(void){
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
+			  std::cout<<"cpt["<<i<<"]["<<j<<"].size:"<<cpt[i][j].size()<<"\n";
+			  
+			}
+		}
+	}
+	
 

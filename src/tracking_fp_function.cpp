@@ -5,15 +5,15 @@ void ImageProcesser::add_feature_points(void){
 	cv::Point2i ppts;
 	float ptz;
 	bool flag;
-	for(int i=0;i<cn;i++){
-		for(int j=0;j<cn;j++){
+	for(int i=0;i<cnh;i++){
+		for(int j=0;j<cnw;j++){
 			if((int)cp[i][j].size()<th_clpimg){
 				detector.detect(clp_img[i][j], keypoints);	
 				for(std::vector<cv::KeyPoint>::iterator itk = keypoints.begin();
 		 			itk != keypoints.end(); ++itk){
 					flag=false;
-				   	ppts.x=j*width/cn+itk->pt.x;
-					ppts.y=i*height/cn+itk->pt.y;
+				   	ppts.x=j*width/cnw+itk->pt.x;
+					ppts.y=i*height/cnh+itk->pt.y;
 					for(int k=0;k<pts.size();k++){
 						if(std::abs(cp[i][j][k].x-ppts.x)<1&&std::abs(cp[i][j][k].y-ppts.y)<1){
 
@@ -64,10 +64,10 @@ void ImageProcesser::add_feature_points(void){
 
 
     for(int k=0;k<pts.size();k++){
-      for(int j=0;j<cn;j++){
-        if((int)(j*width/cn) < (int)pts[k].x && (int)pts[k].x < (int)((j+1)*width/cn)){
-          for(int i=0;i<cn;i++){
-            if((int)(i*height/cn)<(int)pts[k].y&&(int)pts[k].y<(int)((i+1)*height/cn)){
+      for(int j=0;j<cnw;j++){
+        if((int)(j*width/cnw) < (int)pts[k].x && (int)pts[k].x < (int)((j+1)*width/cnw)){
+          for(int i=0;i<cnh;i++){
+            if((int)(i*height/cnh)<(int)pts[k].y&&(int)pts[k].y<(int)((i+1)*height/cnh)){
 
 		cp[i][j].push_back(pts[k]);
 
