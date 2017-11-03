@@ -137,28 +137,31 @@
 		int space_end;
 		int space_size=0;
 		int space_temp=0;
-		for(int j=0;j<cnw;j++){
+/*		for(int j=0;j<cnw;j++){
 			std::cout<<ismvline[j];
 		}
 		std::cout<<"\n";
+*/
 		for(int j=0;j<cnw;j++){
 			if(!ismvline[j])
 				space_temp++;
-			if(ismvline[j]){
-				if(space_size<space_temp){
+			else{
+				if(space_size<=space_temp){
 					space_size=space_temp;
 					space_end=j;
 					space_begin=space_end-space_size;
 				}
 				space_temp=0;
 			}
-			if(space_temp==cnw-1){
-				space_size=space_temp;
-				space_end=space_temp;
-				space_begin=0;
+			if(j==cnw-1){
+				if(space_size<=space_temp){
+					space_size=space_temp;
+					space_end=j;
+					space_begin=space_end-space_size;
+				}			
 			}
 		}
-		std::cout<<"space:"<<space_size<<"["<<space_begin<<","<<space_end<<"]\n";
+	//	std::cout<<"space:"<<space_size<<"["<<space_begin<<","<<space_end<<"]\n";
 //culculate target point
 		cv::Point2i target_point;
 		target_point.x=(space_begin+space_end+1)/2*width/cnw+width/cnw*0.5;
