@@ -14,8 +14,8 @@
 		double dspsize[cnh][cnw];		//sum->dsp
 		double avez[cnh][cnw];
 		double p_mvarea[cnh][cnw];
-		bool ismvobj[cnh][cnw];
-		bool ismvline[cnw]={false};
+		double ismvobj[cnh][cnw];
+		double ismvline[cnw]={0};
 		//initialize
 
 		for(int i=0;i<cnh;i++){
@@ -27,7 +27,7 @@
 				dsppt[i][j].x=0;
 				dsppt[i][j].y=0;
 				dspsize[i][j]=0;
-				ismvobj[i][j]=false;
+				ismvobj[i][j]=0;
 			}
 		}
 		//calculate sum
@@ -75,17 +75,18 @@
 					dsppt[i][j].x+=(cnpt[i][j][k].x-cpt[i][j][k].x-avept[i][j].x)*(cnpt[i][j][k].x-cpt[i][j][k].x-avept[i][j].x);
 					dsppt[i][j].y+=(cnpt[i][j][k].y-cpt[i][j][k].y-avept[i][j].y)*(cnpt[i][j][k].y-cpt[i][j][k].y-avept[i][j].y);
 					dspsize[i][j]+=pow( sqrt(pow(cnpt[i][j][k].x-cpt[i][j][k].x,2.0)
-							+pow(cnpt[i][j][k].y-cpt[i][j][k].y,2.0)) -avesize[i][j],2.0);				
+							+pow(cnpt[i][j][k].y-cpt[i][j][k].y,2.0)) -avesize[i][j],2.0);
 				}
-				dsppt[i][j].x=sqrt( dsppt[i][j].x/(int)cpt[i][j].size() );				
+				dsppt[i][j].x=sqrt( dsppt[i][j].x/(int)cpt[i][j].size() );
 				dsppt[i][j].y=sqrt( dsppt[i][j].y/(int)cpt[i][j].size() );
 				dspsize[i][j]=sqrt( dspsize[i][j]/(int)cpt[i][j].size() );
 			}
 		}
-		
+
 		double p_mv;
 		double th_dsp;
 		double th_mv;
+		double pT=dt*5;
 //		double ddt=dt/0.045;
 		for(int i=0;i<cnh;i++){
 			for(int j=0;j<cnw;j++){
@@ -93,11 +94,11 @@
 				th_mv=2.0;///ddt;
 				if(std::abs(dyaw)>0.01)
 					th_mv=th_mv*std::abs(dyaw)/0.01;
-				if(std::isnan(avept[i][j].x)||avept[i][j].y*avez[i][j]/f+0.23<0.15||std::abs(avept[i][j].x)<th_mv/avez[i][j]||th_mv<dsppt[i][j].x)
+				if(std::isnan(avept[i][j].x)||avept[i][j].y*avez[i][j]/f+0.23<0.15||std::abs(avept[i][j].x)<th_mv/avez[i][j]||th_mv<dsppt[i][j].x){
 //				if(std::isnan(avesize[i][j]))//||dspsize[i][j]>th_dsp||avesize[i][j]<1||avesize[i][j]<th_dsp)
-					continue;
+					p_mvarea[i][j]=0;
+				}
 				else{
-					ismvobj[i][j]=true;
 //					std::cout<<"ddt:"<<ddt<<"\n";
 					std::cout<<"th_dsp:"<<th_dsp<<"\n";
 					std::cout<<"th_mv:"<<th_mv<<"\n";
@@ -112,60 +113,122 @@
 						p_mv=1;
 					std::cout<<"p_mv:"<<p_mv<<"\n";
 */
-					p_mv=1;
-					int color=100*p_mv;
-					for(int u=j*width/cnw;u<(j+1)*width/cnw;u++){
-						for(int v=i*height/cnh;v<(i+1)*height/cnh;v++){
-							Limg_view.at<cv::Vec3b>(v,u)[1]+=color;
-						}
+					p_mvarea[i][j]=1;
+//zの大きさによる重み付け
+//z<=min_z==1m -> p_mvarea=1 (危険領域)
+//min_z,max_zで線形近似
+//min_z < z < max_z (警戒領域)
+//max_z==5m < z	-> p_mvarea=0 (安全領域)
+					double max_z=5;
+					double min_z=1;
+					if(avez[i][j]<=min_z)
+						p_mvarea[i][j]=min_z;
+					else if(avez[i][j]>=max_z)
+						p_mvarea[i][j]=0;
+					else
+						p_mvarea[i][j]=-min_z/(max_z-min_z) * avez[i][j] + (max_z)/(max_z-min_z);
+				}				
+//				p_mvarea[i][j]=(pT*p_pmvarea[i][j]+dt*p_mvarea[i][j])/(pT+dt);
+				if(std::isnan(p_mvarea[i][j])||p_mvarea[i][j]<0)
+					p_mvarea[i][j]=0;
+//				std::cout<<"p_mvarea[i][j]:"<<p_mvarea[i][j]<<"\n";
+				int color=200*p_mvarea[i][j];
+				for(int u=j*width/cnw;u<(j+1)*width/cnw;u++){
+					for(int v=i*height/cnh;v<(i+1)*height/cnh;v++){
+						Limg_view.at<cv::Vec3b>(v,u)[1]+=color;
 					}
 				}
 			}
 		}
-		
-//	convert ismvobj->ismvline	
+
+//	convert ismvobj->ismvline
+//	ismvline : ave_mvobj
+		double sum_pmvline[cnw]={0};
+		double pmvline[cnw]={0};
 		for(int j=0;j<cnw;j++){
 			for(int i=0;i<cnh;i++){
-				if(ismvobj[i][j]==true){
-					ismvline[j]=true;
+				if(p_mvarea[i][j]==1){
+					pmvline[j]=1;
 					break;
-				}				
+				}
+				else{
+					sum_pmvline[j]+=p_mvarea[i][j];
+				}
 			}
+			if(pmvline[j]!=1)
+				pmvline[j]=sum_pmvline[j]/cnh;
 		}
-//	find spaces		
-		int space_begin;
-		int space_end;
-		int space_size=0;
+
+//	find spaces
+		const int space_minsize=3;
+		//img_prc_cls.h reserve(cnw)
+		std::vector<int> space_begin;
+		std::vector<int> space_end;
+		std::vector<int> space_size;
 		int space_temp=0;
 /*		for(int j=0;j<cnw;j++){
 			std::cout<<ismvline[j];
 		}
 		std::cout<<"\n";
 */
+//危険領域のみを考慮したスペース探査
 		for(int j=0;j<cnw;j++){
-			if(!ismvline[j])
+			if(pmvline[j]==0)
 				space_temp++;
 			else{
-				if(space_size<=space_temp){
-					space_size=space_temp;
-					space_end=j;
-					space_begin=space_end-space_size;
+				if(space_minsize<=space_temp){
+					space_size.push_back(space_temp);
+					space_end.push_back(j);
+					space_begin.push_back(j-space_temp);
 				}
 				space_temp=0;
 			}
 			if(j==cnw-1){
-				if(space_size<=space_temp){
-					space_size=space_temp;
-					space_end=j;
-					space_begin=space_end-space_size;
-				}			
+				if(space_minsize<=space_temp){
+					space_size.push_back(space_temp);
+					space_end.push_back(j);
+					space_begin.push_back(j-space_temp);
+				}
 			}
 		}
-	//	std::cout<<"space:"<<space_size<<"["<<space_begin<<","<<space_end<<"]\n";
+//		std::cout<<"pmvline\n";
+//		for(int i=0;i<cnw;i++) 
+//			std::cout<<pmvline[i]<<"\n";
+//警戒領域を考慮した目標点設定
+		double p_min=1;
+		double p_aveline=0;//sum->ave
+		int target_num=cnw/2;
+		for(int i=0;i<space_size.size();i++){
+			//space num
+			for(int j=0;j<space_size[i]-(space_minsize-1);j++){
+				for(int k=0;k<space_minsize;k++)
+					p_aveline+=pmvline[space_begin[i]+j+k];
+				p_aveline=p_aveline/space_minsize;
+				if(p_min>p_aveline){
+					p_min=p_aveline;
+					target_num=space_begin[i]+j+space_minsize/2;
+				}
+				else if(p_min==p_aveline){
+					if(std::abs(target_num-cnw/2)>std::abs(space_begin[i]+j+space_minsize/2-cnw/2))
+						target_num=space_begin[i]+j+space_minsize/2;
+				}
+				p_aveline=0;
+			}
+		}
+		std::cout<<"space_size.size():"<<space_size.size()<<"\n";
+		std::cout<<"target_num:"<<target_num<<"\n";
+//	std::cout<<"space:"<<space_size<<"["<<space_begin<<","<<space_end<<"]\n";
 //culculate target point
 		cv::Point2i target_point;
-		target_point.x=(space_begin+space_end+1)/2*width/cnw+width/cnw*0.5;
+		target_point.x=target_num*width/cnw+width/cnw*0.5;
+		target_point.x=(pT*ptarget_point.x+dt*target_point.x)/(pT+dt);
 		target_point.y=height/2;
 		cv::circle(Limg_view, target_point, 4, cv::Scalar(200,200,0),-1, CV_AA);
+		for(int i=0;i<cn;i++){
+			for(int j=0;j<cn;j++){
+				p_pmvarea[i][j]=p_mvarea[i][j];
+			}
+		}
+		ptarget_point=target_point;
 	}
 

@@ -133,6 +133,7 @@ public:
 	double p_pmvarea[cnh][cnw];
 	double pavesize[cnh][cnw];
 	cv::Point2d pavept[cnh][cnw];
+	cv::Point2i ptarget_point;
 //ファイル出力
 	std::ofstream ofs;
 
