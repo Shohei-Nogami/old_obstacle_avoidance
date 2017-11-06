@@ -8,7 +8,7 @@ ImageProcesser::ImageProcesser()//
 		pub_Limg=it.advertise("output_Limage",1);
 		pub_Lmsk=it.advertise("output_Mskimage",1);
 		pub_dpt=it.advertise("output_dptimage",1);
-
+		pub_wheel=nh.advertise<obst_avoid::wheel_msg>("wheel_data",1);
 		nh1.setCallbackQueue(&image_queue);
 		nh2.setCallbackQueue(&depth_queue);
 		nh.setCallbackQueue(&odom_queue);

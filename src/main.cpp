@@ -19,6 +19,7 @@ int main(int argc,char **argv){
 //		prc.pub_org_img();
 //		prc.pub_left_img();
 //		prc.print_points_size();
+		prc.wheel_control();
 		prc.renew_vectors();
 //		prc.print_points_size();
 		prc.clear_vectors();

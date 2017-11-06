@@ -100,12 +100,12 @@
 				}
 				else{
 //					std::cout<<"ddt:"<<ddt<<"\n";
-					std::cout<<"th_dsp:"<<th_dsp<<"\n";
-					std::cout<<"th_mv:"<<th_mv<<"\n";
-					std::cout<<"avept[i][j]:"<<avept[i][j]<<"\n";
-					std::cout<<"avesize[i][j]:"<<avesize[i][j]<<"\n";
-					std::cout<<"dspsize[i][j]:"<<dspsize[i][j]<<"\n";
-					std::cout<<"avez[i][j]:"<<avez[i][j]<<"\n";
+//					std::cout<<"th_dsp:"<<th_dsp<<"\n";
+//					std::cout<<"th_mv:"<<th_mv<<"\n";
+//					std::cout<<"avept[i][j]:"<<avept[i][j]<<"\n";
+//					std::cout<<"avesize[i][j]:"<<avesize[i][j]<<"\n";
+//					std::cout<<"dspsize[i][j]:"<<dspsize[i][j]<<"\n";
+//					std::cout<<"avez[i][j]:"<<avez[i][j]<<"\n";
 /*					p_mv=avesize[i][j];///th_dsp;
 					if(th_dsp>1)
 						p_mv/=th_dsp;
@@ -215,13 +215,15 @@
 				p_aveline=0;
 			}
 		}
-		std::cout<<"space_size.size():"<<space_size.size()<<"\n";
+//		std::cout<<"space_size.size():"<<space_size.size()<<"\n";
 		std::cout<<"target_num:"<<target_num<<"\n";
 //	std::cout<<"space:"<<space_size<<"["<<space_begin<<","<<space_end<<"]\n";
 //culculate target point
-		cv::Point2i target_point;
-		target_point.x=target_num*width/cnw+width/cnw*0.5;
+//		cv::Point2i target_point;
+		target_point.x=width/cnw*target_num;//+width/cnw*0.5;
+		std::cout<<"tp1"<<target_point.x<<"\n";
 		target_point.x=(pT*ptarget_point.x+dt*target_point.x)/(pT+dt);
+		std::cout<<"tp2"<<target_point.x<<"\n";
 		target_point.y=height/2;
 		cv::circle(Limg_view, target_point, 4, cv::Scalar(200,200,0),-1, CV_AA);
 		for(int i=0;i<cn;i++){

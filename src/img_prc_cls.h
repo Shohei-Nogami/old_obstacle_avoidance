@@ -58,6 +58,7 @@ public:
 	image_transport::Publisher pub_Lmsk;
 	image_transport::Publisher pub_dpt;
 	ros::Publisher pub_odm;
+	ros::Publisher pub_wheel;
 //variable
 //画像
 	cv::Mat Limg,depth_img,Limg_view;
@@ -133,7 +134,12 @@ public:
 	double p_pmvarea[cnh][cnw];
 	double pavesize[cnh][cnw];
 	cv::Point2d pavept[cnh][cnw];
+	cv::Point2i target_point;
 	cv::Point2i ptarget_point;
+//control wheel
+	obst_avoid::wheel_msg wheelMsg;
+	const int vel=0;//200;
+	const int max_vel_dif=100;
 //ファイル出力
 	std::ofstream ofs;
 
@@ -211,6 +217,8 @@ public:
 	void count_feature_points(void);
 //移動物体予測,目標点算出
 	void prd_prcess(void);
+//wheel control
+	void wheel_control(void);
 //矢印描写用関数
 	void cvArrow(cv::Mat* img, cv::Point2i pt1, cv::Point2i pt2, cv::Scalar color);
 //----time----
@@ -224,7 +232,7 @@ public:
 	void reserve_vectors(void);
 	void clear_vectors(void);
 	void renew_vectors(void);
-  void clear_dtctvectors(void);
+	void clear_dtctvectors(void);
 //----------debug-------------
 	void print_odom(void);
 	//show current speed

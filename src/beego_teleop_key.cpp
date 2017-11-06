@@ -4,7 +4,7 @@
 
 	ros::Subscriber sub_twist;
 	ros::Publisher pub_wheel;
-	int maxvel=500;
+	int maxvel=600;
 	std::string order;
 	int vel_r=0;
 	int vel_l=0;
