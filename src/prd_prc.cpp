@@ -216,7 +216,7 @@
 			}
 		}
 //		std::cout<<"space_size.size():"<<space_size.size()<<"\n";
-		std::cout<<"target_num:"<<target_num<<"\n";
+//		std::cout<<"target_num:"<<target_num<<"\n";
 //	std::cout<<"space:"<<space_size<<"["<<space_begin<<","<<space_end<<"]\n";
 //culculate target point
 //		cv::Point2i target_point;

@@ -5,7 +5,7 @@
 		int vel_l=vel;
 		int vel_r=vel;
 		const double s=0.50;//sensitivity
-		std::cout<<"tp,wdth:"<<target_point.x<<","<<width/2<<"\n";
+//		std::cout<<"tp,wdth:"<<target_point.x<<","<<width/2<<"\n";
 		double d=(target_point.x-width/2)/s;//+:roll right,-:roll left
 		int u=(int)d;
 		if(u>max_vel_dif)
