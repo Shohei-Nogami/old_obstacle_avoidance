@@ -15,11 +15,15 @@
 //ros msgファイル
 #include<nav_msgs/Odometry.h>
 #include<sensor_msgs/image_encodings.h>
+#include <std_msgs/Empty.h>
 //自作msgファイル
 #include"obst_avoid/points.h"
 #include"obst_avoid/moving_points.h"
 #include"obst_avoid/moving_pointsArray.h"
 #include"obst_avoid/wheel_msg.h"
+#include"obst_avoid/point3d"
+#include"obst_avoid/line_point3d"
+#include"obst_avoid/sqr_point3d"
 //service
 #include<obst_avoid/image.h>
 #include<obst_avoid/odometry.h>
@@ -27,15 +31,18 @@
 #include<fstream>//file input output
 //円周率
 #define PI 3.141593
- 
+
 class ImageProcesser
 {
   ros::NodeHandle nh;
 	ros::NodeHandle nh1;
 	ros::NodeHandle nh2;
 	ros::NodeHandle nh3;
+	ros::NodeHandle nh4;
+	ros::NodeHandle nh5;
 //subscriber
 	image_transport::ImageTransport it;
+	image_transport::ImageTransport it2;
 	ros::Subscriber sub_Limg;//LeftImage
 	ros::Subscriber sub_depth;//DepthImage
 	ros::Subscriber sub_odom;
@@ -45,11 +52,13 @@ class ImageProcesser
 	ros::CallbackQueue depth_queue;
 	ros::CallbackQueue odom_queue;
 	ros::CallbackQueue wodom_queue;
+	ros::CallbackQueue avedepth_queue;
 //subscribe options
 	ros::SubscribeOptions image_option;
 	ros::SubscribeOptions depth_option;
 	ros::SubscribeOptions odom_option;
 	ros::SubscribeOptions wodom_option;
+	ros::SubscribeOptions avedepth_option;
 	ros::Time start_time;
 public:
 //publisher
@@ -59,6 +68,7 @@ public:
 	image_transport::Publisher pub_dpt;
 	ros::Publisher pub_odm;
 	ros::Publisher pub_wheel;
+	ros::Publisher pub_empty;
 //variable
 //画像
 	cv::Mat Limg,depth_img,Limg_view;
@@ -136,6 +146,7 @@ public:
 	cv::Point2d pavept[cnh][cnw];
 	cv::Point2i target_point;
 	cv::Point2i ptarget_point;
+	obst_avoid::
 //control wheel
 	obst_avoid::wheel_msg wheelMsg;
 	const int vel=0;//200;
@@ -228,7 +239,7 @@ public:
 	void getimgtime(void);
 	void getprevimgtime(void);
 	void culcimgdt(void);
-//vector 
+//vector
 	void reserve_vectors(void);
 	void clear_vectors(void);
 	void renew_vectors(void);
@@ -246,4 +257,3 @@ public:
 	void print_cptsize(void);
 
 };
-
