@@ -59,6 +59,9 @@ find_package(OpenCV REQUIRED)
    moving_points.msg
    moving_pointsArray.msg
    points.msg
+   point3d.msg
+   line_point3d.msg
+   sqr_point3d.msg
 #   Message1.msg
 #   Message2.msg
  )
