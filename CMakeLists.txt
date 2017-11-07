@@ -62,6 +62,9 @@ find_package(OpenCV REQUIRED)
    point3d.msg
    line_point3d.msg
    sqr_point3d.msg
+   pointz.msg
+   line_pointz.msg
+   sqr_pointz.msg
 #   Message1.msg
 #   Message2.msg
  )
@@ -220,14 +223,20 @@ include_directories(
 #add_executable(NodeName src/sourcecode.cpp )
 #target_link_libraries(NodeName ${catkin_LIBRARIES} )
 
-add_executable(obst_dtct src/obst_dtct.cpp)
-target_link_libraries(obst_dtct ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#add_executable(obst_dtct src/obst_dtct.cpp)
+#target_link_libraries(obst_dtct ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(obst_dtct_bndry src/obst_dtct_bndry_srfc.cpp)
-target_link_libraries(obst_dtct_bndry ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#add_executable(obst_dtct_bndry src/obst_dtct_bndry_srfc.cpp)
+#target_link_libraries(obst_dtct_bndry ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(img_prc src/main.cpp src/img_prc_cls.cpp src/prcs_fnc.cpp src/image_function.cpp src/depth_function.cpp src/odom_function.cpp src/time_function.cpp src/cvArrow_function.cpp src/vector_function.cpp src/debug_function.cpp src/tracking_fp_function.cpp src/prd_prc.cpp src/wheel_control.cpp)
 target_link_libraries(img_prc ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(culc_area3d src/culc_area3d.cpp)
+target_link_libraries(culc_area3d ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+#add_executable(culc_areaz src/culc_areaz.cpp)
+#target_link_libraries(culc_areaz ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(beego_teleop_key src/beego_teleop_key.cpp)
 target_link_libraries(beego_teleop_key ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})

@@ -11,6 +11,10 @@
 			return ;
 		}
 	}
+	void ImageProcesser::avedepth_callback(const obst_avoid::sqr_point3d::ConstPtr& msg)
+	{
+		sp3d.sqr_p3d= msg->sqr_p3d;	
+	}
 	//set depth関連を一括管理
 	void ImageProcesser::set_depth(void){
 		if(isdepth())
@@ -40,6 +44,9 @@
 	//publish depth image
 	void ImageProcesser::pub_depthimg(void){
 		pub_dpt.publish(depthimg->toImageMsg());
+	}
+	void ImageProcesser::setave3d(void){
+		avedepth_queue.callOne(ros::WallDuration(1));
 	}
 
 	//Linear approximation

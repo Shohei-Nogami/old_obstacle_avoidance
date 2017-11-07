@@ -1,3 +1,5 @@
 <launch>
   <node pkg="obst_avoid" name="img_prc" type="img_prc" respawn="true" output="screen"/>
+  <node pkg="obst_avoid" name="culc_area3d" type="culc_area3d" respawn="true" output="screen"/>
+<!--  <node pkg="obst_avoid" name="culc_area3d" type="culc_area3d" respawn="true" output="screen"/>-->
 </launch>

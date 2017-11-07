@@ -1,5 +1,8 @@
 #include"img_prc_cls.h"
 
+	void ImageProcesser::pub_response(void){
+		pub_empty.publish(emptymsg);
+	}
 	void ImageProcesser::prd_prcess(void){
 		//方針
 		//分割領域のオプティカルフローの大きさの平均or平均と分散を算出
@@ -221,9 +224,9 @@
 //culculate target point
 //		cv::Point2i target_point;
 		target_point.x=width/cnw*target_num;//+width/cnw*0.5;
-		std::cout<<"tp1"<<target_point.x<<"\n";
+//		std::cout<<"tp1"<<target_point.x<<"\n";
 		target_point.x=(pT*ptarget_point.x+dt*target_point.x)/(pT+dt);
-		std::cout<<"tp2"<<target_point.x<<"\n";
+//		std::cout<<"tp2"<<target_point.x<<"\n";
 		target_point.y=height/2;
 		cv::circle(Limg_view, target_point, 4, cv::Scalar(200,200,0),-1, CV_AA);
 		for(int i=0;i<cn;i++){

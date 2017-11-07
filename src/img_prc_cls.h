@@ -47,6 +47,7 @@ class ImageProcesser
 	ros::Subscriber sub_depth;//DepthImage
 	ros::Subscriber sub_odom;
 	ros::Subscriber sub_wodom;
+	ros::Subscriber sub_avedepth;
 //callbackqueue
 	ros::CallbackQueue image_queue;
 	ros::CallbackQueue depth_queue;
@@ -146,7 +147,8 @@ public:
 	cv::Point2d pavept[cnh][cnw];
 	cv::Point2i target_point;
 	cv::Point2i ptarget_point;
-	obst_avoid::
+	obst_avoid::sqr_point3d sp3d;
+	std_msgs::Empty emptymsg;
 //control wheel
 	obst_avoid::wheel_msg wheelMsg;
 	const int vel=0;//200;
@@ -164,6 +166,7 @@ public:
 	void depth_callback(const sensor_msgs::ImageConstPtr& msg);
 	void odom_callback(const nav_msgs::Odometry::ConstPtr& msg);
 	void wheelodom_callback(const obst_avoid::wheel_msg::ConstPtr& msg);
+	void avedepth_callback(const obst_avoid::sqr_point3d::ConstPtr& msg);
 //image,depth,odometry取り込み用メソッド
 //---image----
 //set original image	要改善(1つ前の画像の有無等)
@@ -197,6 +200,8 @@ public:
 	void pub_depthimg(void);
 	//Linear approximation
 	void approx_depth_img(void);
+	//set ave 3d
+	void setave3d(void);
 //-----odometry----
 //set wheel odometry
 	void setwodom(void);
@@ -230,6 +235,8 @@ public:
 	void prd_prcess(void);
 //wheel control
 	void wheel_control(void);
+//publish empty msgs
+	void pub_response(void);
 //矢印描写用関数
 	void cvArrow(cv::Mat* img, cv::Point2i pt1, cv::Point2i pt2, cv::Scalar color);
 //----time----

@@ -169,13 +169,13 @@ public:
 			//
 			prc.culc_prc();
 			prc.initrf();
-//			ROS_INFO("prc.pub3d()");
+			ROS_INFO("prc.pub3d()");
 			prc.pub3d();
-//			ROS_INFO("prc.pub3d(),prc.emptycall();");
+			ROS_INFO("prc.pub3d(),prc.emptycall();");
 //			while(ros::ok()&&!prc.isrf()){
 				prc.emptycall();
 	//		}
-//			ROS_INFO("prc.emptycall();");
+			ROS_INFO("prc.emptycall();");
 /*			if(prc.isnew_time()){
 				prc.getprevtime();
 				prc.gettime();

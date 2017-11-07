@@ -38,6 +38,6 @@
 		else
 			wheelMsg.vel_data="00000000";
 
-		std::cout<<"wheelMsg.vel_data:("<<wheelMsg.vel_data<<"\n";
+//		std::cout<<"wheelMsg.vel_data:("<<wheelMsg.vel_data<<"\n";
 		pub_wheel.publish(wheelMsg);
 	}
