@@ -21,9 +21,9 @@
 #include"obst_avoid/moving_points.h"
 #include"obst_avoid/moving_pointsArray.h"
 #include"obst_avoid/wheel_msg.h"
-#include"obst_avoid/point3d"
-#include"obst_avoid/line_point3d"
-#include"obst_avoid/sqr_point3d"
+#include"obst_avoid/point3d.h"
+#include"obst_avoid/line_point3d.h"
+#include"obst_avoid/sqr_point3d.h"
 //service
 #include<obst_avoid/image.h>
 #include<obst_avoid/odometry.h>
