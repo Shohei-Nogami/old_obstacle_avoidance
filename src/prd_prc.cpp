@@ -15,7 +15,7 @@
 		double avesize[cnh][cnw];		//sum->ave
 		cv::Point2d dsppt[cnh][cnw];	//sum->dsp
 		double dspsize[cnh][cnw];		//sum->dsp
-		double avez[cnh][cnw];
+//		double avez[cnh][cnw];
 		double p_mvarea[cnh][cnw];
 		double ismvobj[cnh][cnw];
 		double ismvline[cnw]={0};
@@ -26,7 +26,7 @@
 				avept[i][j].x=0;
 				avept[i][j].y=0;
 				avesize[i][j]=0;
-				avez[i][j]=0;
+//				avez[i][j]=0;
 				dsppt[i][j].x=0;
 				dsppt[i][j].y=0;
 				dspsize[i][j]=0;
@@ -44,7 +44,7 @@
 							cnpt[i][j].push_back(newpoints[k]-jnewpoints[k]+points[k]);
 							avept[i][j].x+=newpoints[k].x-jnewpoints[k].x;
 							avept[i][j].y+=newpoints[k].y-jnewpoints[k].y;
-							avez[i][j]+=z[k];
+//							avez[i][j]+=z[k];
 //							avesize[i][j]+=sqrt(pow(newpoints[k].x-jnewpoints[k].x,2.0)
 	//							+pow(newpoints[k].y-jnewpoints[k].y,2.0));
 						}
@@ -58,7 +58,7 @@
 			for(int i=0;i<cnh;i++){
 				avept[i][j].x=avept[i][j].x/(int)cpt[i][j].size();
 				avept[i][j].y=avept[i][j].y/(int)cpt[i][j].size();
-				avez[i][j]=avez[i][j]/(int)cpt[i][j].size();
+//				avez[i][j]=avez[i][j]/(int)cpt[i][j].size();
 				if(!std::isnan(pavept[i][j].x)&&!std::isnan(pavept[i][j].x)){
 					avept[i][j].x=(ppT*pavept[i][j].x+dt*avept[i][j].x)/(ppT+dt);
 					avept[i][j].y=(ppT*pavept[i][j].y+dt*avept[i][j].y)/(ppT+dt);
@@ -97,7 +97,12 @@
 				th_mv=2.0;///ddt;
 				if(std::abs(dyaw)>0.01)
 					th_mv=th_mv*std::abs(dyaw)/0.01;
-				if(std::isnan(avept[i][j].x)||avept[i][j].y*avez[i][j]/f+0.23<0.15||std::abs(avept[i][j].x)<th_mv/avez[i][j]||th_mv<dsppt[i][j].x){
+//				if(i>=9)
+//					std::cout<<"sp3d.sqr_p3d[i"<<i<<"].line_p3d[j"<<j<<"].y:"<<sp3d.sqr_p3d[i].line_p3d[j].y<<"\n";
+				if(sp3d.sqr_p3d[i].line_p3d[j].y+0.23<=0||sp3d.sqr_p3d[i].line_p3d[j].y+0.23>1.0
+					||std::isnan(avept[i][j].x)
+					||std::abs(avept[i][j].x)<th_mv/sp3d.sqr_p3d[i].line_p3d[j].z
+					||th_mv<dsppt[i][j].x){
 //				if(std::isnan(avesize[i][j]))//||dspsize[i][j]>th_dsp||avesize[i][j]<1||avesize[i][j]<th_dsp)
 					p_mvarea[i][j]=0;
 				}
@@ -124,13 +129,14 @@
 //max_z==5m < z	-> p_mvarea=0 (安全領域)
 					double max_z=5;
 					double min_z=1;
-					if(avez[i][j]<=min_z)
+					if(sp3d.sqr_p3d[i].line_p3d[j].z<=min_z)
 						p_mvarea[i][j]=min_z;
-					else if(avez[i][j]>=max_z)
+					else if(sp3d.sqr_p3d[i].line_p3d[j].z>=max_z)
 						p_mvarea[i][j]=0;
 					else
-						p_mvarea[i][j]=-min_z/(max_z-min_z) * avez[i][j] + (max_z)/(max_z-min_z);
-				}				
+						p_mvarea[i][j]=-min_z/(max_z-min_z) * sp3d.sqr_p3d[i].line_p3d[j].z + (max_z)/(max_z-min_z);
+				}
+		
 //				p_mvarea[i][j]=(pT*p_pmvarea[i][j]+dt*p_mvarea[i][j])/(pT+dt);
 				if(std::isnan(p_mvarea[i][j])||p_mvarea[i][j]<0)
 					p_mvarea[i][j]=0;
@@ -148,7 +154,27 @@
 //	ismvline : ave_mvobj
 		double sum_pmvline[cnw]={0};
 		double pmvline[cnw]={0};
+		double line_z[cnw]={0};
+		int z_count=0;
 		for(int j=0;j<cnw;j++){
+			double min_z=5;
+			for(int i=0;i<cnh;i++){
+				if(!std::isnan(sp3d.sqr_p3d[i].line_p3d[j].y)
+					&&sp3d.sqr_p3d[i].line_p3d[j].y+0.23>0&&sp3d.sqr_p3d[i].line_p3d[j].y+0.23<1.0){
+//					line_z[j]+=sp3d.sqr_p3d[i].line_p3d[j].z;
+//					z_count++;
+					if(min_z>sp3d.sqr_p3d[i].line_p3d[j].z)
+						min_z=sp3d.sqr_p3d[i].line_p3d[j].z;
+				}
+			}
+			if(min_z==5)
+				min_z=0.5;
+/*			if(z_count!=0)
+				line_z[j]=line_z[j]/z_count;
+			else
+				line_z[j]=0;
+*/
+			line_z[j]=min_z;
 			for(int i=0;i<cnh;i++){
 				if(p_mvarea[i][j]==1){
 					pmvline[j]=1;
@@ -163,7 +189,7 @@
 		}
 
 //	find spaces
-		const int space_minsize=3;
+		int space_minsize=3;//  3area/1m 
 		//img_prc_cls.h reserve(cnw)
 		std::vector<int> space_begin;
 		std::vector<int> space_end;
@@ -174,8 +200,50 @@
 		}
 		std::cout<<"\n";
 */
-//危険領域のみを考慮したスペース探査
+//VFH
 		for(int j=0;j<cnw;j++){
+			if(line_z[j]>1&&!std::isinf(line_z[j])&&!std::isnan(line_z[j]))
+				space_temp++;
+			else{
+				if(space_minsize<=space_temp){
+					space_size.push_back(space_temp);
+					space_end.push_back(j);
+					space_begin.push_back(j-space_temp);
+				}
+				space_temp=0;
+			}
+			if(j==cnw-1){
+				if(space_minsize<=space_temp){
+					space_size.push_back(space_temp);
+					space_end.push_back(j);
+					space_begin.push_back(j-space_temp);
+				}
+			}
+		}
+
+		double z_max=0.5;
+		double z_aveline=0;//sum->ave
+		int target_num=cnw/2;
+		for(int i=0;i<space_size.size();i++){
+			//space num
+			for(int j=0;j<space_size[i]-(space_minsize-1);j++){
+				for(int k=0;k<space_minsize;k++)
+					z_aveline+=line_z[space_begin[i]+j+k];
+				z_aveline=z_aveline/space_minsize;
+				if(z_max<z_aveline){
+					z_max=z_aveline;
+					target_num=space_begin[i]+j+space_minsize/2;
+				}
+				else if(z_max==z_aveline){
+					if(std::abs(target_num-cnw/2)>std::abs(space_begin[i]+j+space_minsize/2-cnw/2))
+						target_num=space_begin[i]+j+space_minsize/2;
+				}
+				z_aveline=0;
+			}
+		}
+		std::cout<<"z_max:"<<z_max<<"\n";
+//危険領域のみを考慮したスペース探査
+/*		for(int j=0;j<cnw;j++){
 			if(pmvline[j]==0)
 				space_temp++;
 			else{
@@ -218,6 +286,7 @@
 				p_aveline=0;
 			}
 		}
+*/
 //		std::cout<<"space_size.size():"<<space_size.size()<<"\n";
 //		std::cout<<"target_num:"<<target_num<<"\n";
 //	std::cout<<"space:"<<space_size<<"["<<space_begin<<","<<space_end<<"]\n";

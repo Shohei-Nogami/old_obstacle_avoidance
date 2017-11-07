@@ -262,5 +262,6 @@ public:
 	void print_w(void);
 	void print_clpsize(void);
 	void print_cptsize(void);
+	void print_sp3dsize(void);
 
 };

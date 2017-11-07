@@ -95,12 +95,13 @@ public:
 					}
 				}
 				ave_depth[i][j]=sum_depth/(count-nan_count);
-				p3d.x=( (double)j*width/cnw+(double)width/cnw/2 )*ave_depth[i][j]/f;
-				p3d.y=( (double)j*height/cnh+(double)height/cnh/2 )*ave_depth[i][j]/f;
+				p3d.x=( -((double)j*width/cnw+(double)width/cnw/2)+(double)width/2 )*ave_depth[i][j]/f;
+				p3d.y=( -((double)i*height/cnh+(double)height/cnh/2)+(double)height/2 )*ave_depth[i][j]/f;
 				p3d.z=ave_depth[i][j];
 				lp3d.line_p3d.push_back(p3d);
 			}
 			sp3d.sqr_p3d.push_back(lp3d);
+			lp3d.line_p3d.clear();
 		}
 	}
 	void empty_callback(const std_msgs::Empty& msg){

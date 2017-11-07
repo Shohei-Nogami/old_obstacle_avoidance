@@ -42,5 +42,10 @@
 			}
 		}
 	}
-	
+	void ImageProcesser::print_sp3dsize(void){
+		std::cout<<"i=cnh=sp3d.sqr_p3d.size():"<<sp3d.sqr_p3d.size()<<"\n";
+		std::cout<<"j=cnw=sp3d.sqr_p3d[0].line_p3d.size():"<<sp3d.sqr_p3d[0].line_p3d.size()<<"\n";
+		
+	}
+
 

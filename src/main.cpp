@@ -37,6 +37,7 @@ int main(int argc,char **argv){
 //		rate.sleep();
 //		prc.print_points_size();
 		prc.print_dt();
+//		prc.print_sp3dsize();
 //		prc.print_imgdt();
 //		prc.show_speed();
 //		prc.print_bias();
