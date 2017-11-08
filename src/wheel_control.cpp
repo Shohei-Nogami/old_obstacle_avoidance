@@ -1,9 +1,21 @@
 #include"img_prc_cls.h"
 
 	void ImageProcesser::wheel_control(void){
+		int vel_l;
+		int vel_r;
 		//deviation
-		int vel_l=vel;
-		int vel_r=vel;
+		if(z_target<1){
+			vel_l=0;
+			vel_r=0;
+		}
+		else if(z_target==0.5){
+			vel_l=0;
+			vel_r=50;
+		}
+		else{
+			vel_l=vel;
+			vel_r=vel;
+		}
 		const double s=0.50;//sensitivity
 //		std::cout<<"tp,wdth:"<<target_point.x<<","<<width/2<<"\n";
 		double d=(target_point.x-width/2)/s;//+:roll right,-:roll left

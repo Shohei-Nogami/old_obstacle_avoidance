@@ -97,30 +97,13 @@
 				th_mv=2.0;///ddt;
 				if(std::abs(dyaw)>0.01)
 					th_mv=th_mv*std::abs(dyaw)/0.01;
-//				if(i>=9)
-//					std::cout<<"sp3d.sqr_p3d[i"<<i<<"].line_p3d[j"<<j<<"].y:"<<sp3d.sqr_p3d[i].line_p3d[j].y<<"\n";
 				if(sp3d.sqr_p3d[i].line_p3d[j].y+0.23<=0||sp3d.sqr_p3d[i].line_p3d[j].y+0.23>1.0
 					||std::isnan(avept[i][j].x)
 					||std::abs(avept[i][j].x)<th_mv/sp3d.sqr_p3d[i].line_p3d[j].z
 					||th_mv<dsppt[i][j].x){
-//				if(std::isnan(avesize[i][j]))//||dspsize[i][j]>th_dsp||avesize[i][j]<1||avesize[i][j]<th_dsp)
 					p_mvarea[i][j]=0;
 				}
 				else{
-//					std::cout<<"ddt:"<<ddt<<"\n";
-//					std::cout<<"th_dsp:"<<th_dsp<<"\n";
-//					std::cout<<"th_mv:"<<th_mv<<"\n";
-//					std::cout<<"avept[i][j]:"<<avept[i][j]<<"\n";
-//					std::cout<<"avesize[i][j]:"<<avesize[i][j]<<"\n";
-//					std::cout<<"dspsize[i][j]:"<<dspsize[i][j]<<"\n";
-//					std::cout<<"avez[i][j]:"<<avez[i][j]<<"\n";
-/*					p_mv=avesize[i][j];///th_dsp;
-					if(th_dsp>1)
-						p_mv/=th_dsp;
-					if(p_mv>1)
-						p_mv=1;
-					std::cout<<"p_mv:"<<p_mv<<"\n";
-*/
 					p_mvarea[i][j]=1;
 //zの大きさによる重み付け
 //z<=min_z==1m -> p_mvarea=1 (危険領域)
@@ -150,6 +133,36 @@
 			}
 		}
 
+//衝突物体を予測
+//avept[i][j].x
+/*		double obj_pstn;
+		int prd_obj[cnh][cnw];
+		int prd_line[cnw];
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
+				prd_obj[i][j]=0;
+			}
+		}
+
+		for(int j=0;j<cnw;j++){
+			for(int i=0;i<cnh;i++){
+				if(p_mvarea[i][j]!=0){
+					obj_pstn=avept[i][j].x*sp3d.sqr_p3d[i].line_p3d[j].z/dz
+						+(double)j*width/cnw+(double)width/cnw/2;
+					int prd_j=(int)(obj_pstn*cnw/width);
+					std::cout<<"prd_j:"<<prd_j<<"\n";
+					prd_obj[i][prd_j]=1;
+					int color=100;
+					for(int u=prd_j*width/cnw;u<(prd_j+1)*width/cnw;u++){
+						for(int v=i*height/cnh;v<(i+1)*height/cnh;v++){
+							Limg_view.at<cv::Vec3b>(v,u)[2]+=color;
+						}
+					}
+					
+				}
+			}
+		}
+*/
 //	convert ismvobj->ismvline
 //	ismvline : ave_mvobj
 		double sum_pmvline[cnw]={0};
@@ -157,23 +170,25 @@
 		double line_z[cnw]={0};
 		int z_count=0;
 		for(int j=0;j<cnw;j++){
-			double min_z=5;
+			double min_z;
+			int nan_count=0;
+			int all_count=0;
 			for(int i=0;i<cnh;i++){
-				if(!std::isnan(sp3d.sqr_p3d[i].line_p3d[j].y)
-					&&sp3d.sqr_p3d[i].line_p3d[j].y+0.23>0&&sp3d.sqr_p3d[i].line_p3d[j].y+0.23<1.0){
-//					line_z[j]+=sp3d.sqr_p3d[i].line_p3d[j].z;
-//					z_count++;
-					if(min_z>sp3d.sqr_p3d[i].line_p3d[j].z)
-						min_z=sp3d.sqr_p3d[i].line_p3d[j].z;
+				if(sp3d.sqr_p3d[i].line_p3d[j].y+0.23>0&&sp3d.sqr_p3d[i].line_p3d[j].y+0.23<1.0){
+					if(!std::isnan(sp3d.sqr_p3d[i].line_p3d[j].y)){
+						if(min_z>sp3d.sqr_p3d[i].line_p3d[j].z||all_count==0)
+							min_z=sp3d.sqr_p3d[i].line_p3d[j].z;
+					}
+//					else
+//						nan_count++;
+					all_count++;
 				}
+			
 			}
-			if(min_z==5)
-				min_z=0.5;
-/*			if(z_count!=0)
-				line_z[j]=line_z[j]/z_count;
-			else
-				line_z[j]=0;
-*/
+			
+//			if(nan_count==all_count)
+			if(all_count==0)
+				min_z=0.5;	
 			line_z[j]=min_z;
 			for(int i=0;i<cnh;i++){
 				if(p_mvarea[i][j]==1){
@@ -189,20 +204,14 @@
 		}
 
 //	find spaces
-		int space_minsize=3;//  3area/1m 
-		//img_prc_cls.h reserve(cnw)
+		int space_minsize=3;//	3area/1m 
 		std::vector<int> space_begin;
 		std::vector<int> space_end;
 		std::vector<int> space_size;
 		int space_temp=0;
-/*		for(int j=0;j<cnw;j++){
-			std::cout<<ismvline[j];
-		}
-		std::cout<<"\n";
-*/
 //VFH
 		for(int j=0;j<cnw;j++){
-			if(line_z[j]>1&&!std::isinf(line_z[j])&&!std::isnan(line_z[j]))
+			if(line_z[j]>0.5&&!std::isinf(line_z[j])&&!std::isnan(line_z[j]))
 				space_temp++;
 			else{
 				if(space_minsize<=space_temp){
@@ -220,82 +229,37 @@
 				}
 			}
 		}
-
-		double z_max=0.5;
+		double z_max=5;
 		double z_aveline=0;//sum->ave
+//		double z_target=0.5;
 		int target_num=cnw/2;
+		z_target=0.5;
+
+		for(int i=0;i<cnw;i++)
+			std::cout<<"line_z["<<i<<"]:"<<line_z[i]<<"\n";
+		for(int i=0;i<space_size.size();i++)
+			std::cout<<"space_begin[i],space_size[i]:"<<space_begin[i]<<","<<space_size[i]<<"\n";
 		for(int i=0;i<space_size.size();i++){
 			//space num
-			for(int j=0;j<space_size[i]-(space_minsize-1);j++){
+			for(int j=0;j<space_size[i]-(space_minsize);j++){
 				for(int k=0;k<space_minsize;k++)
 					z_aveline+=line_z[space_begin[i]+j+k];
 				z_aveline=z_aveline/space_minsize;
-				if(z_max<z_aveline){
-					z_max=z_aveline;
+				if(z_target<z_aveline){
+					z_target=z_aveline;
 					target_num=space_begin[i]+j+space_minsize/2;
 				}
-				else if(z_max==z_aveline){
+				else if(z_target==z_aveline){
 					if(std::abs(target_num-cnw/2)>std::abs(space_begin[i]+j+space_minsize/2-cnw/2))
 						target_num=space_begin[i]+j+space_minsize/2;
 				}
 				z_aveline=0;
 			}
 		}
-		std::cout<<"z_max:"<<z_max<<"\n";
-//危険領域のみを考慮したスペース探査
-/*		for(int j=0;j<cnw;j++){
-			if(pmvline[j]==0)
-				space_temp++;
-			else{
-				if(space_minsize<=space_temp){
-					space_size.push_back(space_temp);
-					space_end.push_back(j);
-					space_begin.push_back(j-space_temp);
-				}
-				space_temp=0;
-			}
-			if(j==cnw-1){
-				if(space_minsize<=space_temp){
-					space_size.push_back(space_temp);
-					space_end.push_back(j);
-					space_begin.push_back(j-space_temp);
-				}
-			}
-		}
-//		std::cout<<"pmvline\n";
-//		for(int i=0;i<cnw;i++) 
-//			std::cout<<pmvline[i]<<"\n";
-//警戒領域を考慮した目標点設定
-		double p_min=1;
-		double p_aveline=0;//sum->ave
-		int target_num=cnw/2;
-		for(int i=0;i<space_size.size();i++){
-			//space num
-			for(int j=0;j<space_size[i]-(space_minsize-1);j++){
-				for(int k=0;k<space_minsize;k++)
-					p_aveline+=pmvline[space_begin[i]+j+k];
-				p_aveline=p_aveline/space_minsize;
-				if(p_min>p_aveline){
-					p_min=p_aveline;
-					target_num=space_begin[i]+j+space_minsize/2;
-				}
-				else if(p_min==p_aveline){
-					if(std::abs(target_num-cnw/2)>std::abs(space_begin[i]+j+space_minsize/2-cnw/2))
-						target_num=space_begin[i]+j+space_minsize/2;
-				}
-				p_aveline=0;
-			}
-		}
-*/
-//		std::cout<<"space_size.size():"<<space_size.size()<<"\n";
-//		std::cout<<"target_num:"<<target_num<<"\n";
-//	std::cout<<"space:"<<space_size<<"["<<space_begin<<","<<space_end<<"]\n";
-//culculate target point
-//		cv::Point2i target_point;
-		target_point.x=width/cnw*target_num;//+width/cnw*0.5;
-//		std::cout<<"tp1"<<target_point.x<<"\n";
+		std::cout<<"target_num:"<<target_num<<"\n";
+		std::cout<<"z_target:"<<z_target<<"\n";
+		target_point.x=width/cnw*target_num;
 		target_point.x=(pT*ptarget_point.x+dt*target_point.x)/(pT+dt);
-//		std::cout<<"tp2"<<target_point.x<<"\n";
 		target_point.y=height/2;
 		cv::circle(Limg_view, target_point, 4, cv::Scalar(200,200,0),-1, CV_AA);
 		for(int i=0;i<cn;i++){

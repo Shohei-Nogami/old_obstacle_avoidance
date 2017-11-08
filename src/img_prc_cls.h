@@ -151,8 +151,9 @@ public:
 	std_msgs::Empty emptymsg;
 //control wheel
 	obst_avoid::wheel_msg wheelMsg;
-	const int vel=0;//200;
+	const int vel=100;//200;
 	const int max_vel_dif=100;
+	double z_target=0.5;
 //ファイル出力
 	std::ofstream ofs;
 
