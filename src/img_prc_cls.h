@@ -141,6 +141,7 @@ public:
 	std::vector<cv::Point2d> cpt[cnh][cnw];
 	std::vector<cv::Point2d> cnpt[cnh][cnw];
 	std::vector<double> cz[cnh][cnw];
+	double p_avez[cnh][cnw];
 //	double p_mvarea[cnh][cnh];
 	double p_pmvarea[cnh][cnw];
 	double pavesize[cnh][cnw];
@@ -266,3 +267,4 @@ public:
 	void print_sp3dsize(void);
 
 };
+
