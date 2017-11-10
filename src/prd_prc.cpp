@@ -148,32 +148,61 @@
 				if(p_mvarea[i][j]!=0){
 //					obj_pstn=avept[i][j].x*sp3d.sqr_p3d[i].line_p3d[j].z/dz
 //						+(double)j*width/cnw+(double)width/cnw/2;
-						
-//					int prd_j=(int)(obj_pstn*cnw/width);
-					std::cout<<"p_avez[i][j]-avept[i][j].x*sp3d.sqr_p3d[i].line_p3d[j].z:"<<p_avez[i][j]-avept[i][j].x*sp3d.sqr_p3d[i].line_p3d[j].z<<"\n";
-					if(std::isnan(p_avez[i][j])||p_avez[i][j]-avept[i][j].x*sp3d.sqr_p3d[i].line_p3d[j].z<=0.05)
-					  continue;
-					obj_pstn=j*width/cnw+avept[i][j].x*avept[i][j].x*sp3d.sqr_p3d[i].line_p3d[j].z/(p_avez[i][j]-avept[i][j].x*sp3d.sqr_p3d[i].line_p3d[j].z);
-						+(double)j*width/cnw+(double)width/cnw/2;
 
+//					int prd_j=(int)(obj_pstn*cnw/width);
+//					std::cout<<"p_avez[i][j]-avept[i][j].x*sp3d.sqr_p3d[i].line_p3d[j].z:"<<p_avez[i][j]-avept[i][j].x*sp3d.sqr_p3d[i].line_p3d[j].z<<"\n";
+//					if(std::isnan(p_avez[i][j])||p_avez[i][j]-avept[i][j].x*sp3d.sqr_p3d[i].line_p3d[j].z<=0.05)
+//					  continue;
+//					obj_pstn=j*width/cnw+avept[i][j].x*avept[i][j].x*sp3d.sqr_p3d[i].line_p3d[j].z/(p_avez[i][j]-avept[i][j].x*sp3d.sqr_p3d[i].line_p3d[j].z);
+//						+(double)j*width/cnw+(double)width/cnw/2;
+
+					//if(std::isnan(p_avez[i][j]))//||p_avez[i][j]-avez[i][j]<=0.01
+//||p_avez[i][j]-avez[i][j]>=0.5)
+					//  continue;
+//					obj_pstn=((double)j+0.5)*width/cnw+avept[i][j].x*avez[i][j]/(p_avez[i][j]-avez[i][j]);
+					std::cout<<"avept["<<i<<"]["<<j<<"].x:"<<avept[i][j].x<<"\n";
+					std::cout<<"p_avez["<<i<<"]["<<j<<"]:"<<p_avez[i][j]<<"\n";
+					std::cout<<"p_avez["<<i<<"]["<<j<<"]-avez["<<i<<"]["<<j<<"]:"<<p_avez[i][j]-avez[i][j]<<"\n";
+//					std::cout<<"t_limit["<<i<<"]["<<j<<"]:"<<p_avez[i][j]/(p_avez[i][j]-avez[i][j])*dt<<"\n";
+//					double obj_pstn3=avept[i][j].x/dt*3;//
+//					std::cout<<"obj_pstn:dx/3:"<<obj_pstn3<<"\n";
+					std::cout<<"t_limit["<<i<<"]["<<j<<"]:"<<avez[i][j]/dz*dt<<"\n";
+					double obj_pstn=avept[i][j].x*avez[i][j]/dz;//
+//					std::cout<<"dz:"<<dz<<"\n";
+//					std::cout<<"obj_pstn::"<<obj_pstn<<"\n";
+					obj_pstn=((double)j+0.5)*width/cnw+obj_pstn;
+					std::cout<<"obj_pstn(prev,aftr):("<<((double)j+0.5)*width/cnw<<","<<obj_pstn<<")\n";
 //if(std::isnan(p_avez[i][j])||p_avez[i][j]-avez[i][j]<=0.05)
 //  continue;
-//obj_pstn=j*width/cnw+avept[i][j].x*avez[i][j]/(p_avez[i][j]-avez[i][j]);
+//obj_pstn=obj_pstn=((double)j+0.5)*width/cnw+avept[i][j].x*sp3d.sqr_p3d[i].line_p3d[j].z/(p_avez[i][j]-sp3d.sqr_p3d[i].line_p3d[j].z);
 //						+(double)j*width/cnw+(double)width/cnw/2;
 //std::cout<<"j*width/cnw+avept[i][j]*avez[i][j]/(p_avez[i][j]-avez[i][j]):"<<j*width/cnw+avept[i][j].x*avez[i][j]/(p_avez[i][j]-avez[i][j])<<"\n";
 					int prd_j=(int)(obj_pstn*cnw/width);
 					std::cout<<"prd_j:"<<prd_j<<"\n";
-					if(0<=prd_j&&prd_j<cnw){
+					if(0<=prd_j&&prd_j<cnw)
 					  prd_obj[i][prd_j]=1;
+//					  (pT*pprd_obj[i][j]+dt*prd_obj[i][j])/(pT+dt);
 					  int color=100;
-					  for(int u=prd_j*width/cnw;u<(prd_j+1)*width/cnw;u++){
+					  for(int u=j*width/cnw;u<(j+1)*width/cnw;u++){
 						  for(int v=i*height/cnh;v<(i+1)*height/cnh;v++){
-							  Limg_view.at<cv::Vec3b>(v,u)[2]+=color;
+							  Limg_view.at<cv::Vec3b>(v,u)[0]+=color;
 						  }
 					  }
-					}
 					
+
 				}
+			}
+		}
+		for(int j=0;j<cnw;j++){
+			for(int i=0;i<cnh;i++){
+				  double Tp=dt*5;
+//				  prd_obj[i][j]=(pT*pprd_obj[i][j]+dt*prd_obj[i][j])/(pT+dt);
+				  int color=100*prd_obj[i][j];
+				  for(int u=j*width/cnw;u<(j+1)*width/cnw;u++){
+					  for(int v=i*height/cnh;v<(i+1)*height/cnh;v++){
+						  Limg_view.at<cv::Vec3b>(v,u)[2]+=color;
+					  }
+				  }
 			}
 		}
 
@@ -216,8 +245,8 @@
 			if(pmvline[j]!=1)
 				pmvline[j]=sum_pmvline[j]/cnh;
 		}
-		
-		
+
+
 		/*
 //	find spaces
 		int space_minsize=3;//	3area/1m 
@@ -250,7 +279,6 @@
 //		double z_target=0.5;
 		int target_num=cnw/2;
 		z_target=0.5;
-
 		for(int i=0;i<cnw;i++)
 			std::cout<<"line_z["<<i<<"]:"<<line_z[i]<<"\n";
 		for(int i=0;i<space_size.size();i++)
@@ -306,7 +334,7 @@
 				}
 			}
 		}
-		
+
 		double z_max=5;
 		double z_aveline=0;//sum->ave
 //		double z_target=0.5;
@@ -335,7 +363,7 @@
 				z_aveline=0;
 			}
 		}
-		
+
 
 		if((int)space_size.size()==0){
 			int right_space=0;
@@ -359,19 +387,20 @@
 		else
 		  target_num=cnw;
 		}
-		
-		
+
+
 //		std::cout<<"target_num:"<<target_num<<"\n";
 //		std::cout<<"z_target:"<<z_target<<"\n";
 		target_point.x=width/cnw*target_num;
-		target_point.x=(pT*ptarget_point.x+dt*target_point.x)/(pT+dt);
+//		target_point.x=(pT*ptarget_point.x+dt*target_point.x)/(pT+dt);
 		target_point.y=height/2;
 		cv::circle(Limg_view, target_point, 4, cv::Scalar(200,200,0),-1, CV_AA);
 		for(int i=0;i<cn;i++){
 			for(int j=0;j<cn;j++){
 				p_pmvarea[i][j]=p_mvarea[i][j];
-//				p_avez[i][j]=avez[i][j];
-				p_avez[i][j]=avept[i][j].x*sp3d.sqr_p3d[i].line_p3d[j].z;
+				p_avez[i][j]=avez[i][j];
+//				p_avez[i][j]=avept[i][j].x*sp3d.sqr_p3d[i].line_p3d[j].z;
+            pprd_obj[i][j]=prd_obj[i][j];
 			}
 		}
 		ptarget_point=target_point;

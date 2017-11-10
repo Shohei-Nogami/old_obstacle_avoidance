@@ -235,6 +235,10 @@ target_link_libraries(img_prc ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 add_executable(culc_area3d src/culc_area3d.cpp)
 target_link_libraries(culc_area3d ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
+add_executable(improve_depth src/improve_depth.cpp)
+target_link_libraries(improve_depth ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+
 #add_executable(culc_areaz src/culc_areaz.cpp)
 #target_link_libraries(culc_areaz ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 

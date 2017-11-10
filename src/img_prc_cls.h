@@ -145,6 +145,7 @@ public:
 //	double p_mvarea[cnh][cnh];
 	double p_pmvarea[cnh][cnw];
 	double pavesize[cnh][cnw];
+	double pprd_obj[cnh][cnw];
 	cv::Point2d pavept[cnh][cnw];
 	cv::Point2i target_point;
 	cv::Point2i ptarget_point;

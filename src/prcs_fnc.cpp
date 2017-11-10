@@ -36,6 +36,7 @@ void ImageProcesser::imageProcess()
 	}
 //
 //修正必要
+//	std::cout<<"dz:"<<dz<<"\n";
 	float X,Y;
 	cv::Point2f ppt;
 	for(int j=0;j<pts.size();j++){
