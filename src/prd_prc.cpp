@@ -300,7 +300,7 @@
 //			if(all_count!=0)
 //				std::cout<<"line["<<j<<"]:(float)nan_count/all_count:"<<(float)nan_count/all_count<<"\n";
 //				std::cout<<"line["<<j<<"]nan_count:"<<nan_count<<"\n";
-			if(all_count==0||min_z<0.5)
+			if(all_count==0||min_z<0.5||max_z>5)//add
 				min_z=0.5;
 			else if((float)nan_count/all_count>=0.70)
 				min_z=0.5;
@@ -385,7 +385,7 @@
 					break;
 			}
 			for(int j=cnw-1;j>=0;j--){
-				if(line_z[j]>1.0&&!std::isinf(line_z[j])&&!std::isnan(line_z[j]))
+				if(line_z[j]>0.5&&!std::isinf(line_z[j])&&!std::isnan(line_z[j]))
 					right_space++;
 				else
 					break;
