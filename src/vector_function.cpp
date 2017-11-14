@@ -23,7 +23,8 @@
 		}
 		jnpts.reserve(point_size);
 		jnewpoints.reserve(point_size);
-
+		mv_area.reserve(cnh*cnw);
+		opt.reserve(cnh*cnw);
 	}
 	void ImageProcesser::clear_vectors(void){
 //		pts.clear();   //特徴点
@@ -60,6 +61,8 @@
 				cz[i][j].clear();
 			}
 		}
+		mv_area.clear();
+		opt.clear();
 	}
 
 

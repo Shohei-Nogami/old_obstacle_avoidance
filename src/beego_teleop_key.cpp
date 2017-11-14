@@ -11,6 +11,7 @@
 	obst_avoid::wheel_msg wheelMsg;
 	int pbtn=0;
 	int cbtn;
+	const int ac=100;
 /*	double new_time,prev_time,dt;
 	ros::Time start_time;
 		void gettime(void){
@@ -83,8 +84,8 @@ void twistCallback(const geometry_msgs::Twist::ConstPtr& msg){
 		else if(msg->linear.x>0&&msg->angular.z==0){
 
 
-		  vel_r+=100;
-		  vel_l+=100;		  
+		  vel_r+=ac;
+		  vel_l+=ac;		  
 		  if(vel_r>=maxvel)
 			vel_r=maxvel;
 		  if(vel_l>=maxvel)
@@ -113,8 +114,8 @@ void twistCallback(const geometry_msgs::Twist::ConstPtr& msg){
 		}
 		else{
 
-		  vel_r-=100;
-		  vel_l-=100;		  
+		  vel_r-=ac;
+		  vel_l-=ac;		  
 		  if(vel_r<=-maxvel)
 			vel_r=-maxvel;
 		  if(vel_l<=-maxvel)

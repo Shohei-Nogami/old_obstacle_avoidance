@@ -151,6 +151,9 @@ public:
 	cv::Point2i ptarget_point;
 	obst_avoid::sqr_point3d sp3d;
 	std_msgs::Empty emptymsg;
+	std::vector<cv::Point2i> mv_area;
+	std::vector<double> opt;
+					
 //control wheel
 	obst_avoid::wheel_msg wheelMsg;
 	const int vel=100;//200;
