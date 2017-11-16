@@ -76,6 +76,7 @@ public:
 //		int cn=12;
 //		cnw=cn*2;
 //		cnh=cn;
+
 		double ave_depth[cnh][cnw];
 		int nan_count,count;
 		long double sum_depth;
@@ -103,6 +104,37 @@ public:
 			sp3d.sqr_p3d.push_back(lp3d);
 			lp3d.line_p3d.clear();
 		}
+
+/*		double min_depth[cnh][cnw];
+		int nan_count,count;
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
+				count=0;
+				nan_count=0;
+				for(int h=(int)(i*height/cnh);h<(int)((i+1)*height/cnh);h++){
+					for(int w=(int)(j*width/cnw);w<(int)((j+1)*width/cnw);w++){
+						double depth=depth_img.at<float>(h,w);
+						if(!std::isnan(depth)){
+							if(count==0)
+								min_depth[i][j]=depth;
+							else if(min_depth[i][j]>depth)
+								min_depth[i][j]=depth;
+						}
+						else
+							nan_count++;
+						count++;
+					}
+				}
+				p3d.x=( -((double)j*width/cnw+(double)width/cnw/2)+(double)width/2 )*min_depth[i][j]/f;
+				p3d.y=( -((double)i*height/cnh+(double)height/cnh/2)+(double)height/2 )*min_depth[i][j]/f;
+				p3d.z=min_depth[i][j];
+				lp3d.line_p3d.push_back(p3d);
+			}
+			sp3d.sqr_p3d.push_back(lp3d);
+			lp3d.line_p3d.clear();
+		}
+*/
+
 	}
 	void empty_callback(const std_msgs::Empty& msg){
 		rf=true;
