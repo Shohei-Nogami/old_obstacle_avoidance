@@ -27,6 +27,7 @@
 			vel_l=vel;
 			vel_r=vel;
 		}
+//		std::cout<<"vel_l,r:("<<vel_l<<","<<vel_r<<"\n";
 		const double s=0.50;//sensitivity
 //		std::cout<<"tp,wdth:"<<target_point.x<<","<<width/2<<"\n";
 		double d=(target_point.x-width/2)/s;//+:roll right,-:roll left
@@ -35,11 +36,12 @@
 			u=max_vel_dif;
 		else if(u<-max_vel_dif)
 			u=-max_vel_dif;
+		
 		vel_l=vel_l-u/2;
 		vel_r=vel_r+u/2;
 		wheelMsg.vel_l=vel_l;
 		wheelMsg.vel_r=vel_r;
-
+		
 		if(std::abs(vel_l)>=100){
 			if(vel_l>0)
 				wheelMsg.vel_data="0"+std::to_string(vel_l)+std::to_string(vel_r);
