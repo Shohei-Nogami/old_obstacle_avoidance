@@ -190,9 +190,11 @@
 							if(!std::isnan(avez[h][w]))
 //								obj_pstn=ave_opt*avez[h][w]/dz;//
 								obj_pstn=ave_opt*avez[h][w]/dr;//
+//								obj_pstn=ave_opt*avez[h][w]/(avez[h][w]*(1-cos(dyaw))+dr);;//
 							else
 //								obj_pstn=ave_opt*sp3d.sqr_p3d[h].line_p3d[w].z/dz;
 								obj_pstn=ave_opt*sp3d.sqr_p3d[h].line_p3d[w].z/dr;
+//								obj_pstn=ave_opt*sp3d.sqr_p3d[h].line_p3d[w].z/(sp3d.sqr_p3d[h].line_p3d[w].z*(1-cos(dyaw))+dr);
 		//					std::cout<<"dz:"<<dz<<"\n";
 							obj_pstn=((double)w+0.5)*width/cnw+obj_pstn;
 //							std::cout<<"obj_pstn(prev,aftr):("<<((double)w+0.5)*width/cnw<<","<<obj_pstn<<")\n";
@@ -211,6 +213,9 @@
 								if(!std::isnan(avez[h][w])){
 									if(sp3d.sqr_p3d[h].line_p3d[prd_j].z >avez[h][w]){
 										sp3d.sqr_p3d[h].line_p3d[prd_j].z =avez[h][w];
+										if(avez[h][w]<1.5)//add
+											sp3d.sqr_p3d[h].line_p3d[prd_j].z =0.5;
+
 //正規分布
 /*
 	//移動前後、の間のみ
@@ -229,17 +234,20 @@
 										}
 */
 	//全て
-										double sgm=(double)(std::abs(w-prd_j))/4;
+/*										double sgm=(double)(std::abs(w-prd_j))/4;
 										for(int k=0;k<cnw;k++){
 											double p=exp(-abs(prd_j-k)/(2*sgm*sgm));
 											sp3d.sqr_p3d[h].line_p3d[k].z=p*sp3d.sqr_p3d[h].line_p3d[prd_j].z+(1-p)*sp3d.sqr_p3d[h].line_p3d[k].z;
 										}
-
+*/
 									}
 								}
 								else{
 									if(sp3d.sqr_p3d[h].line_p3d[prd_j].z >sp3d.sqr_p3d[h].line_p3d[w].z){
 										sp3d.sqr_p3d[h].line_p3d[prd_j].z =sp3d.sqr_p3d[h].line_p3d[w].z;
+										if(sp3d.sqr_p3d[h].line_p3d[w].z<1.5)//add
+										sp3d.sqr_p3d[h].line_p3d[prd_j].z =0.5;
+										
 //正規分布
 /*
 										if(w<prd_j){
@@ -257,12 +265,12 @@
 										}
 */
 	//全て
-										double sgm=(double)(std::abs(w-prd_j))/4;
+/*										double sgm=(double)(std::abs(w-prd_j))/4;
 										for(int k=0;k<cnw;k++){
 											double p=exp(-abs(prd_j-k)/(2*sgm*sgm));
 											sp3d.sqr_p3d[h].line_p3d[k].z=p*sp3d.sqr_p3d[h].line_p3d[prd_j].z+(1-p)*sp3d.sqr_p3d[h].line_p3d[k].z;
 										}
-									}
+*/									}
 								}
 							}
 							int color=100;
@@ -369,6 +377,8 @@
 				min_z=0.5;
 			else if((float)nan_count/all_count>=0.70)
 				min_z=0.5;
+			else if(min_z!=0.5&&min_z==max_z)
+				min_z=0.5;
 			if(max_flag==0)
 				line_z[j]=min_z;
 			else
@@ -381,7 +391,9 @@
 			if(min_line_z>line_z[j])
 				min_line_z=line_z[j];
 		}
-		const double rw=0.276+0.1;//robot width +( left camera position - center position)
+		const double rw=0.276;//robot width +( left camera position - center position)
+		double dif_lens_d=0.075*f/min_line_z/(width/cnw);
+		int dif_lens=(int)dif_lens_d+(int)((dif_lens_d-(int)dif_lens_d)*2);//4 out ,5 in
 		double w_pix=f*rw/min_line_z;
 		int space_minsize=w_pix/(width/cnw)+1;
 //		std::cout<<"space_minsize:"<<space_minsize<<"\n";
@@ -390,8 +402,8 @@
 		std::vector<int> space_size;
 		int space_temp=0;
 //set vel and max_vel_dif
-		double min_space_z=line_z[cnw/2+(-space_minsize/2)];
-		for(int j=-space_minsize/2+1;j<=space_minsize/2;j++){
+/*		double min_space_z=line_z[cnw/2+(-space_minsize/2)-dif_lens];
+		for(int j=-space_minsize/2-dif_lens+1;j<=space_minsize/2+dif_lens;j++){
 			if(min_space_z>line_z[cnw/2+(-space_minsize/2)])
 					min_space_z=line_z[cnw/2+(-space_minsize/2)];
 		}
@@ -402,6 +414,7 @@
 			min_space_z=1.0;
 
 		vel=min_space_z*50+50;
+*/
 //VFH
 		for(int j=0;j<cnw;j++){
 			if(line_z[j]>0.7&&!std::isinf(line_z[j])&&!std::isnan(line_z[j]))
@@ -441,12 +454,12 @@
 				z_aveline=z_aveline/space_minsize;
 				if(z_target<z_aveline){
 					z_target=z_aveline;
-					target_num=space_begin[i]+j+space_minsize/2;
+					target_num=space_begin[i]+j+space_minsize/2-dif_lens;
 				}
 				else if(z_target==z_aveline
 					||std::abs(z_target-z_aveline)<z_target*0.1 ){
 					if(std::abs(target_num-cnw/2)>std::abs(space_begin[i]+j+space_minsize/2-cnw/2))
-						target_num=space_begin[i]+j+space_minsize/2;
+						target_num=space_begin[i]+j+space_minsize/2-dif_lens;
 				}
 				z_aveline=0;
 			}
