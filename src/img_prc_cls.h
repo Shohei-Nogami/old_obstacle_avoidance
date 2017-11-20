@@ -109,6 +109,7 @@ public:
 	double prev_roll,prev_pitch,prev_yaw;
 	double droll,dpitch,dyaw;
 	double pdyaw;
+	double dr;
 //--特徴点抽出
 	static const int max_points=800;//500
 	const int point_size=max_points*2;
@@ -153,11 +154,11 @@ public:
 	std_msgs::Empty emptymsg;
 	std::vector<cv::Point2i> mv_area;
 	std::vector<double> opt;
-					
+
 //control wheel
 	obst_avoid::wheel_msg wheelMsg;
-	const int vel=200;//100;//200;
-	const int max_vel_dif=100;
+	int vel=200;//100;//200;
+	int max_vel_dif=100;
 	double z_target=0.5;
 //ファイル出力
 	std::ofstream ofs;

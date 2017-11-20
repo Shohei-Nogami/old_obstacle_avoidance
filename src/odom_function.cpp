@@ -93,14 +93,14 @@
 	}
 //set global dx,dy
 	void ImageProcesser::setglobalodom(void){
-		double r=sqrt((position_x*position_x
+		dr=sqrt((position_x*position_x
 			-2*position_x*prev_position_x
 			+prev_position_x*prev_position_x)
 			+(position_y*position_y
 			-2*position_y*prev_position_y
 			+prev_position_y*prev_position_y));
-		global_dx=-r*cos(-dyaw);
-		global_dy=r*sin(-dyaw);
+		global_dx=-dr*cos(-dyaw);
+		global_dy=dr*sin(-dyaw);
 //		std::cout<<"global_dx,dy:"<<global_dx<<","<<global_dy<<"\n";
 	}
 	void ImageProcesser::setdzdx(void){

@@ -114,6 +114,7 @@
 		double obj_pstn;
 		int prd_obj[cnh][cnw];
 		int prd_line[cnw];
+		//initialize prd_obj
 		for(int i=0;i<cnh;i++){
 			for(int j=0;j<cnw;j++){
 				prd_obj[i][j]=0;
@@ -126,9 +127,7 @@
 
 		for(int j=0;j<cnw;j++){
 			for(int i=0;i<cnh;i++){
-			  
 				if(p_mvarea[i][j]!=0){
-
 					cv::Point2i temp;
 					temp.x=j;
 					temp.y=i;
@@ -150,7 +149,6 @@
 							if(area_end.y<mv_area[k].y)
 								area_end.y=mv_area[k].y;
 						}
-						
 						int search_range=1;
 						for(int l=-search_range;l<=search_range;l++){
 							for(int m=-search_range;m<=search_range;m++){
@@ -158,13 +156,10 @@
 									continue;
 								int u=mv_area[k].x;
 								int v=mv_area[k].y;
-								
 								if(u+l<0||u+l>cnw-1||v+m<0||v+m>cnh-1)
 									continue;
-									
 								if(std::isnan(sp3d.sqr_p3d[v+m].line_p3d[u+l].z)||std::isinf(sp3d.sqr_p3d[v+m].line_p3d[u+l].z))
 									continue;
-									
 								if(sp3d.sqr_p3d[v+m].line_p3d[u+l].y+0.23<=0||sp3d.sqr_p3d[v+m].line_p3d[u+l].y+0.23>1.0)
 									continue;
 								if(pp_mvarea[v+m][u+l]==1)
@@ -181,9 +176,8 @@
 						}
 					}
 					double ave_opt=0;
-
-					for(int k=0;k<mv_area.size();k++){		
-						ave_opt+=opt[k];						
+					for(int k=0;k<mv_area.size();k++){
+						ave_opt+=opt[k];
 					}
 					ave_opt=ave_opt/(int)opt.size();
 //					std::cout<<"mv_area.size():"<<mv_area.size()<<"\n";
@@ -194,9 +188,11 @@
 //--
 							double obj_pstn;
 							if(!std::isnan(avez[h][w]))
-								obj_pstn=ave_opt*avez[h][w]/dz;//
+//								obj_pstn=ave_opt*avez[h][w]/dz;//
+								obj_pstn=ave_opt*avez[h][w]/dr;//
 							else
-								obj_pstn=ave_opt*sp3d.sqr_p3d[h].line_p3d[w].z/dz;
+//								obj_pstn=ave_opt*sp3d.sqr_p3d[h].line_p3d[w].z/dz;
+								obj_pstn=ave_opt*sp3d.sqr_p3d[h].line_p3d[w].z/dr;
 		//					std::cout<<"dz:"<<dz<<"\n";
 							obj_pstn=((double)w+0.5)*width/cnw+obj_pstn;
 //							std::cout<<"obj_pstn(prev,aftr):("<<((double)w+0.5)*width/cnw<<","<<obj_pstn<<")\n";
@@ -209,21 +205,69 @@
 							//移動するエリアは考慮しない
 							if(0<=prd_j&&prd_j<cnw){
 								prd_obj[h][prd_j]=1;
+								int k_begin;
+								int k_end;
 								//移動後z
-								if(!std::isnan(avez[h][w])){	
-									if(sp3d.sqr_p3d[h].line_p3d[prd_j].z >avez[h][w])
+								if(!std::isnan(avez[h][w])){
+									if(sp3d.sqr_p3d[h].line_p3d[prd_j].z >avez[h][w]){
 										sp3d.sqr_p3d[h].line_p3d[prd_j].z =avez[h][w];
+//正規分布
+/*
+	//移動前後、の間のみ
+										if(w<prd_j){
+											k_begin=w;
+											k_end=prd_j;
+										}
+										else{
+											k_begin=prd_j;
+											k_end=w;
+										}
+										double sgm=(double)(k_end-k_begin)/4;
+										for(int k=k_begin;k<=k_end-k_begin;k++){
+											double p=exp(-abs(prd_j-k)/(2*sgm*sgm));
+											sp3d.sqr_p3d[h].line_p3d[k].z=p*sp3d.sqr_p3d[h].line_p3d[prd_j].z+(1-p)*sp3d.sqr_p3d[h].line_p3d[k].z;
+										}
+*/
+	//全て
+										double sgm=(double)(std::abs(w-prd_j))/4;
+										for(int k=0;k<cnw;k++){
+											double p=exp(-abs(prd_j-k)/(2*sgm*sgm));
+											sp3d.sqr_p3d[h].line_p3d[k].z=p*sp3d.sqr_p3d[h].line_p3d[prd_j].z+(1-p)*sp3d.sqr_p3d[h].line_p3d[k].z;
+										}
+
+									}
 								}
 								else{
-									if(sp3d.sqr_p3d[h].line_p3d[prd_j].z >sp3d.sqr_p3d[h].line_p3d[w].z)
+									if(sp3d.sqr_p3d[h].line_p3d[prd_j].z >sp3d.sqr_p3d[h].line_p3d[w].z){
 										sp3d.sqr_p3d[h].line_p3d[prd_j].z =sp3d.sqr_p3d[h].line_p3d[w].z;
+//正規分布
+/*
+										if(w<prd_j){
+											k_begin=w;
+											k_end=prd_j;
+										}
+										else{
+											k_begin=prd_j;
+											k_end=w;
+										}
+										double sgm=(double)(k_end-k_begin)/4;
+										for(int k=k_begin;k<=k_end-k_begin;k++){
+											double p=exp(-abs(prd_j-k)/(2*sgm*sgm));
+											sp3d.sqr_p3d[h].line_p3d[k].z=p*sp3d.sqr_p3d[h].line_p3d[prd_j].z+(1-p)*sp3d.sqr_p3d[h].line_p3d[k].z;
+										}
+*/
+	//全て
+										double sgm=(double)(std::abs(w-prd_j))/4;
+										for(int k=0;k<cnw;k++){
+											double p=exp(-abs(prd_j-k)/(2*sgm*sgm));
+											sp3d.sqr_p3d[h].line_p3d[k].z=p*sp3d.sqr_p3d[h].line_p3d[prd_j].z+(1-p)*sp3d.sqr_p3d[h].line_p3d[k].z;
+										}
+									}
 								}
 							}
-		//						(pT*pprd_obj[i][j]+dt*prd_obj[i][j])/(pT+dt);
 							int color=100;
 							for(int u=w*width/cnw;u<(w+1)*width/cnw;u++){
 								for(int v=h*height/cnh;v<(h+1)*height/cnh;v++){
-//									Limg_view.at<cv::Vec3b>(v,u)[0]+=color;
 									Limg_view.at<cv::Vec3b>(v,u)[1]+=color;
 								}
 							}
@@ -234,13 +278,11 @@
 				mv_area.clear();
 			}
 		}
-///////////
+//移動予測エリアを表示
 		for(int j=0;j<cnw;j++){
 			for(int i=0;i<cnh;i++){
 				//移動後エリアを追加
 				if(prd_obj[i][j]!=0){
-					double Tp=dt*5;
-//					prd_obj[i][j]=(pT*pprd_obj[i][j]+dt*prd_obj[i][j])/(pT+dt);
 					int color=100*prd_obj[i][j];
 					for(int u=j*width/cnw;u<(j+1)*width/cnw;u++){
 						for(int v=i*height/cnh;v<(i+1)*height/cnh;v++){
@@ -261,7 +303,7 @@
 			int nan_count=0;
 			int count=0;
 			int all_count=0;
-			int max_flag=0;		
+			int max_flag=0;
 			for(int i=0;i<cnh;i++){
 				if(!std::isnan(sp3d.sqr_p3d[i].line_p3d[j].y)){
 					if(sp3d.sqr_p3d[i].line_p3d[j].y+0.23>0&&sp3d.sqr_p3d[i].line_p3d[j].y+0.23<1.0){
@@ -271,7 +313,7 @@
 							min_z=sp3d.sqr_p3d[i].line_p3d[j].z;
 						}
 						if(prd_obj[i][j]==0&&!std::isnan(avez[i][j])){//add1114
-							int mrgn=(int)(f*0.5/avez[i][j]/width*cnh)+1;///3;add1114	
+							int mrgn=(int)(f*0.5/avez[i][j]/width*cnh)+1;///3;add1114
 //							std::cout<<"mrgn:"<<mrgn<<"\n";
 							bool cnf=false;
 							for(int k=-mrgn;k<=mrgn;k++){
@@ -288,7 +330,7 @@
 							if(cnf)
 								continue;
 /*
-							int mrgn=(int)(f*0.5/avez[i][j]/width*cnh)+1;///3;add1114	
+							int mrgn=(int)(f*0.5/avez[i][j]/width*cnh)+1;///3;add1114
 							bool cnf=false;
 							for(int k=-mrgn;k<=mrgn;k++){
 								for(int l=-mrgn;l<=mrgn;l++){
@@ -307,7 +349,7 @@
 						}
 
 						if(pp_mvarea[i][j]==0||prd_obj[i][j]!=0){
-							if(min_z>sp3d.sqr_p3d[i].line_p3d[j].z)								
+							if(min_z>sp3d.sqr_p3d[i].line_p3d[j].z)
 								min_z=sp3d.sqr_p3d[i].line_p3d[j].z;
 							if(max_z<sp3d.sqr_p3d[i].line_p3d[j].z)
 								max_z=sp3d.sqr_p3d[i].line_p3d[j].z;
@@ -331,7 +373,7 @@
 				line_z[j]=min_z;
 			else
 				line_z[j]=max_z;
-			std::cout<<"line["<<j<<"](z,min,max):("<<line_z[j]<<","<<min_z<<","<<max_z<<")"<<"\n";				
+			std::cout<<"line["<<j<<"](z,min,max):("<<line_z[j]<<","<<min_z<<","<<max_z<<")"<<"\n";
 		}
 		//
 		double min_line_z=line_z[0];
@@ -339,7 +381,7 @@
 			if(min_line_z>line_z[j])
 				min_line_z=line_z[j];
 		}
-		const double rw=0.276;
+		const double rw=0.276+0.1;//robot width +( left camera position - center position)
 		double w_pix=f*rw/min_line_z;
 		int space_minsize=w_pix/(width/cnw)+1;
 //		std::cout<<"space_minsize:"<<space_minsize<<"\n";
@@ -347,6 +389,19 @@
 		std::vector<int> space_end;
 		std::vector<int> space_size;
 		int space_temp=0;
+//set vel and max_vel_dif
+		double min_space_z=line_z[cnw/2+(-space_minsize/2)];
+		for(int j=-space_minsize/2+1;j<=space_minsize/2;j++){
+			if(min_space_z>line_z[cnw/2+(-space_minsize/2)])
+					min_space_z=line_z[cnw/2+(-space_minsize/2)];
+		}
+		if(min_space_z>5)
+			min_space_z=5.0;
+		max_vel_dif=min_space_z*(-20)+110;
+		if(min_space_z<1.0)
+			min_space_z=1.0;
+
+		vel=min_space_z*50+50;
 //VFH
 		for(int j=0;j<cnw;j++){
 			if(line_z[j]>0.7&&!std::isinf(line_z[j])&&!std::isnan(line_z[j]))
@@ -412,7 +467,7 @@
 					right_space++;
 				else
 					break;
-			}				
+			}
 //		std::cout<<"right_space:"<<right_space<<"\n";
 		//スペースがないときは左回転
 			if(left_space>=right_space)
