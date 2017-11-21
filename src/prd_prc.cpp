@@ -97,7 +97,8 @@
 			for(int j=0;j<cnw;j++){
 				p_mvarea[i][j]=1;
 				th_dsp=1*std::abs(dyaw)/0.01*std::abs(j-cnw/2+0.5);
-				th_mv=1.5;///ddt;add1114
+				th_mv=2.0*dt/0.10;///ddt;add1114
+//				th_mv=1.3*dt/0.12;///ddt;add1114
 				if(std::abs(dyaw)>0.015)
 					th_mv=th_mv*std::abs(dyaw)/0.015;
 				if(sp3d.sqr_p3d[i].line_p3d[j].y+0.23<=0||sp3d.sqr_p3d[i].line_p3d[j].y+0.23>1.0
@@ -211,10 +212,14 @@
 								int k_end;
 								//移動後z
 								if(!std::isnan(avez[h][w])){
-									if(sp3d.sqr_p3d[h].line_p3d[prd_j].z >avez[h][w]){
-										sp3d.sqr_p3d[h].line_p3d[prd_j].z =avez[h][w];
-										if(avez[h][w]<1.5)//add
-											sp3d.sqr_p3d[h].line_p3d[prd_j].z =0.5;
+									if(sp3d.sqr_p3d[h].line_p3d[prd_j].z >avez[h][w]||sp3d.sqr_p3d[h].line_p3d[prd_j].z >sp3d.sqr_p3d[h].line_p3d[w].z){
+										if(avez[h][w]<sp3d.sqr_p3d[h].line_p3d[w].z)
+											sp3d.sqr_p3d[h].line_p3d[prd_j].z =avez[h][w];
+										else
+											sp3d.sqr_p3d[h].line_p3d[prd_j].z =sp3d.sqr_p3d[h].line_p3d[w].z;											
+//										sp3d.sqr_p3d[h].line_p3d[prd_j].z =avez[h][w]-0.1;
+//										if(avez[h][w]<1.5)//add
+//											sp3d.sqr_p3d[h].line_p3d[prd_j].z =0.5;
 
 //正規分布
 /*
@@ -245,9 +250,10 @@
 								else{
 									if(sp3d.sqr_p3d[h].line_p3d[prd_j].z >sp3d.sqr_p3d[h].line_p3d[w].z){
 										sp3d.sqr_p3d[h].line_p3d[prd_j].z =sp3d.sqr_p3d[h].line_p3d[w].z;
-										if(sp3d.sqr_p3d[h].line_p3d[w].z<1.5)//add
-										sp3d.sqr_p3d[h].line_p3d[prd_j].z =0.5;
-										
+//										sp3d.sqr_p3d[h].line_p3d[prd_j].z =sp3d.sqr_p3d[h].line_p3d[w].z-0.1;
+//										if(sp3d.sqr_p3d[h].line_p3d[w].z<1.5)//add
+//										sp3d.sqr_p3d[h].line_p3d[prd_j].z =0.5;
+
 //正規分布
 /*
 										if(w<prd_j){
@@ -321,7 +327,7 @@
 							min_z=sp3d.sqr_p3d[i].line_p3d[j].z;
 						}
 						if(prd_obj[i][j]==0&&!std::isnan(avez[i][j])){//add1114
-							int mrgn=(int)(f*0.5/avez[i][j]/width*cnh)+1;///3;add1114
+/*							int mrgn=(int)(f*0.5/avez[i][j]/width*cnh)+1;///3;add1114
 //							std::cout<<"mrgn:"<<mrgn<<"\n";
 							bool cnf=false;
 							for(int k=-mrgn;k<=mrgn;k++){
@@ -337,7 +343,7 @@
 							}
 							if(cnf)
 								continue;
-/*
+*/
 							int mrgn=(int)(f*0.5/avez[i][j]/width*cnh)+1;///3;add1114
 							bool cnf=false;
 							for(int k=-mrgn;k<=mrgn;k++){
@@ -347,12 +353,15 @@
 									}
 									else{
 										if(pp_mvarea[i][j+k]!=0){
-										cnf=true;
-										break;
+											cnf=true;
+											break;
+										}
 									}
 								}
 							}
-*/
+							if(cnf)
+								continue;
+
 
 						}
 
@@ -395,8 +404,9 @@
 		double dif_lens_d=0.075*f/min_line_z/(width/cnw);
 		int dif_lens=(int)dif_lens_d+(int)((dif_lens_d-(int)dif_lens_d)*2);//4 out ,5 in
 		double w_pix=f*rw/min_line_z;
-		int space_minsize=w_pix/(width/cnw)+1;
-//		std::cout<<"space_minsize:"<<space_minsize<<"\n";
+		int space_minsize=(int)(w_pix/(width/cnw))+1;
+		std::cout<<"dif_lens(i,d):("<<dif_lens<<","<<dif_lens_d<<")\n";
+		std::cout<<"space_minsize:"<<space_minsize<<"\n";
 		std::vector<int> space_begin;
 		std::vector<int> space_end;
 		std::vector<int> space_size;
@@ -412,12 +422,11 @@
 		max_vel_dif=min_space_z*(-20)+110;
 		if(min_space_z<1.0)
 			min_space_z=1.0;
-
 		vel=min_space_z*50+50;
 */
 //VFH
 		for(int j=0;j<cnw;j++){
-			if(line_z[j]>0.7&&!std::isinf(line_z[j])&&!std::isnan(line_z[j]))
+			if(line_z[j]>1.0&&!std::isinf(line_z[j])&&!std::isnan(line_z[j]))
 				space_temp++;
 			else{
 				if(space_minsize<=space_temp){
@@ -449,9 +458,15 @@
 		for(int i=0;i<space_size.size();i++){
 			//space num
 			for(int j=0;j<space_size[i]-(space_minsize-1);j++){
-				for(int k=0;k<space_minsize;k++)
+			  double min_space_z=line_z[space_begin[i]+j+0];
+			  for(int k=1;k<space_minsize;k++)
+			  if(min_space_z>line_z[space_begin[i]+j+k])
+			  min_space_z=line_z[space_begin[i]+j+k];
+			  z_aveline=min_space_z;
+/*				for(int k=0;k<space_minsize;k++)
 					z_aveline+=line_z[space_begin[i]+j+k];
 				z_aveline=z_aveline/space_minsize;
+*/
 				if(z_target<z_aveline){
 					z_target=z_aveline;
 					target_num=space_begin[i]+j+space_minsize/2-dif_lens;

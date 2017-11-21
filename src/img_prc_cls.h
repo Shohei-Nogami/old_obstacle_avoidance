@@ -270,6 +270,7 @@ public:
 	void print_clpsize(void);
 	void print_cptsize(void);
 	void print_sp3dsize(void);
+	void write_odom(void);
 
 };
 

@@ -38,14 +38,21 @@
 		for(int i=0;i<cnh;i++){
 			for(int j=0;j<cnw;j++){
 			  std::cout<<"cpt["<<i<<"]["<<j<<"].size:"<<cpt[i][j].size()<<"\n";
-			  
+
 			}
 		}
 	}
 	void ImageProcesser::print_sp3dsize(void){
 		std::cout<<"i=cnh=sp3d.sqr_p3d.size():"<<sp3d.sqr_p3d.size()<<"\n";
 		std::cout<<"j=cnw=sp3d.sqr_p3d[0].line_p3d.size():"<<sp3d.sqr_p3d[0].line_p3d.size()<<"\n";
-		
-	}
 
+	}
+	void ImageProcesser::write_odom(void){
+	  std::ofstream ofsss("./Documents/odometry.csv",std::ios::app);
+			ofsss<<position_x
+			  <<position_y
+			  <<position_z
+			  <<new_time
+			  <<std::endl;
+	}
 

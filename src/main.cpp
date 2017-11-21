@@ -6,7 +6,7 @@ int main(int argc,char **argv){
 	ImageProcesser prc;
 	prc.reserve_vectors();
 	//while文でloop
-	ros::Rate rate(5);
+	ros::Rate rate(10);
 	while(ros::ok()){
 		prc.setimage();
 		prc.set_depth();
@@ -22,7 +22,7 @@ int main(int argc,char **argv){
 //		prc.pub_org_img();
 //		prc.pub_left_img();
 //		prc.print_points_size();
-		prc.wheel_control();
+//		prc.wheel_control();
 		prc.renew_vectors();
 //		prc.print_points_size();
 		prc.clear_vectors();
@@ -38,7 +38,7 @@ int main(int argc,char **argv){
 //		prc.print_points_size();
 //		prc.print_dt();
 //		prc.print_sp3dsize();
-//		prc.print_imgdt();
+		prc.print_imgdt();
 //		prc.show_speed();
 //		prc.print_bias();
 //		prc.print_w();
