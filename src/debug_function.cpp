@@ -49,10 +49,10 @@
 	}
 	void ImageProcesser::write_odom(void){
 	  std::ofstream ofsss("./Documents/odometry.csv",std::ios::app);
-			ofsss<<position_x
-			  <<position_y
-			  <<position_z
-			  <<new_time
+			ofsss<<position_x<<","
+			  <<position_y<<","
+			  <<position_z<<","
+			  <<new_time<<","
 			  <<std::endl;
 	}
 
