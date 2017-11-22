@@ -35,6 +35,7 @@ void ImageProcesser::imageProcess()
 		return ;
 	}
 //
+
 //修正必要
 //	std::cout<<"dz:"<<dz<<"\n";
 	float X,Y;
@@ -54,22 +55,66 @@ void ImageProcesser::imageProcess()
 				));
 		jnpts.push_back(ppt) ;
 	}
-		npts.insert(npts.end(),jnpts.begin(),jnpts.end());
-	//---オプティカルフローを得る-----------------------------
-		cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(15,15), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
+	npts.insert(npts.end(),jnpts.begin(),jnpts.end());
+//---オプティカルフローを得る-----------------------------
+	cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(15,15), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
 
-		float pnz;
-		for(int i=0;i<pts.size();i++){
-			float depth_np=depth_img.at<float>(npts[i].y,npts[i].x);
-			if(sts[i]&&!std::isnan(depth_np)&&!std::isinf(depth_np)&&depth_np>=0.5){
-				points.push_back(pts[i]);
-				newpoints.push_back(npts[i]);
-				z.push_back(pz[i]);
-				jnewpoints.push_back(jnpts[i]);
-				nz.push_back(depth_np);
-			}
+	float pnz;
+	for(int i=0;i<pts.size();i++){
+		float depth_np=depth_img.at<float>(npts[i].y,npts[i].x);
+		if(sts[i]&&!std::isnan(depth_np)&&!std::isinf(depth_np)&&depth_np>=0.5){
+			points.push_back(pts[i]);
+			newpoints.push_back(npts[i]);
+			z.push_back(pz[i]);
+			jnewpoints.push_back(jnpts[i]);
+			nz.push_back(depth_np);
+			nmk.push_back(mk[i]);
+			npk.push_back(pk[i]);
 		}
-
+	}
+//kalman filter
+	for(int j=0;j<points.size();j++){
+		double ver_Uk=0.6;
+		double ver_tk=0.01;
+		double fk_data[2][2]={ {1,-dyaw/dt},{dyaw/dt,1} };	
+		cv::Mat fk(2,2,CV_64FC1,fk_data);
+		double gk_data[2][3]={ {-1,0,pz[j]},{0,-1,-f*points[j].x/z[j]} };
+		cv::Mat gk(2,3,CV_64FC1,gk_data);
+		double wk_data[3][1]={ {dx/dt},{dz/dt},{dyaw/dt} };
+		cv::Mat wk(3,1,CV_64FC1,wk_data);
+		double hk_data[2][3]={ {f/pz[j],0,-f*points[j].x/(pz[j]*z[j])},{0,f/pz[j],-f*points[j].y/(z[j]*z[j])} };//provisional 
+		cv::Mat hk(2,3,CV_64FC1,hk_data);
+		double Uk_data[2][2]={ {ver_Uk,0},{0,ver_Uk}};
+		cv::Mat Uk(2,2,CV_64FC1,Uk_data);
+		double Wk_data[3][3]={{z[j]*z[j]*ver_Uk*ver_tk*ver_tk,0,0},{0,z[j]*z[j]*ver_Uk*ver_tk*ver_tk,0},{0,0,z[j]*z[j]*ver_Uk*ver_tk*ver_tk}};
+		cv::Mat Wk(3,3,CV_64FC1,Wk_data);
+		double xk_t_1_data[2][1];
+		cv::Mat xk_t_tld,xk_t_hat;
+//		cv::Mat mk;
+//		cv::Mat pk;
+		if(npk[j].at<double>(0,0)!=0){
+			nmk[j]=fk*npk[j]*fk.t()+gk*Wk*gk.t();
+//			xk_t_1_data[2][1]={ {f*(~~~~~~~~~)/z[j]},{z[j]}};//tochuuu	
+		}
+		else{
+//			xk_t_1_data[2][1]{ {f*points[j].x/z[j]},{z[j]}};				
+		}
+		npk[j]=(nmk[j].inv()+hk.t()*Uk.inv()*hk).inv();//.inv()<-?
+//		npk[j]=nmk[j].inv()+hk.t()*Uk.inv()*hk;
+//		npk[j]=npk[j].inv();
+		cv::Mat xk_t_1(2,1,CV_64FC1,xk_t_1_data);
+		
+		//Estimation
+		xk_t_tld=fk*xk_t_1+gk*wk;
+		
+		double xk_temp_data[2][1]={ {f*points[j].x/z[j]},z[j] };
+		cv::Mat xk_temp(2,1,CV_64FC1,xk_temp_data);
+		double uk_data[2][1]={ {f*points[j].x/z[j]},{f*points[j].y/z[j]} };
+		cv::Mat uk(2,1,CV_64FC1,uk_data);
+		xk_t_hat=xk_t_tld+npk[j]*hk.t()*Uk.inv()*(xk_temp-(hk*xk_t_tld+uk));
+		
+	}
+		
 
 	for(int j=0;j<points.size();j++){
 //----矢印描写---

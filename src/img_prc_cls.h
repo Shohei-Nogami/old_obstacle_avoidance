@@ -137,6 +137,11 @@ public:
 	std::vector<float> nz;//new z
 	std::vector<cv::Point2f> jnpts;
 	std::vector<cv::Point2f> jnewpoints;
+//calman filter
+	std::vector<cv::Mat> mk;
+	std::vector<cv::Mat> nmk;
+	std::vector<cv::Mat> pk;
+	std::vector<cv::Mat> npk;
 
 //--detect area exist moving objects
 	std::vector<cv::Point2d> cpt[cnh][cnw];
