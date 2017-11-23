@@ -30,10 +30,66 @@ void ImageProcesser::imageProcess()
 	}
 //	//std::cout<<"count\n";
 	count_feature_points();
-	add_feature_points();
+//	add_feature_points();
+
+///////////////void ImageProcesser::add_feature_points(void)
+	auto detector = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
+	cv::Point2i ppts;
+	float ptz;
+	bool flag;
+	for(int i=0;i<cnh;i++){
+		for(int j=0;j<cnw;j++){
+			if((int)cp[i][j].size()<th_clpimg){
+				detector.detect(clp_img[i][j], keypoints);	
+				for(std::vector<cv::KeyPoint>::iterator itk = keypoints.begin();
+		 			itk != keypoints.end(); ++itk){
+					flag=false;
+				   	ppts.x=j*width/cnw+itk->pt.x;
+					ppts.y=i*height/cnh+itk->pt.y;
+					for(int k=0;k<pts.size();k++){
+						if(std::abs(cp[i][j][k].x-ppts.x)<1&&std::abs(cp[i][j][k].y-ppts.y)<1){
+					    	flag=true;
+					    	break;
+						}
+					}
+					if(flag)
+						continue;
+					ptz=Predepth.at<float>(
+						ppts.y,
+						ppts.x
+						);
+					if(!std::isnan(ptz)&&!std::isinf(ptz)&&ptz>=0.5&&(int)pts.size()<point_size){
+						pts.push_back(ppts);
+						pz.push_back(ptz);
+//						double mk_data[3][3]={{5.0,0.0,0.0},{0.0,5.0,0.0},{0.0,0.0,5.0}};
+//						mk.push_back(cv::Mat(3,3,CV_64FC1,mk_data));
+						double mk_data[2][2]={{5.0,0.0},{0.0,5.0}};
+						mk.push_back(cv::Mat(2,2,CV_64FC1,mk_data));
+//						double pk_data[3][3]={{0,0,0},{0,0,0},{0,0,0}};
+//						pk.push_back(cv::Mat(3,3,CV_64FC1,pk_data));
+						double pk_data[2][2]={{0,0},{0,0}};
+						pk.push_back(cv::Mat(2,2,CV_64FC1,pk_data));
+//						std::cout<<"mk[0]:"<<mk[0]<<"\n";
+						double xk_data[2][1]={{0},{0}};
+//						cv::Mat xk_temp(2,1,CV_64FC1,xk_data);
+						xk_hat.push_back(cv::Mat(2,1,CV_64FC1,xk_data));
+//						mk_once_flag.push_back(true);
+//						mk_temp.release();
+						
+					}
+				}//std::cout<<"1mk[0]:"<<mk[0]<<"\n";
+			}//std::cout<<"2mk[0]:"<<mk[0]<<"\n";
+		}//std::cout<<"3mk[0]:"<<mk[0]<<"\n";
+	}//std::cout<<"4mk[0]:"<<mk[0]<<"\n";
+//	std::cout<<"mk.size:"<<mk.size()<<"\n";
+	
+
+
+///////////////
 	if(!pts.size()){
 		return ;
 	}
+//	std::cout<<"in prcs mk[0]:"<<mk[0]<<"\n";
 //
 
 //修正必要
@@ -70,55 +126,118 @@ void ImageProcesser::imageProcess()
 			nz.push_back(depth_np);
 			nmk.push_back(mk[i]);
 			npk.push_back(pk[i]);
+			nxk_hat.push_back(xk_hat[i]);
+//			nmk_once_flag.push_back(mk_once_flag[i]);
 		}
 	}
-//kalman filter
+//kalman filter	
+	std::cout<<"xk_hat[0]:"<<xk_hat[0]<<"\n";
+	std::cout<<"pk[0]:"<<pk[0]<<"\n";
+	std::cout<<"mk[0]:"<<mk[0]<<"\n";
+	pxk_hat.insert(pxk_hat.end(),nxk_hat.begin(),nxk_hat.end());
+	std::cout<<"nxk_hat[0]:"<<nxk_hat[0]<<"\n";
+	std::cout<<"npk[0]:"<<npk[0]<<"\n";
+	std::cout<<"nmk[0]:"<<nmk[0]<<"\n";
+	
 	for(int j=0;j<points.size();j++){
-		double ver_Uk=0.6;
+/*		double ver_Uk=0.6;
 		double ver_tk=0.01;
-		double fk_data[2][2]={ {1,-dyaw/dt},{dyaw/dt,1} };	
-		cv::Mat fk(2,2,CV_64FC1,fk_data);
-		double gk_data[2][3]={ {-1,0,pz[j]},{0,-1,-f*points[j].x/z[j]} };
+		double fk_data[2][3]={ {1,0,-dyaw/dt},{dyaw/dt,0,1} };	
+		cv::Mat fk(2,3,CV_64FC1,fk_data);
+		double gk_data[2][3]={ {-1,0,z[j]},{0,-1,-f*points[j].x/z[j]} };
 		cv::Mat gk(2,3,CV_64FC1,gk_data);
 		double wk_data[3][1]={ {dx/dt},{dz/dt},{dyaw/dt} };
 		cv::Mat wk(3,1,CV_64FC1,wk_data);
-		double hk_data[2][3]={ {f/pz[j],0,-f*points[j].x/(pz[j]*z[j])},{0,f/pz[j],-f*points[j].y/(z[j]*z[j])} };//provisional 
+		double hk_data[2][3]={ {f/z[j],0,-points[j].x/z[j]},{0,f/z[j],-points[j].y/z[j]} };//provisional 
 		cv::Mat hk(2,3,CV_64FC1,hk_data);
 		double Uk_data[2][2]={ {ver_Uk,0},{0,ver_Uk}};
 		cv::Mat Uk(2,2,CV_64FC1,Uk_data);
 		double Wk_data[3][3]={{z[j]*z[j]*ver_Uk*ver_tk*ver_tk,0,0},{0,z[j]*z[j]*ver_Uk*ver_tk*ver_tk,0},{0,0,z[j]*z[j]*ver_Uk*ver_tk*ver_tk}};
 		cv::Mat Wk(3,3,CV_64FC1,Wk_data);
-		double xk_t_1_data[2][1];
-		cv::Mat xk_t_tld,xk_t_hat;
-//		cv::Mat mk;
-//		cv::Mat pk;
-		if(npk[j].at<double>(0,0)!=0){
-			nmk[j]=fk*npk[j]*fk.t()+gk*Wk*gk.t();
-//			xk_t_1_data[2][1]={ {f*(~~~~~~~~~)/z[j]},{z[j]}};//tochuuu	
-		}
-		else{
-//			xk_t_1_data[2][1]{ {f*points[j].x/z[j]},{z[j]}};				
-		}
-		npk[j]=(nmk[j].inv()+hk.t()*Uk.inv()*hk).inv();//.inv()<-?
-//		npk[j]=nmk[j].inv()+hk.t()*Uk.inv()*hk;
-//		npk[j]=npk[j].inv();
+		double xk_t_1_data[2][1]={ {points[j].x*z[j]/f},{z[j]}};		;
 		cv::Mat xk_t_1(2,1,CV_64FC1,xk_t_1_data);
-		
+		cv::Mat xk_t_tld;//,xk_hat;
+//		std::cout<<"npk[j]:"<<npk[j]<<"\n";
+		std::cout<<"npk[j].at<double>(0,0):"<<npk[j].at<double>(0,0)<<"\n";
+		if(npk[j].at<double>(0,0)!=0.0){
+//		if(!nmk_once_flag[j]){
+				nmk[j]=fk*npk[j]*fk.t()+gk*Wk*gk.t();
+				xk_t_1=nxk_hat[j];
+//				mk_once_flag[j]=false;	
+		}
+//		else{
+//			mk_once_flag[j]=false;			
+//		}
+		std::cout<<"Uk.inv():"<<Uk.inv()<<"\n";
+		std::cout<<"hk:"<<hk<<"\n";
+		std::cout<<"1\n";
+//		npk[j]=(nmk[j].inv()+hk.t()*Uk.inv()*hk).inv();//.inv()<-?
+		cv::Mat a=nmk[j].inv();
+		std::cout<<"a:"<<a<<"\n";
+		std::cout<<"1.1\n";
+//		cv::Mat b=hk.t()*Uk.inv()*hk;
+		cv::Mat b=hk.t()*Uk.inv()*hk;
+		std::cout<<"b:"<<b<<"\n";
+		std::cout<<"1.2\n";		
+		npk[j]=a+b;
+		std::cout<<"npk[j]:"<<npk[j]<<"\n";
+		std::cout<<"1.3\n";
+//		npk[j]=nmk[j].inv()+hk.t()*Uk.inv()*hk;
+		std::cout<<"1.4\n";
+		npk[j]=npk[j].inv();
+		std::cout<<"2\n";	
+/*
 		//Estimation
 		xk_t_tld=fk*xk_t_1+gk*wk;
-		
-		double xk_temp_data[2][1]={ {f*points[j].x/z[j]},z[j] };
+
+		double xk_temp_data[2][1]={ {f*newpoints[j].x/nz[j]},nz[j] };
 		cv::Mat xk_temp(2,1,CV_64FC1,xk_temp_data);
 		double uk_data[2][1]={ {f*points[j].x/z[j]},{f*points[j].y/z[j]} };
 		cv::Mat uk(2,1,CV_64FC1,uk_data);
-		xk_t_hat=xk_t_tld+npk[j]*hk.t()*Uk.inv()*(xk_temp-(hk*xk_t_tld+uk));
+		nxk_hat[j]=xk_t_tld+npk[j]*hk.t()*Uk.inv()*(xk_temp-(hk*xk_t_tld+uk));
+		
+		x_hat.push_back(hk*nxk_hat[j]+uk);
+*/
+
+//観測方程式（量子化誤差を考慮しない）場合
+		double ver_Uk=0.6;
+		double ver_tk=0.01;
+		double fk_data[2][2]={ {1,-dyaw/dt},{dyaw/dt,1} };	
+		cv::Mat fk(2,2,CV_64FC1,fk_data);
+		double gk_data[2][3]={ {-1,0,z[j]},{0,-1,-f*points[j].x/z[j]} };
+		cv::Mat gk(2,3,CV_64FC1,gk_data);
+		double wk_data[3][1]={ {dx/dt},{dz/dt},{dyaw/dt} };
+		cv::Mat wk(3,1,CV_64FC1,wk_data);
+		double Wk_data[3][3]={{z[j]*z[j]*ver_Uk*ver_tk*ver_tk,0,0},{0,z[j]*z[j]*ver_Uk*ver_tk*ver_tk,0},{0,0,z[j]*z[j]*ver_Uk*ver_tk*ver_tk}};
+		cv::Mat Wk(3,3,CV_64FC1,Wk_data);
+		double xk_t_1_data[2][1]={ {points[j].x*z[j]/f},{z[j]}};		;
+		cv::Mat xk_t_1(2,1,CV_64FC1,xk_t_1_data);
+		cv::Mat xk_t_tld;//,xk_hat;
+		if(npk[j].at<double>(0,0)!=0){
+			nmk[j]=fk*npk[j]*fk.t()+gk*Wk*gk.t();
+			xk_t_1=nxk_hat[j];	
+		}
+		npk[j]=nmk[j];
+		//Estimation
+		xk_t_tld=fk*xk_t_1+gk*wk;
+		
+		double xk_temp_data[2][1]={ {f*newpoints[j].x/nz[j]},nz[j] };
+		cv::Mat xk_temp(2,1,CV_64FC1,xk_temp_data);
+		double uk_data[2][1]={ {f*points[j].x/z[j]},{f*points[j].y/z[j]} };
+		cv::Mat uk(2,1,CV_64FC1,uk_data);
+		nxk_hat[j]=xk_t_tld+npk[j]*(xk_temp-(xk_t_tld+uk));
+		double x_hat_data[2][1]={ {nxk_hat[j].at<double>(0,0)*f/nxk_hat[j].at<double>(1,0)},{points[j].y*nxk_hat[j].at<double>(1,0)/z[j]} };
+		x_hat.push_back(cv::Mat(2,1,CV_64FC1,x_hat_data));
+		
 		
 	}
-		
 
+	
+	
 	for(int j=0;j<points.size();j++){
 //----矢印描写---
-		float L1=std::abs(newpoints[j].x-jnewpoints[j].x);//sqrt(z[j]);
+//		float L1=std::abs(newpoints[j].x-jnewpoints[j].x);//sqrt(z[j]);
+		float L1=std::abs(newpoints[j].x-x_hat[j].at<double>(0,0));//sqrt(z[j]);
 		float L2=sqrt((newpoints[j].x-jnewpoints[j].x)*(newpoints[j].x-jnewpoints[j].x)
 			+(newpoints[j].y-jnewpoints[j].y)*(newpoints[j].y-jnewpoints[j].y));//sqrt(z[j]);
 //newpoints==points+LK
@@ -206,4 +325,5 @@ void ImageProcesser::imageProcess()
 
 
 }
+
 
