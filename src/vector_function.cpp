@@ -26,25 +26,18 @@
 		mv_area.reserve(cnh*cnw);
 		opt.reserve(cnh*cnw);
 
-		pk.reserve(point_size);
-		npk.reserve(point_size);
-		xk_hat.reserve(point_size);
-		nxk_hat.reserve(point_size);
-		x_hat.reserve(point_size);
-		mk.reserve(point_size);
-		nmk.reserve(point_size);
-//		mk_once_flag.reserve(point_size);
-//		nmk_once_flag.reserve(point_size);
+		sgm.reserve(point_size);
+		sgm_p.reserve(point_size);
+		xt_hat.reserve(point_size);
+		xt_hat_p.reserve(point_size);
+		xt_once_p.reserve(point_size);
+		xt_once.reserve(point_size);
 	}
 	void ImageProcesser::clear_vectors(void){
 //		pts.clear();   //特徴点
 		npts.clear();  //移動後の特徴点
 		sts.clear();
 		ers.clear();
-		nmk.clear();
-		npk.clear();
-//		nmk_once_flag.clear();
-		
 //-----特徴点抽出用変数-----
 		keypoints.clear();
 		for(int i=0;i<cnh;i++){
@@ -53,23 +46,19 @@
 			}
 		}	
 		jnpts.clear();
+
 	}
 	void ImageProcesser::renew_vectors(void){
-		if(pts.empty())
-			return ;
 		pts.clear();
 		pz.clear();
 		pts.insert(pts.end(),newpoints.begin(),newpoints.end());
 		pz.insert(pz.end(),nz.begin(),nz.end());
-		mk.clear();
-		mk.insert(mk.end(),nmk.begin(),nmk.end());
-		pk.clear();
-		pk.insert(pk.end(),npk.begin(),npk.end());
-		xk_hat.clear();
-		xk_hat.insert(xk_hat.end(),nxk_hat.begin(),nxk_hat.end());
-//		mk_once_flag.clear();
-//		mk_once_flag.insert(mk_once_flag.end(),nmk_once_flag.begin(),nmk_once_flag.end());
-		
+		xt_hat_p.clear();
+		xt_hat_p.insert(xt_hat_p.end(),xt_hat.begin(),xt_hat.end());
+		sgm_p.clear();
+		sgm_p.insert(sgm_p.end(),sgm.begin(),sgm.end());
+		xt_once_p.clear();
+		xt_once_p.insert(xt_once_p.end(),xt_once.begin(),xt_once.end());
 	}
 	void ImageProcesser::clear_dtctvectors(void){
 		points.clear();
@@ -86,10 +75,10 @@
 		}
 		mv_area.clear();
 		opt.clear();
-		
-		pxk_hat.clear();
-		nxk_hat.clear();
-		x_hat.clear();
+
+		sgm.clear();
+		xt_hat.clear();
+		xt_once.clear();
 	}
 
 

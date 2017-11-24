@@ -4,10 +4,10 @@ ImageProcesser::ImageProcesser()//
 	:it(nh),it2(nh5)
 	{
 		start_time = ros::Time::now();
-		pub_orgimg=it.advertise("output_originalimage2",1);
-		pub_Limg=it.advertise("output_Limage2",1);
-		pub_Lmsk=it.advertise("output_Mskimage2",1);
-		pub_dpt=it2.advertise("output_dptimage2",1);
+		pub_orgimg=it.advertise("output_originalimage",1);
+		pub_Limg=it.advertise("output_Limage",1);
+		pub_Lmsk=it.advertise("output_Mskimage",1);
+		pub_dpt=it2.advertise("output_dptimage",1);
 		pub_wheel=nh.advertise<obst_avoid::wheel_msg>("wheel_data",1);
 		pub_empty=nh.advertise<std_msgs::Empty>("empty_msg",1);
 		nh1.setCallbackQueue(&image_queue);

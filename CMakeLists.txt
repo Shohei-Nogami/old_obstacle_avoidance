@@ -232,8 +232,8 @@ include_directories(
 add_executable(img_prc src/main.cpp src/img_prc_cls.cpp src/prcs_fnc.cpp src/image_function.cpp src/depth_function.cpp src/odom_function.cpp src/time_function.cpp src/cvArrow_function.cpp src/vector_function.cpp src/debug_function.cpp src/tracking_fp_function.cpp src/prd_prc.cpp src/wheel_control.cpp)
 target_link_libraries(img_prc ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(img_prc_before src2/main.cpp src2/img_prc_cls.cpp src2/prcs_fnc.cpp src2/image_function.cpp src2/depth_function.cpp src2/odom_function.cpp src2/time_function.cpp src2/cvArrow_function.cpp src2/vector_function.cpp src2/debug_function.cpp src2/tracking_fp_function.cpp src2/prd_prc.cpp src2/wheel_control.cpp)
-target_link_libraries(img_prc_before ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#add_executable(img_prc_before src2/main.cpp src2/img_prc_cls.cpp src2/prcs_fnc.cpp src2/image_function.cpp src2/depth_function.cpp src2/odom_function.cpp src2/time_function.cpp src2/cvArrow_function.cpp src2/vector_function.cpp src2/debug_function.cpp src2/tracking_fp_function.cpp src2/prd_prc.cpp src2/wheel_control.cpp)
+#target_link_libraries(img_prc_before ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(culc_area3d src/culc_area3d.cpp)
 target_link_libraries(culc_area3d ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})

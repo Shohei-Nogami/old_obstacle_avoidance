@@ -34,7 +34,7 @@
 
 class ImageProcesser
 {
-  ros::NodeHandle nh;
+	ros::NodeHandle nh;
 	ros::NodeHandle nh1;
 	ros::NodeHandle nh2;
 	ros::NodeHandle nh3;
@@ -138,16 +138,12 @@ public:
 	std::vector<cv::Point2f> jnpts;
 	std::vector<cv::Point2f> jnewpoints;
 //calman filter
-	std::vector<cv::Mat> mk;
-	std::vector<cv::Mat> nmk;
-	std::vector<cv::Mat> pk;
-	std::vector<cv::Mat> npk;
-	std::vector<cv::Mat> xk_hat;
-	std::vector<cv::Mat> nxk_hat;
-	std::vector<cv::Mat> pxk_hat;
-	std::vector<cv::Mat> x_hat;
-//	std::vector<bool> mk_once_flag;
-//	std::vector<bool> nmk_once_flag;
+	std::vector<cv::Mat> sgm_p;
+	std::vector<cv::Mat> sgm;
+	std::vector<cv::Mat> xt_hat_p;
+	std::vector<cv::Mat> xt_hat;	
+	std::vector<bool> xt_once_p;
+	std::vector<bool> xt_once;
 //--detect area exist moving objects
 	std::vector<cv::Point2d> cpt[cnh][cnw];
 	std::vector<cv::Point2d> cnpt[cnh][cnw];
