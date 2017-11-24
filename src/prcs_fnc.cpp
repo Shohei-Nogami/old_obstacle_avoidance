@@ -225,8 +225,9 @@ void ImageProcesser::imageProcess()
 		std::cout<<"3.12\n";	
 		std::cout<<"qt:"<<qt<<"\n";
 		cv::Mat sgmqt_temp=(sgm_tld+qt);
-		cv::Mat sgmtld_temp=sgm_tld*sgmqt_temp;
-		cv::Mat kt=sgmtld_temp.inv();
+		cv::Mat sgmqt_inv_temp=sgmqt_temp.inv();
+//		cv::Mat sgmtld_temp=sgm_tld*sgmqt_temp;
+		cv::Mat kt=sgm_tld*sgmqt_inv_temp;
 		std::cout<<"kt:"<<kt<<"\n";
 		std::cout<<"3.14\n";
 		std::cout<<"zt("<<(newpoints[j].x-width/2)*nz[j]/f<<","<<-(newpoints[j].y-height/2)*nz[j]/f<<","<<nz[j]<<"\n";
