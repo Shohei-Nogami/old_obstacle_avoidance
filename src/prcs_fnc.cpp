@@ -199,12 +199,18 @@ void ImageProcesser::imageProcess()
 		cv::Mat rt(3,3,CV_64FC1,rt_data);	 
 		double qt_data[3][3]={ {0.05,0,0},{0,0.05,0},{0,0,0.05} };
 		cv::Mat qt(3,3,CV_64FC1,qt_data);
+		double I_data[3][3]={ {1,0,0},{0,1,0},{0,0,1} };
+		cv::Mat I(3,3,CV_64FC1,I_data);
+		cv::Mat xt_tld;
+		cv::Mat sgm_tld;
+		cv::Mat kt;
+		
 //		double at_data[3][3]={ {1,droll,-dyaw},{-droll,1,dpitch},{dyaw,-dpitch,1} };		
 		double at_data[3][3]={ {1,0,-dyaw},{0,1,0},{dyaw,0,1} };
 		cv::Mat at(3,3,CV_64FC1,at_data);
 //		double btut_data[3][1]={ {dx},{dy},{dz} };		
 		double btut_data[3][1]={ {dx},{0},{dz} };
-		cv::Mat btut(3,1,CV_64FC1,at_data);
+		cv::Mat btut(3,1,CV_64FC1,btut_data);
 		std::cout<<"2\n";
 		if(xt_hat[j].at<double>(0,0)==0||xt_once[j]==true){
 			double xt_0_data[3][1]={ {(points[j].x-width/2)*z[j]/f},{-(points[j].y-width/2)*z[j]/f},{z[j]} };
@@ -213,7 +219,15 @@ void ImageProcesser::imageProcess()
 			std::cout<<"2.5\n";
 			xt_once[j]=false;
 		}
-		std::cout<<"3\n";
+		xt_tld=at*xt_hat+btut;
+		sgm_tld=at*sgm*at.t()+rt;
+		kt=sgm_tld*((sgm_tld+qt).inv());
+		double zt_data[3][1]={ { 0.2+(-0.05)+0.05*2*(random_num()) },{ 0.5+(-0.05)+0.05*2*(random_num()) },{z+(-0.05)+0.05*2*(random_num())} };
+		cv::Mat zt(3,1,CV_64FC1,zt_data);
+		xt_hat=xt_tld+kt*(zt-xt_tld);
+		sgm=(I-kt)*sgm_tld;
+		std::cout<<"xt_hat:"<<xt_hat<<"\n";
+/*		std::cout<<"3\n";
 		std::cout<<"xt_hat[j]:"<<xt_hat[j]<<"\n";
 		cv::Mat atxt_temp=at*xt_hat[j];
 		cv::Mat xt_tld=atxt_temp+btut;
@@ -226,7 +240,7 @@ void ImageProcesser::imageProcess()
 		std::cout<<"qt:"<<qt<<"\n";
 		cv::Mat sgmqt_temp=(sgm_tld+qt);
 		cv::Mat sgmqt_inv_temp=sgmqt_temp.inv();
-//		cv::Mat sgmtld_temp=sgm_tld*sgmqt_temp;
+		cv::Mat sgmtld_temp=sgm_tld*sgmqt_temp;
 		cv::Mat kt=sgm_tld*sgmqt_inv_temp;
 		std::cout<<"kt:"<<kt<<"\n";
 		std::cout<<"3.14\n";
@@ -247,8 +261,7 @@ void ImageProcesser::imageProcess()
 //		xt_hat[j]=xt_hat[j]+kt*(zt-xt_hat[j]);
 		std::cout<<"xt_hat[j]:"<<xt_hat[j]<<"\n";
 		std::cout<<"3.2\n";
-		double I_data[3][3]={ {1,0,0},{0,1,0},{0,0,1} };
-		cv::Mat I(3,3,CV_64FC1,I_data);
+
 		std::cout<<"I:"<<I<<"\n";
 		std::cout<<"(I-kt)*sgm_tld:"<<(I-kt)*sgm_tld<<"\n";
 		cv::Mat sgm_temp=(I-kt);
@@ -257,6 +270,7 @@ void ImageProcesser::imageProcess()
 
 //		sgm[j]=(I-kt)*sgm_tld;
 		std::cout<<"4\n";
+*/
 	}
 
 	
