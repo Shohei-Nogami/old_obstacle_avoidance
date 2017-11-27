@@ -202,8 +202,8 @@
 
 							int prd_j=(int)(obj_pstn*cnw/width);
 							if(pp_mvarea[h][w]==1)
-								std::cout<<"pp_mvarea[h][w]==1\n";
-							std::cout<<"obj_pstn(prev,aftr):("<<w<<","<<prd_j<<")\n";
+//								std::cout<<"pp_mvarea[h][w]==1\n";
+//							std::cout<<"obj_pstn(prev,aftr):("<<w<<","<<prd_j<<")\n";
 //							std::cout<<"prd_j:"<<prd_j<<"\n";
 							//移動するエリアは考慮しない
 							if(0<=prd_j&&prd_j<cnw){
@@ -392,7 +392,7 @@
 				line_z[j]=min_z;
 			else
 				line_z[j]=max_z;
-			std::cout<<"line["<<j<<"](z,min,max):("<<line_z[j]<<","<<min_z<<","<<max_z<<")"<<"\n";
+//			std::cout<<"line["<<j<<"](z,min,max):("<<line_z[j]<<","<<min_z<<","<<max_z<<")"<<"\n";
 		}
 		//
 		double min_line_z=line_z[0];
@@ -405,8 +405,8 @@
 		int dif_lens=(int)dif_lens_d+(int)((dif_lens_d-(int)dif_lens_d)*2);//4 out ,5 in
 		double w_pix=f*rw/min_line_z;
 		int space_minsize=(int)(w_pix/(width/cnw))+1;
-		std::cout<<"dif_lens(i,d):("<<dif_lens<<","<<dif_lens_d<<")\n";
-		std::cout<<"space_minsize:"<<space_minsize<<"\n";
+//		std::cout<<"dif_lens(i,d):("<<dif_lens<<","<<dif_lens_d<<")\n";
+//		std::cout<<"space_minsize:"<<space_minsize<<"\n";
 		std::vector<int> space_begin;
 		std::vector<int> space_end;
 		std::vector<int> space_size;
@@ -506,7 +506,7 @@
 		}
 
 
-		std::cout<<"target_num:"<<target_num<<"\n";
+//		std::cout<<"target_num:"<<target_num<<"\n";
 //		std::cout<<"z_target:"<<z_target<<"\n";
 		target_point.x=width/cnw*target_num;
 //		target_point.x=(pT*ptarget_point.x+dt*target_point.x)/(pT+dt);

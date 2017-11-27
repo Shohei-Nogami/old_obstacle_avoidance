@@ -124,9 +124,9 @@ void ImageProcesser::imageProcess()
 				nz.push_back(depth_np);
 
 				sgm.push_back(sgm_p[i]);
-				if(xt_hat_p[i].at<double>(0,0)!=0){
-					std::cout<<"xt_hat_p[i]:"<<xt_hat_p[i]<<"\n";
-				}
+//				if(xt_hat_p[i].at<double>(0,0)!=0){
+//					std::cout<<"xt_hat_p[i]:"<<xt_hat_p[i]<<"\n";
+//				}
 				xt_hat.push_back(xt_hat_p[i]);
 				xt_once.push_back(xt_once_p[i]);
 			}
@@ -194,7 +194,7 @@ void ImageProcesser::imageProcess()
 		std::cout<<"points[j]:"<<points[j]<<"\n";
 		std::cout<<"newpoints[j]:"<<newpoints[j]<<"\n";
 */
-		std::cout<<"1\n";
+//		std::cout<<"1\n";
 		double rt_data[3][3]={ {0.05,0,0},{0,0.05,0},{0,0,0.05} };
 		cv::Mat rt(3,3,CV_64FC1,rt_data);	 
 		double qt_data[3][3]={ {0.05,0,0},{0,0.05,0},{0,0,0.05} };
@@ -211,22 +211,34 @@ void ImageProcesser::imageProcess()
 //		double btut_data[3][1]={ {dx},{dy},{dz} };		
 		double btut_data[3][1]={ {dx},{0},{dz} };
 		cv::Mat btut(3,1,CV_64FC1,btut_data);
-		std::cout<<"2\n";
+//		std::cout<<"2\n";
 		if(xt_hat[j].at<double>(0,0)==0||xt_once[j]==true){
 			double xt_0_data[3][1]={ {(points[j].x-width/2)*z[j]/f},{-(points[j].y-width/2)*z[j]/f},{z[j]} };
 			cv::Mat xt_0(3,1,CV_64FC1,xt_0_data);
-			xt_hat[j]=xt_0;
-			std::cout<<"2.5\n";
+			xt_hat[j]=xt_0.clone();
+//			std::cout<<"2.5\n";
 			xt_once[j]=false;
 		}
-		xt_tld=at*xt_hat+btut;
-		sgm_tld=at*sgm*at.t()+rt;
+		xt_tld=at*xt_hat[j]+btut;
+		sgm_tld=at*sgm[j]*at.t()+rt;
 		kt=sgm_tld*((sgm_tld+qt).inv());
-		double zt_data[3][1]={ { 0.2+(-0.05)+0.05*2*(random_num()) },{ 0.5+(-0.05)+0.05*2*(random_num()) },{z+(-0.05)+0.05*2*(random_num())} };
+//		std::cout<<"3\n";
+//		double zt_data[3][1]={ { 0.2+(-0.05)+0.05*2*(random_num()) },{ 0.5+(-0.05)+0.05*2*(random_num()) },{z+(-0.05)+0.05*2*(random_num())} };
+		double zt_data[3][1]={	{(newpoints[j].x-width/2)*nz[j]/f},{-(newpoints[j].y-height/2)*nz[j]/f},{nz[j]} };
 		cv::Mat zt(3,1,CV_64FC1,zt_data);
-		xt_hat=xt_tld+kt*(zt-xt_tld);
-		sgm=(I-kt)*sgm_tld;
-		std::cout<<"xt_hat:"<<xt_hat<<"\n";
+//		std::cout<<"4\n";
+//		xt_hat[j]=(xt_tld+kt*(zt-xt_tld)).clone();
+		cv::Mat xt_hat_temp=(xt_tld+kt*(zt-xt_tld));
+		xt_hat[j]=xt_hat_temp.clone();
+//		std::cout<<"5\n";
+//		std::cout<<"I:"<<I<<"\n";
+//		std::cout<<"kt:"<<kt<<"\n";		
+//		std::cout<<"sgm_tld:"<<sgm_tld<<"\n";
+//		sgm[j]=((I-kt)*sgm_tld).clone();
+		cv::Mat sgm_temp=(I-kt)*sgm_tld;
+		sgm[j]=sgm_temp.clone();
+//		std::cout<<"6\n";
+//		std::cout<<"xt_hat:"<<xt_hat[j]<<"\n";
 /*		std::cout<<"3\n";
 		std::cout<<"xt_hat[j]:"<<xt_hat[j]<<"\n";
 		cv::Mat atxt_temp=at*xt_hat[j];
@@ -272,9 +284,10 @@ void ImageProcesser::imageProcess()
 		std::cout<<"4\n";
 */
 	}
-
-	
-	
+	std::cout<<"xt_hat[0]:"<<xt_hat[0]<<"\n";
+	std::cout<<"zt_hat[0]:["<<(newpoints[0].x-width/2)*nz[0]/f<<";\n"<<-(newpoints[0].y-height/2)*nz[0]/f<<";\n"<<nz[0]<<";\n";
+	std::cout<<"Xt_hat[0]:"<<cv::Point((int)(f*xt_hat[0].at<double>(0,0)/xt_hat[0].at<double>(2,0)+width/2),(int)(height/2-f*xt_hat[0].at<double>(1,0)/xt_hat[0].at<double>(2,0)))<<"\n";
+	std::cout<<"Zt_hat[0]:"<<cv::Point((int)(newpoints[0].x),(int)(newpoints[0].y))<<"\n";
 	for(int j=0;j<points.size();j++){
 //----矢印描写---
 //		float L1=std::abs(newpoints[j].x-jnewpoints[j].x);//sqrt(z[j]);
@@ -299,8 +312,8 @@ void ImageProcesser::imageProcess()
 /*			cv::Point((int)(f*xt_hat[j].at<double>(0,0)/xt_hat[j].at<double>(2,0)+width/2),
 				(int)(f*xt_hat[j].at<double>(1,0)/xt_hat[j].at<double>(2,0)+height)),
 */	
-			cv::Point((int)(f*xt_hat[j].at<double>(0,0)/nz[j]+width/2),
-				(int)(f*xt_hat[j].at<double>(1,0)/nz[j]+height)),
+			cv::Point((int)(f*xt_hat[j].at<double>(0,0)/xt_hat[j].at<double>(2,0)+width/2),
+				(int)(height/2-f*xt_hat[j].at<double>(1,0)/xt_hat[j].at<double>(2,0))),
 			cv::Scalar(200,0,200));//
 	
 			//detect moving area	
