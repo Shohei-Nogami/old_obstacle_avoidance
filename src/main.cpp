@@ -32,6 +32,7 @@ int main(int argc,char **argv){
 		prc.pub_response();
 //		ROS_INFO("prc.pub_response();");
 		prc.prd_prcess();
+//		prc.wheel_control();
 		prc.clear_dtctvectors();
 		prc.pub_left_img();
 //		rate.sleep();
@@ -44,6 +45,7 @@ int main(int argc,char **argv){
 //		prc.print_bias();
 //		prc.print_w();
 //		prc.print_clpsize();
+//		prc.culc_ave_dyaw();
 	}
 	return 0;
 }

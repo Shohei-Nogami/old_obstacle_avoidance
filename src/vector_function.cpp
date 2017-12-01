@@ -32,6 +32,12 @@
 		xt_hat_p.reserve(point_size);
 		xt_once_p.reserve(point_size);
 		xt_once.reserve(point_size);
+		qt.reserve(point_size);
+		qt_p.reserve(point_size);
+		xt_dif_ave_p.reserve(point_size);
+		xt_dif_ave.reserve(point_size);
+//debug
+//		vec_dyaw.reserve(30000);
 	}
 	void ImageProcesser::clear_vectors(void){
 //		pts.clear();   //特徴点
@@ -59,6 +65,11 @@
 		sgm_p.insert(sgm_p.end(),sgm.begin(),sgm.end());
 		xt_once_p.clear();
 		xt_once_p.insert(xt_once_p.end(),xt_once.begin(),xt_once.end());
+		qt_p.clear();
+		qt_p.insert(qt_p.end(),qt.begin(),qt.end());
+		xt_dif_ave_p.clear();
+		xt_dif_ave_p.insert(xt_dif_ave_p.end(),xt_dif_ave.begin(),xt_dif_ave.end());
+		
 	}
 	void ImageProcesser::clear_dtctvectors(void){
 		points.clear();
@@ -79,6 +90,8 @@
 		sgm.clear();
 		xt_hat.clear();
 		xt_once.clear();
+		qt.clear();
+		xt_dif_ave.clear();
 	}
 
 

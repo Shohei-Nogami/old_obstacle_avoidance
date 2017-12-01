@@ -142,8 +142,13 @@ public:
 	std::vector<cv::Mat> sgm;
 	std::vector<cv::Mat> xt_hat_p;
 	std::vector<cv::Mat> xt_hat;	
-	std::vector<bool> xt_once_p;
-	std::vector<bool> xt_once;
+	std::vector<int> xt_once_p;
+	std::vector<int> xt_once;
+	std::vector<cv::Mat> qt_p;
+	std::vector<cv::Mat> qt;
+	std::vector<cv::Mat> xt_dif_ave_p;
+	std::vector<cv::Mat> xt_dif_ave;
+//	std::vector<cv::Mat> 
 //--detect area exist moving objects
 	std::vector<cv::Point2d> cpt[cnh][cnw];
 	std::vector<cv::Point2d> cnpt[cnh][cnw];
@@ -166,6 +171,9 @@ public:
 	int vel=200;//100;//200;
 	int max_vel_dif=100;
 	double z_target=0.5;
+//debug
+	double ave_dyaw;
+	std::vector<double> vec_dyaw;
 //ファイル出力
 	std::ofstream ofs;
 
@@ -277,6 +285,6 @@ public:
 	void print_cptsize(void);
 	void print_sp3dsize(void);
 	void write_odom(void);
-
+	bool culc_ave_dyaw(void);
 };
 

@@ -55,4 +55,19 @@
 			  <<new_time<<","
 			  <<std::endl;
 	}
+	bool ImageProcesser::culc_ave_dyaw(void){
+		vec_dyaw.push_back(dyaw);
+//		std::cout<<"vec_dyaw.size():"<<vec_dyaw.size()<<"\n";
+//		if((int)vec_dyaw.size()>5000){
+			ave_dyaw=0;
+			for(int i=0;i<vec_dyaw.size();i++){
+				ave_dyaw+=vec_dyaw[i];
+				
+			}
+			ave_dyaw=ave_dyaw/(int)vec_dyaw.size();
+			ROS_INFO("ave_dyaw:%f",ave_dyaw);
+			return true;
+//		}
+		return false;		
+	}
 
