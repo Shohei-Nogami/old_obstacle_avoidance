@@ -202,8 +202,8 @@
 
 							int prd_j=(int)(obj_pstn*cnw/width);
 							if(pp_mvarea[h][w]==1)
-//								std::cout<<"pp_mvarea[h][w]==1\n";
-//							std::cout<<"obj_pstn(prev,aftr):("<<w<<","<<prd_j<<")\n";
+								std::cout<<"pp_mvarea[h][w]==1\n";
+							std::cout<<"obj_pstn(prev,aftr):("<<w<<","<<prd_j<<")\n";
 //							std::cout<<"prd_j:"<<prd_j<<"\n";
 							//移動するエリアは考慮しない
 							if(0<=prd_j&&prd_j<cnw){
@@ -280,12 +280,11 @@
 								}
 							}
 							int color=100;
-/*							for(int u=w*width/cnw;u<(w+1)*width/cnw;u++){
+							for(int u=w*width/cnw;u<(w+1)*width/cnw;u++){
 								for(int v=h*height/cnh;v<(h+1)*height/cnh;v++){
 									Limg_view.at<cv::Vec3b>(v,u)[1]+=color;
 								}
 							}
-*/
 						}
 					}
 				}
@@ -298,13 +297,12 @@
 			for(int i=0;i<cnh;i++){
 				//移動後エリアを追加
 				if(prd_obj[i][j]!=0){
-/*					int color=100*prd_obj[i][j];
+					int color=100*prd_obj[i][j];
 					for(int u=j*width/cnw;u<(j+1)*width/cnw;u++){
 						for(int v=i*height/cnh;v<(i+1)*height/cnh;v++){
 							Limg_view.at<cv::Vec3b>(v,u)[2]+=color;
 						}
 					}
-*/
 				}
 			}
 		}
@@ -394,7 +392,7 @@
 				line_z[j]=min_z;
 			else
 				line_z[j]=max_z;
-//			std::cout<<"line["<<j<<"](z,min,max):("<<line_z[j]<<","<<min_z<<","<<max_z<<")"<<"\n";
+			std::cout<<"line["<<j<<"](z,min,max):("<<line_z[j]<<","<<min_z<<","<<max_z<<")"<<"\n";
 		}
 		//
 		double min_line_z=line_z[0];
@@ -407,14 +405,14 @@
 		int dif_lens=(int)dif_lens_d+(int)((dif_lens_d-(int)dif_lens_d)*2);//4 out ,5 in
 		double w_pix=f*rw/min_line_z;
 		int space_minsize=(int)(w_pix/(width/cnw))+1;
-//		std::cout<<"dif_lens(i,d):("<<dif_lens<<","<<dif_lens_d<<")\n";
-//		std::cout<<"space_minsize:"<<space_minsize<<"\n";
+		std::cout<<"dif_lens(i,d):("<<dif_lens<<","<<dif_lens_d<<")\n";
+		std::cout<<"space_minsize:"<<space_minsize<<"\n";
 		std::vector<int> space_begin;
 		std::vector<int> space_end;
 		std::vector<int> space_size;
 		int space_temp=0;
 //set vel and max_vel_dif
-		double min_space_z=line_z[cnw/2+(-space_minsize/2)-dif_lens];
+/*		double min_space_z=line_z[cnw/2+(-space_minsize/2)-dif_lens];
 		for(int j=-space_minsize/2-dif_lens+1;j<=space_minsize/2+dif_lens;j++){
 			if(min_space_z>line_z[cnw/2+(-space_minsize/2)])
 					min_space_z=line_z[cnw/2+(-space_minsize/2)];
@@ -425,7 +423,7 @@
 		if(min_space_z<1.0)
 			min_space_z=1.0;
 		vel=min_space_z*50+50;
-
+*/
 //VFH
 		for(int j=0;j<cnw;j++){
 			if(line_z[j]>1.0&&!std::isinf(line_z[j])&&!std::isnan(line_z[j]))
@@ -508,7 +506,7 @@
 		}
 
 
-//		std::cout<<"target_num:"<<target_num<<"\n";
+		std::cout<<"target_num:"<<target_num<<"\n";
 //		std::cout<<"z_target:"<<z_target<<"\n";
 		target_point.x=width/cnw*target_num;
 //		target_point.x=(pT*ptarget_point.x+dt*target_point.x)/(pT+dt);

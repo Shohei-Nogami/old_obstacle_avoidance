@@ -28,8 +28,7 @@
 			vel_r=vel;
 		}
 //		std::cout<<"vel_l,r:("<<vel_l<<","<<vel_r<<"\n";
-//		const double s=0.50;//sensitivity
-		const double s=1.0;//sensitivity
+		const double s=0.50;//sensitivity
 //		std::cout<<"tp,wdth:"<<target_point.x<<","<<width/2<<"\n";
 		double d=(target_point.x-width/2)/s;//+:roll right,-:roll left
 		int u=(int)d;

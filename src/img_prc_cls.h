@@ -8,6 +8,19 @@
 #include<opencv2/imgproc/imgproc.hpp>
 #include<opencv2/video/tracking.hpp>//オプティカルフロー用
 #include<opencv2/features2d/features2d.hpp>
+//opencv3.2
+//#include<opencv-3.2.0-dev/opencv2/highgui/highgui.hpp>
+//#include<opencv-3.2.0-dev/opencv2/imgproc/imgproc.hpp>
+//#include<opencv-3.2.0-dev/opencv2/highgui.hpp>
+//#include<opencv-3.2.0-dev/opencv2/imgproc.hpp>
+//#include<opencv-3.2.0-dev/opencv2/video/tracking.hpp>//オプティカルフロー用
+//#include<opencv-3.2.0-dev/opencv2/features2d/features2d.hpp>
+//#include <opencv-3.2.0-dev/opencv2/imgcodecs.hpp>
+//#include<opencv-3.2.0-dev/opencv2/features2d.hpp>
+#include<opencv2/features2d.hpp>
+//#include</opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/features2d/features2d.hpp>
+//#include</opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/features2d.hpp>
+//#include "types.hpp"
 #include<typeinfo>//型調べ
 //odometry取得用
 #include <tf/LinearMath/Quaternion.h>
@@ -34,7 +47,7 @@
 
 class ImageProcesser
 {
-	ros::NodeHandle nh;
+  ros::NodeHandle nh;
 	ros::NodeHandle nh1;
 	ros::NodeHandle nh2;
 	ros::NodeHandle nh3;
@@ -118,6 +131,7 @@ public:
 	static const int cnw=cn*2;
 	const int clp_max_points=max_points/(cnh*cnw);
 	const int clp_point_size=(int)(clp_max_points*10);
+//	cv::Ptr<cv::AKAZE> akaze ;
 //特徴点追加の閾値
 	const int threshold_fp=(int)(max_points*0.8);
 	const int th_clpimg=(int)(clp_max_points*0.8);
@@ -128,7 +142,13 @@ public:
 	std::vector<cv::Point2f> npts;  //移動後の特徴点
 	std::vector<uchar> sts;
 	std::vector<float> ers;
-	std::vector<cv::KeyPoint> keypoints;
+	std::vector<cv::KeyPoint> keypoints_rect_p;
+	std::vector<cv::KeyPoint> keypoints_p;
+	std::vector<cv::Mat> descriptor_rect_p;
+	std::vector<cv::Mat> descriptor_p;
+	std::vector<cv::KeyPoint> keypoints_n;
+	std::vector<cv::Mat> descriptor_n;
+	
 //Provisional z
 	std::vector<float> pz;
 	std::vector<cv::Point2f> points;    //特徴点
@@ -137,18 +157,7 @@ public:
 	std::vector<float> nz;//new z
 	std::vector<cv::Point2f> jnpts;
 	std::vector<cv::Point2f> jnewpoints;
-//calman filter
-	std::vector<cv::Mat> sgm_p;
-	std::vector<cv::Mat> sgm;
-	std::vector<cv::Mat> xt_hat_p;
-	std::vector<cv::Mat> xt_hat;	
-	std::vector<int> xt_once_p;
-	std::vector<int> xt_once;
-	std::vector<cv::Mat> qt_p;
-	std::vector<cv::Mat> qt;
-	std::vector<cv::Mat> xt_dif_ave_p;
-	std::vector<cv::Mat> xt_dif_ave;
-//	std::vector<cv::Mat> 
+
 //--detect area exist moving objects
 	std::vector<cv::Point2d> cpt[cnh][cnw];
 	std::vector<cv::Point2d> cnpt[cnh][cnw];
@@ -171,9 +180,6 @@ public:
 	int vel=200;//100;//200;
 	int max_vel_dif=100;
 	double z_target=0.5;
-//debug
-	double ave_dyaw;
-	std::vector<double> vec_dyaw;
 //ファイル出力
 	std::ofstream ofs;
 
@@ -285,6 +291,6 @@ public:
 	void print_cptsize(void);
 	void print_sp3dsize(void);
 	void write_odom(void);
-	bool culc_ave_dyaw(void);
+
 };
 
