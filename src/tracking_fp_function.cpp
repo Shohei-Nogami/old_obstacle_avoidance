@@ -11,7 +11,7 @@ void ImageProcesser::add_feature_points(void){
 		for(int j=0;j<cnw;j++){
 			if((int)cp[i][j].size()<th_clpimg){
 //				detector.detect(clp_img[i][j], keypoints);	
-				 orb->detect(clp_img[i][j], keypoints_rect_p);
+				 orb.detect(clp_img[i][j], keypoints_rect_p);
 //				 orb.detect(clp_img_n[i][j], keypoints_n);
 				cv::KeyPoint keypoints_temp;
 /*
