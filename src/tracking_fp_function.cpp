@@ -1,8 +1,8 @@
 #include"img_prc_cls.h"
 
 void ImageProcesser::add_feature_points(void){
-//	auto detector = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
-	auto akaze = cv::AKAZE::create();	
+	auto orb = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
+//	auto akaze = cv::AKAZE::create();	
 //	cv::Ptr<cv::AKAZE> detector =cv::AKAZE::create();
 	cv::Point2i ppts;
 	float ptz;
@@ -11,8 +11,8 @@ void ImageProcesser::add_feature_points(void){
 		for(int j=0;j<cnw;j++){
 			if((int)cp[i][j].size()<th_clpimg){
 //				detector.detect(clp_img[i][j], keypoints);	
-				akaze->detect(clp_img[i][j], keypoints_rect_p);
-//				akaze.detect(clp_img_n[i][j], keypoints_n);
+				 orb->detect(clp_img[i][j], keypoints_rect_p);
+//				 orb.detect(clp_img_n[i][j], keypoints_n);
 				cv::KeyPoint keypoints_temp;
 /*
 				for(std::vector<cv::KeyPoint>::iterator itk = keypoints_rect_p.begin();
