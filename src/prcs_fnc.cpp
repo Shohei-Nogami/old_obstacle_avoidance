@@ -38,7 +38,36 @@ void ImageProcesser::imageProcess()
 	if(!keypoints_p.size()){
 		return ;
 	}
+	auto orb = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
+	orb.detect(Lgray,keypoints_n);
 	
+	cv::Mat descriptor_p, descriptor_n;
+	orb.compute(PreLgray, keypoint_p, descriptor_p);
+  orb.ccompute(Lgray, keypoint_n, descriptor_n);
+  
+  cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce");
+  
+  std::vector<cv::DMatch> match, match12, match21;//img_prc_cls,vector_function
+  
+  matcher->match(descriptor_p, descriptor_n, match12);
+  matcher->match(descriptor_p, descriptor_n, match21);
+  
+  for (size_t i = 0; i < match12.size(); i++)
+  {
+    cv::DMatch forward = match12[i];
+    cv::DMatch backward = match21[forward.trainIdx];
+    if (backward.trainIdx == forward.queryIdx)
+    {
+      match.push_back(forward);
+    }
+  }
+  
+  for(int i=0;i<match.size();i++){
+    pts.push_back(keypoints_p[match[i].queryIdx].pt);
+    npts.push_back(keypoints_n[match[i].trainIdx].pt);
+    
+  }
+  
 //
 //修正必要
 //	std::cout<<"dz:"<<dz<<"\n";
@@ -166,4 +195,3 @@ void ImageProcesser::imageProcess()
 
 
 }
-
