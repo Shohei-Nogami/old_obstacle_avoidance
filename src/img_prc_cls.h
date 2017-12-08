@@ -132,25 +132,33 @@ public:
 	const int clp_max_points=max_points/(cnh*cnw);
 	const int clp_point_size=(int)(clp_max_points*10);
 //	cv::Ptr<cv::AKAZE> akaze ;
+	std::vector<cv::DMatch> match, match12, match21;
 //特徴点追加の閾値
 	const int threshold_fp=(int)(max_points*0.8);
 	const int th_clpimg=(int)(clp_max_points*0.8);
 	std::vector<cv::Point2i> cp[cnh][cnw];
-	cv::Mat clp_img[cnh][cnw];
+	cv::Mat clp_img_p[cnh][cnw];
+	cv::Mat clp_img_n[cnh][cnw];
 //vector point,z
 	std::vector<cv::Point2f> pts;   //特徴点
 	std::vector<cv::Point2f> npts;  //移動後の特徴点
 	std::vector<uchar> sts;
 	std::vector<float> ers;
-	std::vector<cv::KeyPoint> keypoints_rect_p;
-	std::vector<cv::KeyPoint> keypoints_p;
-	std::vector<cv::Mat> descriptor_rect_p;
+	std::vector<cv::KeyPoint> kpts_rect_p;
+	std::vector<cv::KeyPoint> kpts_p;
+//	std::vector<cv::Mat> descriptor_rect_p;
 	std::vector<cv::Mat> descriptor_p;
-	std::vector<cv::KeyPoint> keypoints_n;
+	std::vector<cv::KeyPoint> kpts_rect_n;
+	std::vector<cv::KeyPoint> kpts_n;
+//	std::vector<cv::Mat> descriptor_rect_n;
 	std::vector<cv::Mat> descriptor_n;
+	std::vector<cv::KeyPoint> newkpoints;
+	std::vector<cv::KeyPoint> kpoints;
+
+	//Provisional z
+	std::vector<float> ppz;
+	std::vector<float> pnz;
 	
-//Provisional z
-	std::vector<float> pz;
 	std::vector<cv::Point2f> points;    //特徴点
 	std::vector<cv::Point2f> newpoints; //移動後の特徴点
 	std::vector<float> z;//current z

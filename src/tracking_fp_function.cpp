@@ -1,99 +1,77 @@
 #include"img_prc_cls.h"
 
-void ImageProcesser::add_feature_points(void){
-	auto orb = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
-//	auto akaze = cv::AKAZE::create();	
-//	cv::Ptr<cv::AKAZE> detector =cv::AKAZE::create();
-	cv::Point2i ppts;
-	float ptz;
-	bool flag;
-	for(int i=0;i<cnh;i++){
-		for(int j=0;j<cnw;j++){
-			if((int)cp[i][j].size()<th_clpimg){
-//				detector.detect(clp_img[i][j], keypoints);	
-				 orb.detect(clp_img[i][j], keypoints_rect_p);
-//				 orb.detect(clp_img_n[i][j], keypoints_n);
-				cv::KeyPoint keypoints_temp;
-/*
-				for(std::vector<cv::KeyPoint>::iterator itk = keypoints_rect_p.begin();
-		 			itk != keypoints_rect_p.end(); ++itk){
-					flag=false;
-				   	ppts.x=j*width/cnw+itk->pt.x;
-					ppts.y=i*height/cnh+itk->pt.y;
-					keypoints_temp=itk;
-					for(int k=0;k<pts.size();k++){
-						if(std::abs(cp[i][j][k].x-ppts.x)<1&&std::abs(cp[i][j][k].y-ppts.y)<1){
+	void ImageProcesser::add_feature_points(void){
+		auto orb = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
+	//	auto akaze = cv::AKAZE::create();	
+	//	cv::Ptr<cv::AKAZE> detector =cv::AKAZE::create();
+		cv::Point2i ppts;
+		float ptz;
+		bool flag;
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
+				if((int)cp[i][j].size()<th_clpimg){
+					orb.detect(clp_img_p[i][j], kpts_rect_p);
+					orb.detect(clp_img_n[i][j], kpts_rect_n);
+					cv::KeyPoint keypoints_temp;
 
-						    	flag=true;
-						    	break;
+					//add prvious points
+					for(int k=0;k<kpts_rect_p.size();k++){// ++i){
+						flag=false;
+					 	ppts.x=j*width/cnw+kpts_rect_p[k].pt.x;
+						ppts.y=i*height/cnh+kpts_rect_p[k].pt.y;
+						keypoints_temp=kpts_rect_p[k];
+						keypoints_temp.pt.x=j*width/cnw+kpts_rect_p[k].pt.x;
+						keypoints_temp.pt.y=i*height/cnh+kpts_rect_p[k].pt.y;
+						for(int l=0;l<pts.size();l++){
+							if(std::abs(cp[i][j][l].x-ppts.x)<1&&std::abs(cp[i][j][l].y-ppts.y)<1){
+								flag=true;
+								break;
+							}
+						}
+					
+						if(flag)
+							continue;
+					
+						ptz=Predepth.at<float>(
+							ppts.y,
+							ppts.x
+							);					
+						if(!std::isnan(ptz)&&!std::isinf(ptz)&&ptz>=0.5&&(int)pts.size()<point_size){
+							ppz.push_back(ptz);
+							kpts_p.push_back(keypoints_temp);
 						}
 					}
-*/
-				for(int i=0;i<keypoints_rect_p.size(); ++i){
-					flag=false;
-				   	ppts.x=j*width/cnw+keypoints_rect_p[i].pt.x;
-					ppts.y=i*height/cnh+keypoints_rect_p[i].pt.y;
-					keypoints_temp=keypoints_rect_p[i];
-					for(int k=0;k<pts.size();k++){
-						if(std::abs(cp[i][j][k].x-ppts.x)<1&&std::abs(cp[i][j][k].y-ppts.y)<1){
-
-						    	flag=true;
-						    	break;
+					//add current points
+					for(int k=0;k<kpts_rect_p.size();k++){// ++i){
+						cv::Point2i pnpts;
+					 	pnpts.x=j*width/cnw+kpts_rect_n[k].pt.x;
+						pnpts.y=i*height/cnh+kpts_rect_n[k].pt.y;
+						keypoints_temp=kpts_rect_n[k];
+						keypoints_temp.pt.x=j*width/cnw+kpts_rect_n[k].pt.x;
+						keypoints_temp.pt.y=i*height/cnh+kpts_rect_n[k].pt.y;						
+						float depth_np=depth_img.at<float>(pnpts.y,pnpts.x);
+						if(!std::isnan(depth_np)&&!std::isinf(depth_np)&&depth_np>=0.5){
+							pnz.push_back(depth_np);
+							kpts_n.push_back(keypoints_temp);
 						}
-					}
-					
-					if(flag)
-						continue;
-					
-					   ptz=Predepth.at<float>(
-						ppts.y,
-						ppts.x
-						);					
-					if(!std::isnan(ptz)&&!std::isinf(ptz)&&ptz>=0.5&&(int)pts.size()<point_size){
-//						pts.push_back(ppts);
-						pz.push_back(ptz);
-						keypoints_p.push_back(keypoints_temp);
-/*						//culculation jacobi
-						float X,Y;
-						cv::Point2f ppt;
-						X=(float)(ppts.x-width/2.0);//-width;
-						Y=(float)(ppts.y-height/2.0);//-height;
-						ppt.x=ppts.x- (float)(
-						  	dx/ptz-X/ptz*dz
-						  	-(f+pow(X,2.0)/f)*dyaw
-						  	);
-						ppt.y=ppts.y-(float)(
-						  	-(Y/ptz*dz)
-						  	-(X*Y*dyaw/f
-						  	));
-						
-						float jdepth=depth_img.at<float>((int)ppt.y,(int)ppt.x);
-						if(!std::isnan(jdepth)&&!std::isinf(jdepth)&&jdepth>=0.5){
-							jnpts.push_back(ppt) ;
-							jpnz.push_back(jdepth);
-						}   	
-*/						
 					}
 				}
 			}
 		}
 	}
-}
-  
-  void ImageProcesser::count_feature_points(void){
-    
-    //分割画像の各特徴点数を算出
-    for(int k=0;k<pts.size();k++){
-      for(int j=0;j<cnw;j++){
-        if((int)(j*width/cnw) < (int)pts[k].x && (int)pts[k].x < (int)((j+1)*width/cnw)){
-          for(int i=0;i<cnh;i++){
-            if((int)(i*height/cnh)<(int)pts[k].y&&(int)pts[k].y<(int)((i+1)*height/cnh)){
-				cp[i][j].push_back(pts[k]);
-
-            }
-          }
-        }
-      }
-    }
-}
+	
+	void ImageProcesser::count_feature_points(void){
+		//分割画像の各特徴点数を算出
+		for(int k=0;k<kpts_p.size();k++){//pts.size();k++){
+			for(int j=0;j<cnw;j++){
+				if((int)(j*width/cnw) < (int)pts[k].x && (int)pts[k].x < (int)((j+1)*width/cnw)){
+					for(int i=0;i<cnh;i++){
+						if((int)(i*height/cnh)<(int)pts[k].y&&(int)pts[k].y<(int)((i+1)*height/cnh)){
+							cp[i][j].push_back(kpts_p[k].pt);//pts[k]);
+						}
+					}
+				}
+			}
+		}
+	}
 
