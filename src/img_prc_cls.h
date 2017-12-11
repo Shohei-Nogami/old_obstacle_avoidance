@@ -113,7 +113,8 @@ public:
 //--特徴点抽出
 	static const int max_points=800;//500
 	const int point_size=max_points*2;
-	static const int cn=12;
+//	static const int cn=12;
+	static const int cn=12/1.5;
 	static const int cnh=cn;
 	static const int cnw=cn*2;
 	const int clp_max_points=max_points/(cnh*cnw);
