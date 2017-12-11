@@ -5,7 +5,6 @@
 		int vel_r;
 		//deviation
 //vel right and left hanten
-
 		if(z_target<1){
 			if(target_point.x==24){
 				vel_l=-70;
@@ -20,13 +19,11 @@
 				vel_r=0;
 			}
 		}
-
 /*		else if(z_target==0.5){
 			vel_l=0;
 			vel_r=50;
 		}
-*/
-		else{
+*/		else{
 			vel_l=vel;
 			vel_r=vel;
 		}
@@ -42,22 +39,6 @@
 		
 		vel_l=vel_l-u/2;
 		vel_r=vel_r+u/2;
-/*
-		if(z_target<1){
-			if(target_point.x==width){
-				vel_l=-50;
-				vel_r=-20;				
-			}
-			else if(target_point.x==0){
-				vel_l=-0;
-				vel_r=-50;				
-			}
-			else{
-				vel_l=0;
-				vel_r=0;
-			}
-		}
-*/
 		wheelMsg.vel_l=vel_l;
 		wheelMsg.vel_r=vel_r;
 		

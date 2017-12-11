@@ -84,8 +84,7 @@
 //LPF
 		w=dyaw/dt;
 /*		if(std::abs(w_w)>=0.01){
-		//	T=2*PI*d/std::abs(w_w);
-			T=2*PI*d/std::abs(w_w)*0.80;
+			T=2*PI*d/std::abs(w_w);
 			w=(T*pw+dt*w)/(T+dt);
 			dyaw=w*dt;
 		}

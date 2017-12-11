@@ -30,7 +30,7 @@
 //		pts.clear();   //特徴点
 		npts.clear();  //移動後の特徴点
 		sts.clear();
-//		ers.clear();
+		ers.clear();
 //-----特徴点抽出用変数-----
 		keypoints.clear();
 		for(int i=0;i<cnh;i++){
