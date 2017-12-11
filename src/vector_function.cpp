@@ -6,22 +6,11 @@
 		sts.reserve(point_size);
 		ers.reserve(point_size);
 //-----特徴点抽出用変数-----
-		kpts_rect_p.reserve(clp_point_size);
-		kpts_p.reserve(point_size);
-		kpts_n.reserve(point_size);
-		kpts_rect_n.reserve(clp_point_size);
-		descriptor_p.reserve(point_size);
-		descriptor_n.reserve(point_size);
-		match.reserve(point_size);
-		match12.reserve(point_size);
-		match21.reserve(point_size);
+		keypoints.reserve(point_size);
 //Provisional vector z
-		ppz.reserve(point_size);
-		pnz.reserve(point_size);
+		pz.reserve(point_size);
 		points.reserve(point_size);
 		newpoints.reserve(point_size);
-		kpoints.reserve(point_size);
-		newkpoints.reserve(point_size);
 		z.reserve(point_size);
 		nz.reserve(point_size);
 		for(int i=0;i<cnh;i++){
@@ -41,9 +30,9 @@
 //		pts.clear();   //特徴点
 		npts.clear();  //移動後の特徴点
 		sts.clear();
-		ers.clear();
+//		ers.clear();
 //-----特徴点抽出用変数-----
-//		keypoints.clear();
+		keypoints.clear();
 		for(int i=0;i<cnh;i++){
 			for(int j=0;j<cnw;j++){
 				cp[i][j].clear();
@@ -53,26 +42,18 @@
 
 	}
 	void ImageProcesser::renew_vectors(void){
-//		pts.clear();
-		ppz.clear();
-//		pts.insert(pts.end(),newpoints.begin(),newpoints.end());
-		ppz.insert(ppz.end(),nz.begin(),nz.end());
-		kpts_p.clear();
-		kpts_p.insert(kpts_p.end(),newkpoints.begin(),newkpoints.end());
+		pts.clear();
+		pz.clear();
+		pts.insert(pts.end(),newpoints.begin(),newpoints.end());
+		pz.insert(pz.end(),nz.begin(),nz.end());
+
 	}
 	void ImageProcesser::clear_dtctvectors(void){
 		points.clear();
 		newpoints.clear();
 		jnewpoints.clear();
-		kpoints.clear();
-		newkpoints.clear();
-		kpts_n.clear();
 		z.clear();	
 		nz.clear();
-		pnz.clear();
-		match.clear();
-		match12.clear();
-		match21.clear();
 		for(int i=0;i<cnh;i++){
 			for(int j=0;j<cnw;j++){
 				cpt[i][j].clear();

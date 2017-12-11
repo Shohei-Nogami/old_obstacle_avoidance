@@ -3,7 +3,6 @@
 ImageProcesser::ImageProcesser()//
 	:it(nh),it2(nh5)
 	{
-//		akaze = cv::AKAZE::create();
 		start_time = ros::Time::now();
 		pub_orgimg=it.advertise("output_originalimage",1);
 		pub_Limg=it.advertise("output_Limage",1);

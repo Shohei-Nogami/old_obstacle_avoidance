@@ -30,7 +30,7 @@ int main(int argc,char **argv){
 //		ROS_INFO("prc.setave3d();,prc.pub_response();");
 		prc.pub_response();
 //		ROS_INFO("prc.pub_response();");
-//		prc.prd_prcess();
+		prc.prd_prcess();
 //		prc.wheel_control();
 		prc.clear_dtctvectors();
 		prc.pub_left_img();

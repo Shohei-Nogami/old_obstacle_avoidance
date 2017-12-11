@@ -8,19 +8,6 @@
 #include<opencv2/imgproc/imgproc.hpp>
 #include<opencv2/video/tracking.hpp>//オプティカルフロー用
 #include<opencv2/features2d/features2d.hpp>
-//opencv3.2
-//#include<opencv-3.2.0-dev/opencv2/highgui/highgui.hpp>
-//#include<opencv-3.2.0-dev/opencv2/imgproc/imgproc.hpp>
-//#include<opencv-3.2.0-dev/opencv2/highgui.hpp>
-//#include<opencv-3.2.0-dev/opencv2/imgproc.hpp>
-//#include<opencv-3.2.0-dev/opencv2/video/tracking.hpp>//オプティカルフロー用
-//#include<opencv-3.2.0-dev/opencv2/features2d/features2d.hpp>
-//#include <opencv-3.2.0-dev/opencv2/imgcodecs.hpp>
-//#include<opencv-3.2.0-dev/opencv2/features2d.hpp>
-#include<opencv2/features2d.hpp>
-//#include</opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/features2d/features2d.hpp>
-//#include</opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/features2d.hpp>
-//#include "types.hpp"
 #include<typeinfo>//型調べ
 //odometry取得用
 #include <tf/LinearMath/Quaternion.h>
@@ -131,34 +118,19 @@ public:
 	static const int cnw=cn*2;
 	const int clp_max_points=max_points/(cnh*cnw);
 	const int clp_point_size=(int)(clp_max_points*10);
-//	cv::Ptr<cv::AKAZE> akaze ;
-	std::vector<cv::DMatch> match, match12, match21;
 //特徴点追加の閾値
 	const int threshold_fp=(int)(max_points*0.8);
 	const int th_clpimg=(int)(clp_max_points*0.8);
 	std::vector<cv::Point2i> cp[cnh][cnw];
-	cv::Mat clp_img_p[cnh][cnw];
-	cv::Mat clp_img_n[cnh][cnw];
+	cv::Mat clp_img[cnh][cnw];
 //vector point,z
 	std::vector<cv::Point2f> pts;   //特徴点
 	std::vector<cv::Point2f> npts;  //移動後の特徴点
 	std::vector<uchar> sts;
 	std::vector<float> ers;
-	std::vector<cv::KeyPoint> kpts_rect_p;
-	std::vector<cv::KeyPoint> kpts_p;
-//	std::vector<cv::Mat> descriptor_rect_p;
-	std::vector<cv::Mat> descriptor_p;
-	std::vector<cv::KeyPoint> kpts_rect_n;
-	std::vector<cv::KeyPoint> kpts_n;
-//	std::vector<cv::Mat> descriptor_rect_n;
-	std::vector<cv::Mat> descriptor_n;
-	std::vector<cv::KeyPoint> newkpoints;
-	std::vector<cv::KeyPoint> kpoints;
-
-	//Provisional z
-	std::vector<float> ppz;
-	std::vector<float> pnz;
-	
+	std::vector<cv::KeyPoint> keypoints;
+//Provisional z
+	std::vector<float> pz;
 	std::vector<cv::Point2f> points;    //特徴点
 	std::vector<cv::Point2f> newpoints; //移動後の特徴点
 	std::vector<float> z;//current z

@@ -83,11 +83,13 @@
 			dyaw=yaw-prev_yaw;
 //LPF
 		w=dyaw/dt;
-		if(std::abs(w_w)>=0.01){
-			T=2*PI*d/std::abs(w_w);
+/*		if(std::abs(w_w)>=0.01){
+		//	T=2*PI*d/std::abs(w_w);
+			T=2*PI*d/std::abs(w_w)*0.80;
 			w=(T*pw+dt*w)/(T+dt);
 			dyaw=w*dt;
 		}
+*/
 		w_w=-(vr-vl)/d;//回転角速度
 		w_dyaw=w_w*dt;//回転角
 	}

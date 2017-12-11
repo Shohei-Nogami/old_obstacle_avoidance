@@ -25,104 +25,54 @@ void ImageProcesser::imageProcess()
 
 	for(int i=0;i<cnh;i++){
 		for(int j=0;j<cnw;j++){
-			clp_img_p[i][j]=PreLgray(cv::Rect((int)(j*(width)/cnw),(int)(i*(height)/cnh),(int)(width/cnw),(int)(height/cnh)));
-			clp_img_n[i][j]=Lgray(cv::Rect((int)(j*(width)/cnw),(int)(i*(height)/cnh),(int)(width/cnw),(int)(height/cnh)));
+			clp_img[i][j]=PreLgray(cv::Rect((int)(j*(width)/cnw),(int)(i*(height)/cnh),(int)(width/cnw),(int)(height/cnh)));
 		}
 	}
 //	//std::cout<<"count\n";
 	count_feature_points();
 	add_feature_points();
-//	if(!pts.size()){
-//		return ;
-//	}
-	if(!kpts_p.size()){
+	if(!pts.size()){
 		return ;
 	}
-	auto orb = cv::ORB(max_points, 1.25f, 4, 7, 0, 2, 0, 7);
-//	cv::Ptr<cv::Feature2D> orb =cv::ORB::create(max_points, 1.25f, 4, 7, 0, 2, cv::ORB::HARRIS_SCORE, 7, 20);//(max_points, 1.25f, 4, 7, 0, 2, 0, 7);
-//	orb.detect(Lgray,kpts_n);
-	
-	cv::Mat descriptor_p, descriptor_n;
-	orb.compute(PreLgray, kpts_p, descriptor_p);
-	orb.compute(Lgray, kpts_n, descriptor_n);
-
-	
-	cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");//"BruteForce");
-//	std::vector<cv::DMatch> match, match12, match21;//img_prc_cls,vector_function
-
-//	matcher->match(descriptor_p, descriptor_n, match);
-	
-	matcher->match(descriptor_p, descriptor_n, match12);
-	matcher->match(descriptor_n, descriptor_p, match21);
-	
-	for (size_t i = 0; i < match12.size(); i++)
-	{
-		cv::DMatch forward = match12[i];
-		cv::DMatch backward = match21[forward.trainIdx];
-		if (backward.trainIdx == forward.queryIdx)
-		{
-			match.push_back(forward);
-		}
-	}
-
-	for(int i=0;i<match.size();i++){
-		points.push_back(kpts_p[match[i].queryIdx].pt);
-		newpoints.push_back(kpts_n[match[i].trainIdx].pt);
-//		points.push_back(kpts_p[match[i].trainIdx].pt);
-//		newpoints.push_back(kpts_n[match[i].queryIdx].pt);
-		z.push_back(ppz[match[i].queryIdx]);
-		nz.push_back(pnz[match[i].trainIdx]);
-		kpoints.push_back(kpts_p[match[i].queryIdx]);
-		newkpoints.push_back(kpts_n[match[i].trainIdx]);
-		
-	}
-/*	std::cout<<"match[i].queryIdx,match[i].traninIdx:"<<match[0].trainIdx<<","<<match21[0].queryIdx<<"\n";
-	std::cout<<"match[i].queryIdx,match[i].traninIdx:"<<match[0].queryIdx<<","<<match[0].trainIdx<<"\n";
-	std::cout<<"points,npoints:"<<points[0]<<","<<newpoints[0]<<"\n";
-	for(int i=0;i<10;i++){
-		std::cout<<"points,npoints:"<<points[i]<<","<<newpoints[i]<<"\n";
-	}
-*/
 //
 //修正必要
 //	std::cout<<"dz:"<<dz<<"\n";
 	float X,Y;
 	cv::Point2f ppt;
-	for(int j=0;j<points.size();j++){
-		X=(float)(points[j].x-width/2.0);//-width;
-		Y=(float)(points[j].y-height/2.0);//-height;
+	for(int j=0;j<pts.size();j++){
+		X=(float)(pts[j].x-width/2.0);//-width;
+		Y=(float)(pts[j].y-height/2.0);//-height;
 		float value_x;
 		float value_y;
-		ppt.x=points[j].x- (float)(
-			dx/z[j]-X/z[j]*dz
+		ppt.x=pts[j].x- (float)(
+			dx/pz[j]-X/pz[j]*dz
 			-(f+pow(X,2.0)/f)*dyaw
 			);
-		ppt.y=points[j].y-(float)(
-				-(Y/z[j]*dz)
+		ppt.y=pts[j].y-(float)(
+				-(Y/pz[j]*dz)
 				-(X*Y*dyaw/f
 				));
 		jnpts.push_back(ppt) ;
 	}
-
-/*		npts.insert(npts.end(),jnpts.begin(),jnpts.end());
+	npts.insert(npts.end(),jnpts.begin(),jnpts.end());
 	//---オプティカルフローを得る-----------------------------
-		cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(15,15), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
-*/
-/*		float pnz;
+//		cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(15,15), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
+		cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(13,13), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
+
+		float pnz;
 		for(int i=0;i<pts.size();i++){
 			float depth_np=depth_img.at<float>(npts[i].y,npts[i].x);
 			if(sts[i]&&!std::isnan(depth_np)&&!std::isinf(depth_np)&&depth_np>=0.5){
 				points.push_back(pts[i]);
 				newpoints.push_back(npts[i]);
-				z.push_back(ppz[i]);
+				z.push_back(pz[i]);
 				jnewpoints.push_back(jnpts[i]);
 				nz.push_back(depth_np);
 			}
 		}
-*/
+
 
 	for(int j=0;j<points.size();j++){
-		std::cout<<"points,npoints:"<<points[j]<<","<<newpoints[j]<<"\n";
 //----矢印描写---
 		float L1=std::abs(newpoints[j].x-jnewpoints[j].x);//sqrt(z[j]);
 		float L2=sqrt((newpoints[j].x-jnewpoints[j].x)*(newpoints[j].x-jnewpoints[j].x)
@@ -132,21 +82,13 @@ void ImageProcesser::imageProcess()
 //newpoints-jnewpoints==LK-jacobi
 //2*points-jnewpoint==points-jacobi
 
-		
 		ImageProcesser::cvArrow(&Limg_view,
-				cv::Point((int)points[j].x,
-					(int)points[j].y),
-				cv::Point((int)(newpoints[j].x),
-					(int)(newpoints[j].y)),
-				cv::Scalar(0,200,200));//
-
-/*		ImageProcesser::cvArrow(&Limg_view,
 				cv::Point((int)points[j].x,
 					(int)points[j].y),
 				cv::Point((int)(newpoints[j].x-jnewpoints[j].x+points[j].x),
 					(int)(newpoints[j].y-jnewpoints[j].y+points[j].y)),
 				cv::Scalar(0,200,200));//
-*/
+
 			//detect moving area	
 
 

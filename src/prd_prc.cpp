@@ -12,9 +12,10 @@
 
 		//分割画像の各特徴点の平均と分散(x,y,size)
 		cv::Point2d avept[cnh][cnw];	//sum->ave
-		double avesize[cnh][cnw];		//sum->ave
+//		double avesize[cnh][cnw];		//sum->ave
 		cv::Point2d dsppt[cnh][cnw];	//sum->dsp
-		double dspsize[cnh][cnw];		//sum->dsp
+//		double dspsize[cnh][cnw];		//sum->dsp
+		double dspz[cnh][cnw];
 		double avez[cnh][cnw];
 		double p_mvarea[cnh][cnw];
 		int pp_mvarea[cnh][cnw];
@@ -26,11 +27,12 @@
 			for(int j=0;j<cnw;j++){
 				avept[i][j].x=0;
 				avept[i][j].y=0;
-				avesize[i][j]=0;
+//				avesize[i][j]=0;
 				avez[i][j]=0;
 				dsppt[i][j].x=0;
 				dsppt[i][j].y=0;
-				dspsize[i][j]=0;
+//				dspsize[i][j]=0;
+				dspz[i][j]=0;
 				ismvobj[i][j]=0;
 				pp_mvarea[i][j]=0;
 			}
@@ -41,14 +43,16 @@
 				if((int)(j*width/cnw) < (int)points[k].x && (int)points[k].x < (int)((j+1)*width/cnw)){
 					for(int i=0;i<cnh;i++){
 						if((int)(i*height/cnh)<(int)points[k].y&&(int)points[k].y<(int)((i+1)*height/cnh)){
-							cpt[i][j].push_back(points[k]);
-							cz[i][j].push_back(z[k]);
-							cnpt[i][j].push_back(newpoints[k]-jnewpoints[k]+points[k]);
-							avept[i][j].x+=newpoints[k].x-jnewpoints[k].x;
-							avept[i][j].y+=newpoints[k].y-jnewpoints[k].y;
-							avez[i][j]+=z[k];
+							if(std::abs(newpoints[k].x-jnewpoints[k].x)*z[k]/f<1.1){
+								cpt[i][j].push_back(points[k]);
+								cz[i][j].push_back(z[k]);
+								cnpt[i][j].push_back(newpoints[k]-jnewpoints[k]+points[k]);
+								avept[i][j].x+=newpoints[k].x-jnewpoints[k].x;
+								avept[i][j].y+=newpoints[k].y-jnewpoints[k].y;
+								avez[i][j]+=z[k];
 //							avesize[i][j]+=sqrt(pow(newpoints[k].x-jnewpoints[k].x,2.0)
 	//							+pow(newpoints[k].y-jnewpoints[k].y,2.0));
+							}
 						}
 					}
 				}
@@ -61,16 +65,16 @@
 				avept[i][j].x=avept[i][j].x/(int)cpt[i][j].size();
 				avept[i][j].y=avept[i][j].y/(int)cpt[i][j].size();
 				avez[i][j]=avez[i][j]/(int)cpt[i][j].size();
-				if(!std::isnan(pavept[i][j].x)&&!std::isnan(pavept[i][j].x)){
-					avept[i][j].x=(ppT*pavept[i][j].x+dt*avept[i][j].x)/(ppT+dt);
-					avept[i][j].y=(ppT*pavept[i][j].y+dt*avept[i][j].y)/(ppT+dt);
-				}
-				pavept[i][j]=avept[i][j];
+//				if(!std::isnan(pavept[i][j].x)&&!std::isnan(pavept[i][j].x)){
+//					avept[i][j].x=(ppT*pavept[i][j].x+dt*avept[i][j].x)/(ppT+dt);
+//					avept[i][j].y=(ppT*pavept[i][j].y+dt*avept[i][j].y)/(ppT+dt);
+//				}
+//				pavept[i][j]=avept[i][j];
 //				avesize[i][j]=avesize[i][j]/(int)cpt[i][j].size();
-				avesize[i][j]=sqrt( avept[i][j].x*avept[i][j].x +avept[i][j].y*avept[i][j].y );
-				if(!std::isnan(pavesize[i][j]))
-					avesize[i][j]=(ppT*pavesize[i][j]+dt*avesize[i][j])/(ppT+dt);
-				pavesize[i][j]=avesize[i][j];
+//				avesize[i][j]=sqrt( avept[i][j].x*avept[i][j].x +avept[i][j].y*avept[i][j].y );
+//				if(!std::isnan(pavesize[i][j]))
+//					avesize[i][j]=(ppT*pavesize[i][j]+dt*avesize[i][j])/(ppT+dt);
+//				pavesize[i][j]=avesize[i][j];
 			}
 		}
 		//calculate dispersion
@@ -78,13 +82,16 @@
 			for(int i=0;i<cnh;i++){
 				for(int k=0;k<cpt[i][j].size();k++){
 					dsppt[i][j].x+=(cnpt[i][j][k].x-cpt[i][j][k].x-avept[i][j].x)*(cnpt[i][j][k].x-cpt[i][j][k].x-avept[i][j].x);
-					dsppt[i][j].y+=(cnpt[i][j][k].y-cpt[i][j][k].y-avept[i][j].y)*(cnpt[i][j][k].y-cpt[i][j][k].y-avept[i][j].y);
-					dspsize[i][j]+=pow( sqrt(pow(cnpt[i][j][k].x-cpt[i][j][k].x,2.0)
-							+pow(cnpt[i][j][k].y-cpt[i][j][k].y,2.0)) -avesize[i][j],2.0);
+//					dsppt[i][j].y+=(cnpt[i][j][k].y-cpt[i][j][k].y-avept[i][j].y)*(cnpt[i][j][k].y-cpt[i][j][k].y-avept[i][j].y);
+//					dspsize[i][j]+=pow( sqrt(pow(cnpt[i][j][k].x-cpt[i][j][k].x,2.0)
+//							+pow(cnpt[i][j][k].y-cpt[i][j][k].y,2.0)) -avesize[i][j],2.0);
+					dspz[i][j]+=pow(cz[i][j][k]-avez[i][j],2.0);
 				}
 				dsppt[i][j].x=sqrt( dsppt[i][j].x/(int)cpt[i][j].size() );
-				dsppt[i][j].y=sqrt( dsppt[i][j].y/(int)cpt[i][j].size() );
-				dspsize[i][j]=sqrt( dspsize[i][j]/(int)cpt[i][j].size() );
+//				dsppt[i][j].y=sqrt( dsppt[i][j].y/(int)cpt[i][j].size() );
+//				dspsize[i][j]=sqrt( dspsize[i][j]/(int)cpt[i][j].size() );
+				dspz[i][j]=sqrt( dspz[i][j]/(int)cpt[i][j].size() );
+				
 			}
 		}
 
@@ -97,19 +104,42 @@
 			for(int j=0;j<cnw;j++){
 				p_mvarea[i][j]=1;
 				th_dsp=1*std::abs(dyaw)/0.01*std::abs(j-cnw/2+0.5);
-				th_mv=2.0*dt/0.10;///ddt;add1114
+//				th_mv=2.0*dt/0.10;///ddt;add1114
+				th_mv=2.0*dt/0.10;///ddt;add1211
 //				th_mv=1.3*dt/0.12;///ddt;add1114
 				if(std::abs(dyaw)>0.015)
 					th_mv=th_mv*std::abs(dyaw)/0.015;
 				if(sp3d.sqr_p3d[i].line_p3d[j].y+0.23<=0||sp3d.sqr_p3d[i].line_p3d[j].y+0.23>1.0
 					||std::isnan(avept[i][j].x)
-					||std::abs(avept[i][j].x)<th_mv/sp3d.sqr_p3d[i].line_p3d[j].z
-					||th_mv<dsppt[i][j].x){
+					||std::abs(avept[i][j].x)<th_mv /sp3d.sqr_p3d[i].line_p3d[j].z
+//					||sp3d.sqr_p3d[i].line_p3d[j].z>3.0
+//					||std::abs(avept[i][j].x)*sp3d.sqr_p3d[i].line_p3d[j].z/f/dt<0.2
+					||dsppt[i][j].x>th_mv /sp3d.sqr_p3d[i].line_p3d[j].z			//add
+					||dspz[i][j]>0.10					
+					||std::abs(avept[i][j].x)*sp3d.sqr_p3d[i].line_p3d[j].z/f/dt>1.00){
 					p_mvarea[i][j]=0;
 				}
 			}
 		}
 
+		int mvarea_count=0;
+		int all_count=0;
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
+				if(sp3d.sqr_p3d[i].line_p3d[j].y+0.23>0&&sp3d.sqr_p3d[i].line_p3d[j].y+0.23<=1.0){
+					all_count++;
+					if(p_mvarea[i][j]!=0)
+						mvarea_count++;
+				}
+			}
+		}
+		double count_rate=0.3;
+		std::cout<<"mvarea_count:"<<mvarea_count<<":\n";	
+		if(mvarea_count>all_count*count_rate){
+			for(int i=0;i<10;i++)
+				std::cout<<"mvarea_count>all_count*"<<count_rate<<":\n";
+			return ;
+		}
 //衝突物体を予測
 //avept[i][j].x
 		double obj_pstn;
@@ -405,14 +435,14 @@
 		int dif_lens=(int)dif_lens_d+(int)((dif_lens_d-(int)dif_lens_d)*2);//4 out ,5 in
 		double w_pix=f*rw/min_line_z;
 		int space_minsize=(int)(w_pix/(width/cnw))+1;
-		std::cout<<"dif_lens(i,d):("<<dif_lens<<","<<dif_lens_d<<")\n";
+//		std::cout<<"dif_lens(i,d):("<<dif_lens<<","<<dif_lens_d<<")\n";
 		std::cout<<"space_minsize:"<<space_minsize<<"\n";
 		std::vector<int> space_begin;
 		std::vector<int> space_end;
 		std::vector<int> space_size;
 		int space_temp=0;
 //set vel and max_vel_dif
-/*		double min_space_z=line_z[cnw/2+(-space_minsize/2)-dif_lens];
+		double min_space_z=line_z[cnw/2+(-space_minsize/2)-dif_lens];
 		for(int j=-space_minsize/2-dif_lens+1;j<=space_minsize/2+dif_lens;j++){
 			if(min_space_z>line_z[cnw/2+(-space_minsize/2)])
 					min_space_z=line_z[cnw/2+(-space_minsize/2)];
@@ -422,8 +452,9 @@
 		max_vel_dif=min_space_z*(-20)+110;
 		if(min_space_z<1.0)
 			min_space_z=1.0;
-		vel=min_space_z*50+50;
-*/
+//		vel=min_space_z*50+50;
+		vel=min_space_z*50+20;
+
 //VFH
 		for(int j=0;j<cnw;j++){
 			if(line_z[j]>1.0&&!std::isinf(line_z[j])&&!std::isnan(line_z[j]))
