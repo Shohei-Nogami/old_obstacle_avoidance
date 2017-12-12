@@ -68,6 +68,7 @@ void ImageProcesser::imageProcess()
 				z.push_back(pz[i]);
 				jnewpoints.push_back(jnpts[i]);
 				nz.push_back(depth_np);
+				tracking_count.push_back(tracking_count_p[i]+1);
 			}
 		}
 

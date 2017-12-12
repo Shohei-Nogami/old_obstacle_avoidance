@@ -43,7 +43,9 @@
 				if((int)(j*width/cnw) < (int)points[k].x && (int)points[k].x < (int)((j+1)*width/cnw)){
 					for(int i=0;i<cnh;i++){
 						if((int)(i*height/cnh)<(int)points[k].y&&(int)points[k].y<(int)((i+1)*height/cnh)){
-							if(std::abs(newpoints[k].x-jnewpoints[k].x)*z[k]/f<1.1){
+//							if(std::abs(newpoints[k].x-jnewpoints[k].x)*z[k]/f<1.1){
+						if(std::abs(newpoints[k].x-jnewpoints[k].x)*z[k]/f<1.1
+								&&tracking_count[k]>5){
 								cpt[i][j].push_back(points[k]);
 								cz[i][j].push_back(z[k]);
 								cnpt[i][j].push_back(newpoints[k]-jnewpoints[k]+points[k]);
@@ -59,17 +61,18 @@
 			}
 		}
 		//calculate average
-		double ppT=dt*5;//10;//5;add1114
+		double ppT=dt*2;//10;//5;add1114
 		for(int j=0;j<cnw;j++){
 			for(int i=0;i<cnh;i++){
 				avept[i][j].x=avept[i][j].x/(int)cpt[i][j].size();
 				avept[i][j].y=avept[i][j].y/(int)cpt[i][j].size();
 				avez[i][j]=avez[i][j]/(int)cpt[i][j].size();
-//				if(!std::isnan(pavept[i][j].x)&&!std::isnan(pavept[i][j].x)){
-//					avept[i][j].x=(ppT*pavept[i][j].x+dt*avept[i][j].x)/(ppT+dt);
+				if(!std::isnan(pavept[i][j].x)&&!std::isnan(pavept[i][j].x)){
+					avept[i][j].x=(ppT*pavept[i][j].x+dt*avept[i][j].x)/(ppT+dt);
 //					avept[i][j].y=(ppT*pavept[i][j].y+dt*avept[i][j].y)/(ppT+dt);
-//				}
-//				pavept[i][j]=avept[i][j];
+				}
+				pavept[i][j]=avept[i][j];
+
 //				avesize[i][j]=avesize[i][j]/(int)cpt[i][j].size();
 //				avesize[i][j]=sqrt( avept[i][j].x*avept[i][j].x +avept[i][j].y*avept[i][j].y );
 //				if(!std::isnan(pavesize[i][j]))
@@ -102,23 +105,43 @@
 //		double ddt=dt/0.045;
 		for(int i=0;i<cnh;i++){
 			for(int j=0;j<cnw;j++){
-				p_mvarea[i][j]=1;
 				th_dsp=1*std::abs(dyaw)/0.01*std::abs(j-cnw/2+0.5);
 //				th_mv=2.0*dt/0.10;///ddt;add1114
 				th_mv=2.0*dt/0.10;///ddt;add1211
 //				th_mv=1.3*dt/0.12;///ddt;add1114
 				if(std::abs(dyaw)>0.015)
 					th_mv=th_mv*std::abs(dyaw)/0.015;
-				if(sp3d.sqr_p3d[i].line_p3d[j].y+0.23<=0||sp3d.sqr_p3d[i].line_p3d[j].y+0.23>1.0
+
+/*				p_mvarea[i][j]=1;
+				if(sp3d.sqr_p3d[i].line_p3d[j].y+0.23<=0.05||sp3d.sqr_p3d[i].line_p3d[j].y+0.23>1.0//0->0.1 1211
 					||std::isnan(avept[i][j].x)
-					||std::abs(avept[i][j].x)<th_mv /sp3d.sqr_p3d[i].line_p3d[j].z
+//					||std::abs(avept[i][j].x)<th_mv /sp3d.sqr_p3d[i].line_p3d[j].z
+					||(std::abs(avept[i][j].x)<th_mv/sp3d.sqr_p3d[i].line_p3d[j].z
+					||0.03>th_mv/sp3d.sqr_p3d[i].line_p3d[j].z)
+//					||std::abs(avept[i][j].x)<th_mv *sp3d.sqr_p3d[i].line_p3d[j].z
 //					||sp3d.sqr_p3d[i].line_p3d[j].z>3.0
 //					||std::abs(avept[i][j].x)*sp3d.sqr_p3d[i].line_p3d[j].z/f/dt<0.2
-					||dsppt[i][j].x>th_mv /sp3d.sqr_p3d[i].line_p3d[j].z			//add
-					||dspz[i][j]>0.10					
+					||dsppt[i][j].x>th_mv / sp3d.sqr_p3d[i].line_p3d[j].z*0.8			//add
+					||dspz[i][j]>0.10
+					||std::abs(avept[i][j].x)*sp3d.sqr_p3d[i].line_p3d[j].z/f/dt<0.10
 					||std::abs(avept[i][j].x)*sp3d.sqr_p3d[i].line_p3d[j].z/f/dt>1.00){
 					p_mvarea[i][j]=0;
 				}
+*/
+				p_mvarea[i][j]=0;
+				if(sp3d.sqr_p3d[i].line_p3d[j].y+0.23>0.1&&sp3d.sqr_p3d[i].line_p3d[j].y+0.23<=1.0//0->0.1 1211
+					&&!std::isnan(avept[i][j].x)
+					&&std::abs(avept[i][j].x)>=th_mv /sp3d.sqr_p3d[i].line_p3d[j].z
+					&&0.03<th_mv/sp3d.sqr_p3d[i].line_p3d[j].z
+//					||sp3d.sqr_p3d[i].line_p3d[j].z>3.0
+//					||std::abs(avept[i][j].x)*sp3d.sqr_p3d[i].line_p3d[j].z/f/dt<0.2
+					&&dsppt[i][j].x<=th_mv /sp3d.sqr_p3d[i].line_p3d[j].z			//add
+					&&dspz[i][j]<=0.15//0.10
+					&&std::abs(avept[i][j].x)*sp3d.sqr_p3d[i].line_p3d[j].z/f/dt>=0.10
+					&&std::abs(avept[i][j].x)*sp3d.sqr_p3d[i].line_p3d[j].z/f/dt<=1.00){
+					p_mvarea[i][j]=1;
+				}
+
 			}
 		}
 
@@ -452,8 +475,8 @@
 		max_vel_dif=min_space_z*(-20)+110;
 		if(min_space_z<1.0)
 			min_space_z=1.0;
-//		vel=min_space_z*50+50;
-		vel=min_space_z*50+20;
+		vel=min_space_z*50+50;
+//		vel=min_space_z*50+20;
 
 //VFH
 		for(int j=0;j<cnw;j++){

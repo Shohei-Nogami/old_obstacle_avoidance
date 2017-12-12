@@ -25,6 +25,8 @@
 		jnewpoints.reserve(point_size);
 		mv_area.reserve(cnh*cnw);
 		opt.reserve(cnh*cnw);
+		tracking_count_p.reserve(point_size);
+		tracking_count.reserve(point_size);
 	}
 	void ImageProcesser::clear_vectors(void){
 //		pts.clear();   //特徴点
@@ -46,7 +48,9 @@
 		pz.clear();
 		pts.insert(pts.end(),newpoints.begin(),newpoints.end());
 		pz.insert(pz.end(),nz.begin(),nz.end());
-
+		tracking_count_p.clear();
+		tracking_count_p.insert(tracking_count_p.end(),tracking_count.begin(),tracking_count.end());
+		tracking_count.clear();	
 	}
 	void ImageProcesser::clear_dtctvectors(void){
 		points.clear();

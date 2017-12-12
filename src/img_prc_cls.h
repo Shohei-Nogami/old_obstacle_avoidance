@@ -111,12 +111,13 @@ public:
 	double pdyaw;
 	double dr;
 //--特徴点抽出
-	static const int max_points=800;//500
+	static const int max_points=1200;//720;//800;//500
 	const int point_size=max_points*2;
 //	static const int cn=12;
-	static const int cn=12/1.5;
+	static const int cn=12/1.2;
 	static const int cnh=cn;
-	static const int cnw=cn*2;
+//	static const int cnw=cn*2;
+	static const int cnw=cn*1.8;
 	const int clp_max_points=max_points/(cnh*cnw);
 	const int clp_point_size=(int)(clp_max_points*10);
 //特徴点追加の閾値
@@ -138,7 +139,8 @@ public:
 	std::vector<float> nz;//new z
 	std::vector<cv::Point2f> jnpts;
 	std::vector<cv::Point2f> jnewpoints;
-
+	std::vector<int> tracking_count_p;
+	std::vector<int> tracking_count;
 //--detect area exist moving objects
 	std::vector<cv::Point2d> cpt[cnh][cnw];
 	std::vector<cv::Point2d> cnpt[cnh][cnw];
