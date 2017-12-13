@@ -146,7 +146,7 @@ public:
 	std::vector<cv::Point2d> cnpt[cnh][cnw];
 	std::vector<double> cz[cnh][cnw];
 	double p_avez[cnh][cnw];
-//	double p_mvarea[cnh][cnh];
+	double p_mvarea[cnh][cnw];
 	double p_pmvarea[cnh][cnw];
 	double pavesize[cnh][cnw];
 	double pprd_obj[cnh][cnw];
@@ -157,6 +157,19 @@ public:
 	std_msgs::Empty emptymsg;
 	std::vector<cv::Point2i> mv_area;
 	std::vector<double> opt;
+
+	cv::Point2d avept[cnh][cnw];	//sum->ave
+//		double avesize[cnh][cnw];		//sum->ave
+	cv::Point2d dsppt[cnh][cnw];	//sum->dsp
+//		double dspsize[cnh][cnw];		//sum->dsp
+	double dspz[cnh][cnw];
+	double avez[cnh][cnw];
+//		double p_mvarea[cnh][cnw];
+	int pp_mvarea[cnh][cnw];
+	double ismvobj[cnh][cnw];
+	double ismvline[cnw];
+	double obj_pstn;
+	int prd_obj[cnh][cnw];
 
 //control wheel
 	obst_avoid::wheel_msg wheelMsg;

@@ -94,8 +94,8 @@ void twistCallback(const geometry_msgs::Twist::ConstPtr& msg){
 		}
 		else if(msg->linear.x==0&&msg->angular.z<0){
 
-		  vel_r+=ac/2;
-		  vel_l-=ac/2;
+		  vel_r-=ac/2;
+		  vel_l+=ac/2;
 		  if(vel_r>=maxvel)
 			vel_r=maxvel;
 		  if(vel_l<=-maxvel)
@@ -104,8 +104,8 @@ void twistCallback(const geometry_msgs::Twist::ConstPtr& msg){
 		}
 		else if(msg->linear.x==0&&msg->angular.z>0){
 
-		  vel_r-=ac/2;
-		  vel_l+=ac/2;
+		  vel_r+=ac/2;
+		  vel_l-=ac/2;
 		  if(vel_l>=maxvel)
 			vel_l=maxvel;
 		  if(vel_r<=-maxvel)

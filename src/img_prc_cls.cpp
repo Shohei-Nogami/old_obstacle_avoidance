@@ -21,4 +21,12 @@ ImageProcesser::ImageProcesser()//
 		sub_odom=nh.subscribe("/zed/odom",1,&ImageProcesser::odom_callback,this);
 //		sub_wodom=nh3.subscribe("/wheel_data",1,&ImageProcesser::wheelodom_callback,this);
 		sub_avedepth=nh4.subscribe("/ave_p3d",1,&ImageProcesser::avedepth_callback,this);
+
+		for(int i=0;i<cnh;i++){
+			for(int j=0;j<cnw;j++){
+				p_mvarea[i][j]=0;
+				p_pmvarea[i][j]=0;
+			}
+		}
+
 	}
