@@ -1,36 +1,14 @@
 #include"img_prc_cls.h"
 
 	void ImageProcesser::wheel_control(void){
+
+		cv::circle(Limg_view, target_point, 4, cv::Scalar(200,200,0),-1, CV_AA);
 		int vel_r;
 		int vel_l;
-		//deviation
-//vel right and left hanten
-/*		if(z_target<1){
-			if(target_point.x==24){
-				vel_r=-70;
-				vel_l=0;				
-			}
-			else if(target_point.x==0){
-				vel_r=0;
-				vel_l=-70;				
-			}
-			else{
-				vel_r=0;
-				vel_l=0;
-			}
-		}
-*/
-/*		else if(z_target==0.5){
-			vel_r=0;
-			vel_l=50;
-		}
-*///		else{
-			vel_r=vel;
-			vel_l=vel;
-//		}
-//		std::cout<<"vel_r,r:("<<vel_r<<","<<vel_l<<"\n";
+
+		vel_r=vel;
+		vel_l=vel;
 		const double s=0.50;//sensitivity
-//		std::cout<<"tp,wdth:"<<target_point.x<<","<<width/2<<"\n";
 		double d=(target_point.x-width/2)/s;//+:roll right,-:roll left
 		int u=(int)d;
 		if(u>max_vel_dif)

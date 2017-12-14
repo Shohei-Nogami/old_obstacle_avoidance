@@ -32,6 +32,7 @@ void ImageProcesser::add_feature_points(void){
 						pts.push_back(ppts);
 						pz.push_back(ptz);
 						tracking_count_p.push_back(0);
+						is_stc_pts_p.push_back(false);
 /*						//culculation jacobi
 						float X,Y;
 						cv::Point2f ppt;

@@ -157,7 +157,17 @@ public:
 	std_msgs::Empty emptymsg;
 	std::vector<cv::Point2i> mv_area;
 	std::vector<double> opt;
-
+	std::vector<int> cpt_num[cnh][cnw];
+	std::vector<bool> is_mv_pts;
+//--prd_prc
+	int PRD_PRC_ORDER;
+	static const int STC_OBST_AVOID=0;
+	static const int DTCT_MV_AREA=1;
+	static const int DTCT_TRUE_MV_AREA=3;
+	static const int MOVING_SLOWLY=2;
+	static const int PRD_MV_AREA=4;
+	static const int LOCATION_BASED_TRAVEL=5;
+	double idle_time;
 	cv::Point2d avept[cnh][cnw];	//sum->ave
 //		double avesize[cnh][cnw];		//sum->ave
 	cv::Point2d dsppt[cnh][cnw];	//sum->dsp
@@ -170,7 +180,18 @@ public:
 	double ismvline[cnw];
 	double obj_pstn;
 	int prd_obj[cnh][cnw];
-
+	std::vector<int> space_begin;
+	std::vector<int> space_end;
+	std::vector<int> space_size;
+	std::vector<cv::Point2i> area_begin;
+	std::vector<cv::Point2i> area_end;
+	std::vector<double> area_opt;
+	std::vector<double> area_z;
+	//img_plc_cls vector tracking prc_fnc
+	//init value is false
+	std::vector<bool> is_stc_pts;
+	std::vector<bool> is_stc_pts_p;
+	double line_z[cnw];
 //control wheel
 	obst_avoid::wheel_msg wheelMsg;
 	int vel=200;//100;//200;
@@ -262,6 +283,15 @@ public:
 	void pub_response(void);
 //矢印描写用関数
 	void cvArrow(cv::Mat* img, cv::Point2i pt1, cv::Point2i pt2, cv::Scalar color);
+//obstacle avoidance
+	void prd_process(void);
+	void culc_area_param(void);
+	bool dtct_mvarea(void);
+	bool dtct_true_mvarea(void);
+	void prd_mvarea(void);
+	void culc_linez(void);
+	bool lovation_based_travel(void);
+	void obj_avoid(void);
 //----time----
 	void gettime(void);
 	void getprevtime(void);

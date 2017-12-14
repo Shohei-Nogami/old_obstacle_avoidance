@@ -19,6 +19,7 @@
 				cpt[i][j].reserve(clp_point_size);
 				cnpt[i][j].reserve(clp_point_size);
 				cz[i][j].reserve(clp_point_size);
+				cpt_num[i][j].reserve(clp_point_size);
 			}
 		}
 		jnpts.reserve(point_size);
@@ -27,6 +28,18 @@
 		opt.reserve(cnh*cnw);
 		tracking_count_p.reserve(point_size);
 		tracking_count.reserve(point_size);
+
+		space_begin.reserve(cnw);
+		space_end.reserve(cnw);
+		space_size.reserve(cnw);		
+		area_begin.reserve(cnw*cnh);
+		area_end.reserve(cnw*cnh);
+		area_opt.reserve(point_size);
+		area_z.reserve(cnw*cnh);
+		is_stc_pts.reserve(point_size);
+		is_stc_pts_p.reserve(point_size);
+		is_mv_pts.reserve(point_size);
+
 	}
 	void ImageProcesser::clear_vectors(void){
 //		pts.clear();   //特徴点
@@ -61,12 +74,27 @@
 		for(int i=0;i<cnh;i++){
 			for(int j=0;j<cnw;j++){
 				cpt[i][j].clear();
+				cpt_num[i][j].clear();
 				cnpt[i][j].clear();
 				cz[i][j].clear();
 			}
 		}
 		mv_area.clear();
 		opt.clear();
+		
+		space_begin.clear();
+		space_end.clear();
+		space_size.clear();
+
+		area_begin.clear();
+		area_end.clear();
+		area_opt.clear();
+		area_z.clear();
+		
+		is_stc_pts_p.clear();
+		is_stc_pts_p.insert(is_stc_pts_p.end(),is_stc_pts.begin(),is_stc_pts.end());
+		is_stc_pts.clear();
+
 	}
 
 
