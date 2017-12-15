@@ -151,14 +151,14 @@ public:
 	double pavesize[cnh][cnw];
 	double pprd_obj[cnh][cnw];
 	cv::Point2d pavept[cnh][cnw];
-	cv::Point2i target_point;
-	cv::Point2i ptarget_point;
 	obst_avoid::sqr_point3d sp3d;
 	std_msgs::Empty emptymsg;
 	std::vector<cv::Point2i> mv_area;
 	std::vector<double> opt;
 	std::vector<int> cpt_num[cnh][cnw];
+	std::vector<bool> is_mv_pts_p;
 	std::vector<bool> is_mv_pts;
+		
 //--prd_prc
 	int PRD_PRC_ORDER;
 	static const int STC_OBST_AVOID=0;
@@ -191,12 +191,25 @@ public:
 	//init value is false
 	std::vector<bool> is_stc_pts;
 	std::vector<bool> is_stc_pts_p;
+	double min_line_z;
 	double line_z[cnw];
 //control wheel
 	obst_avoid::wheel_msg wheelMsg;
 	int vel=200;//100;//200;
 	int max_vel_dif=100;
 	double z_target=0.5;
+	int target_vel;
+	int pvel;
+//	int pvel_l;
+//	int pvel_r;
+//image_based_travel
+	cv::Point2i target_point;
+	cv::Point2i ptarget_point;
+//location_based_travel
+	double target_sheta;
+	double target_length;
+	double subtarget_z;
+	double subtarget_x;	
 //ファイル出力
 	std::ofstream ofs;
 
@@ -279,6 +292,8 @@ public:
 	void prd_prcess(void);
 //wheel control
 	void wheel_control(void);
+	void image_based_travel(void);
+	bool location_based_travel(void);
 //publish empty msgs
 	void pub_response(void);
 //矢印描写用関数
@@ -290,7 +305,7 @@ public:
 	bool dtct_true_mvarea(void);
 	void prd_mvarea(void);
 	void culc_linez(void);
-	bool lovation_based_travel(void);
+//	bool location_based_travel(void);
 	void obj_avoid(void);
 //----time----
 	void gettime(void);

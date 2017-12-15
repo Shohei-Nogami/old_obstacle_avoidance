@@ -70,6 +70,7 @@ void ImageProcesser::imageProcess()
 				nz.push_back(depth_np);
 				tracking_count.push_back(tracking_count_p[i]+1);
 				is_stc_pts.push_back(is_stc_pts_p[i]);
+				is_mv_pts.push_back(is_mv_pts_p[i]);
 			}
 		}
 

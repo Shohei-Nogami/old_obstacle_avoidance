@@ -12,6 +12,9 @@
 	int pbtn=0;
 	int cbtn;
 	const int ac=50;
+	int pvel_r=0;
+	int pvel_l=0;
+	int T;
 /*	double new_time,prev_time,dt;
 	ros::Time start_time;
 		void gettime(void){

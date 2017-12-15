@@ -1,7 +1,7 @@
 #include"img_prc_cls.h"
 
 ImageProcesser::ImageProcesser()//
-	:it(nh),it2(nh5)
+	:it(nh),it2(nh5),PRD_PRC_ORDER(0),pvel(0)//pvel_l(0),pvel_r(0)
 	{
 		start_time = ros::Time::now();
 		pub_orgimg=it.advertise("output_originalimage",1);

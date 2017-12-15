@@ -85,15 +85,18 @@
 		space_begin.clear();
 		space_end.clear();
 		space_size.clear();
-
+/*
 		area_begin.clear();
 		area_end.clear();
 		area_opt.clear();
 		area_z.clear();
-		
+*/		
 		is_stc_pts_p.clear();
 		is_stc_pts_p.insert(is_stc_pts_p.end(),is_stc_pts.begin(),is_stc_pts.end());
 		is_stc_pts.clear();
+		is_mv_pts_p.clear();
+		is_mv_pts_p.insert(is_mv_pts_p.end(),is_mv_pts.begin(),is_mv_pts.end());
+		is_mv_pts.clear();
 
 	}
 

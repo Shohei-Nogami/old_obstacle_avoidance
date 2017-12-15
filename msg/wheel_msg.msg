@@ -1,3 +1,3 @@
 string vel_data
-float32 vel_l
-float32 vel_r
+int16 vel_l
+int16 vel_r
