@@ -183,7 +183,7 @@
 */
 //pattern 1
 
-					p_mvarea[i][j]=1;
+					p_mvarea[i][j]=1;//
 				}
 				else{
 //					int m=6;
