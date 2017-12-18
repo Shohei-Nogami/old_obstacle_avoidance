@@ -193,6 +193,11 @@ public:
 	std::vector<bool> is_stc_pts_p;
 	double min_line_z;
 	double line_z[cnw];
+	cv::Point2i area_begin0;//
+	cv::Point2i area_end0;//
+	double obj_min_z;
+	int sum_cpt_num;
+	double obj_size;
 //control wheel
 	obst_avoid::wheel_msg wheelMsg;
 	int vel=200;//100;//200;
@@ -301,6 +306,8 @@ public:
 //obstacle avoidance
 	void prd_process(void);
 	void culc_area_param(void);
+	void culc_p_mvarea(void);
+	bool synthesis_mvarea(int& i,int& j);
 	bool dtct_mvarea(void);
 	bool dtct_true_mvarea(void);
 	void prd_mvarea(void);
