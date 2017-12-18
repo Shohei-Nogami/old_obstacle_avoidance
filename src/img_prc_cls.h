@@ -198,6 +198,7 @@ public:
 	double obj_min_z;
 	int sum_cpt_num;
 	double obj_size;
+	double min_z;
 //control wheel
 	obst_avoid::wheel_msg wheelMsg;
 	int vel=200;//100;//200;

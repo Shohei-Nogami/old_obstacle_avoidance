@@ -122,9 +122,10 @@
 				avept[i][j].x=avept[i][j].x/(int)cpt[i][j].size();
 				avept[i][j].y=avept[i][j].y/(int)cpt[i][j].size();
 				avez[i][j]=avez[i][j]/(int)cpt[i][j].size();
-				if(!std::isnan(pavept[i][j].x)&&!std::isnan(pavept[i][j].x)){
+/*				if(!std::isnan(pavept[i][j].x)&&!std::isnan(pavept[i][j].x)){
 					avept[i][j].x=(ppT*pavept[i][j].x+dt*avept[i][j].x)/(ppT+dt);
 				}
+*/
 				pavept[i][j]=avept[i][j];
 			}
 		}
@@ -187,7 +188,7 @@
 				}
 				else{
 //					int m=6;
-					int m=4;
+					int m=3;
 					if(p_mvarea[i][j]!=0)
 						p_mvarea[i][j]=p_mvarea[i][j]-(double)1/m;
 				}
@@ -558,7 +559,7 @@
 			line_z[j]=0;
 		int z_count=0;
 		for(int j=0;j<cnw;j++){
-			double min_z;
+//			double min_z;
 			double max_z;
 			int nan_count=0;
 			int count=0;
@@ -768,13 +769,16 @@
 		bool gool_flag=false;
 
 		if(target_length==-10){
-			subtarget_z=z_target/2;
-			subtarget_x=-(target_point.x-width/2)*z_target/f/2;
+			double sp_k=4;
+//			subtarget_z=z_target/sp_k;
+			subtarget_z=min_z/sp_k;
+			subtarget_x=(target_point.x-width/2)*z_target/f/sp_k;
+//			subtarget_x=-(target_point.x-width/2)*z_target/f/sp_k;
 			target_length=sqrt(subtarget_x*subtarget_x+subtarget_z*subtarget_z);
 			target_sheta=atan(subtarget_x/subtarget_z);
 			std::cout<<"subtarget_z,target_sheta:"<<subtarget_z<<","<<target_sheta<<"\n";//debug
 			vel=min_line_z*50+25;
-			int dif_v=(int)(2*d*vel*sin(target_sheta)/min_line_z);
+			int dif_v=(int)(d*vel*sin(target_sheta)/min_line_z);
 
 			wheelMsg.vel_r=vel-dif_v;
 			wheelMsg.vel_l=vel+dif_v;
