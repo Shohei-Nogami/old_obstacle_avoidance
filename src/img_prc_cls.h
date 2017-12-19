@@ -211,6 +211,9 @@ public:
 //image_based_travel
 	cv::Point2i target_point;
 	cv::Point2i ptarget_point;
+	double vel0;
+	double dif_v0;
+	int dif_v;
 //location_based_travel
 	double target_sheta;
 	double target_length;

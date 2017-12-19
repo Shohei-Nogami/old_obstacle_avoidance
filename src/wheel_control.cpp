@@ -38,7 +38,7 @@
 
 	void ImageProcesser::wheel_control(void){
 
-		cv::circle(Limg_view, target_point, 4, cv::Scalar(200,200,0),-1, CV_AA);
+//		cv::circle(Limg_view, target_point, 4, cv::Scalar(200,200,0),-1, CV_AA);
 
 
 		if(z_target<0.7&&PRD_PRC_ORDER!=MOVING_SLOWLY){

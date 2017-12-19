@@ -26,6 +26,9 @@ ImageProcesser::ImageProcesser()//
 			for(int j=0;j<cnw;j++){
 				p_mvarea[i][j]=0;
 				p_pmvarea[i][j]=0;
+				p_avez[i][j]=0;
+				pavept[i][j].x=0;
+				pavept[i][j].y=0;
 			}
 		}
 

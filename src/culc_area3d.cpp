@@ -95,6 +95,8 @@ public:
 						count++;
 					}
 				}
+				if((double)nan_count/count>=0.40)
+					sum_depth=0;
 				ave_depth[i][j]=sum_depth/(count-nan_count);
 				p3d.x=( -((double)j*width/cnw+(double)width/cnw/2)+(double)width/2 )*ave_depth[i][j]/f;
 				p3d.y=( -((double)i*height/cnh+(double)height/cnh/2)+(double)height/2 )*ave_depth[i][j]/f;
