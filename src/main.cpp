@@ -31,7 +31,7 @@ int main(int argc,char **argv){
 		prc.pub_response();
 //		ROS_INFO("prc.pub_response();");
 		prc.prd_process();
-		prc.wheel_control();
+//		prc.wheel_control();
 		prc.clear_dtctvectors();
 		prc.pub_left_img();
 //		rate.sleep();
@@ -39,7 +39,7 @@ int main(int argc,char **argv){
 //		prc.print_dt();
 //		prc.print_sp3dsize();
 ///		prc.print_imgdt();
-///		prc.write_odom();
+		prc.write_odom();
 //		prc.show_speed();
 //		prc.print_bias();
 //		prc.print_w();

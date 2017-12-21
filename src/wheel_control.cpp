@@ -41,7 +41,7 @@
 //		cv::circle(Limg_view, target_point, 4, cv::Scalar(200,200,0),-1, CV_AA);
 
 
-		if(z_target<0.7&&PRD_PRC_ORDER!=MOVING_SLOWLY){
+		if(z_target<0.7&&PRD_PRC_ORDER!=MOVING_SLOWLY&&PRD_PRC_ORDER!=LOCATION_BASED_TRAVEL){
 			double T=dt*5;
 			if(target_point.x==24){
 				wheelMsg.vel_r=-100;

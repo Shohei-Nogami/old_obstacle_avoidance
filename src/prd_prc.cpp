@@ -9,11 +9,13 @@
 //		std::cout<<"PRD_PRC_ORDER:"<<PRD_PRC_ORDER<<"\n";
 		switch(PRD_PRC_ORDER){
 			case STC_OBST_AVOID:{
+///* <- without prediction of moving objects
 				if(dtct_mvarea()){
 				//move slowly or stop
 					PRD_PRC_ORDER=MOVING_SLOWLY;///
 					idle_time=0;
 				}
+///*/
 				culc_linez();
 				obj_avoid();
 				image_based_travel();
@@ -29,7 +31,7 @@
 				target_point.x=width/2;
 				idle_time+=dt;
 				std::cout<<"PRD_PRC_ORDER:"<<PRD_PRC_ORDER<<"\n";
-				if(idle_time>=0.2)
+				if(idle_time>=0.3)
 					PRD_PRC_ORDER=DTCT_TRUE_MV_AREA;
 				image_based_travel();
 				break;
@@ -39,9 +41,13 @@
 
 				if(dtct_true_mvarea()){
 					PRD_PRC_ORDER=PRD_MV_AREA;
-//					PRD_PRC_ORDER=STC_OBST_AVOID;
+/*					PRD_PRC_ORDER=STC_OBST_AVOID;
+					prd_mvarea();
+					culc_linez();
+					obj_avoid();
+					image_based_travel();
 					break;
-				}
+*/				}
 				else{
 					PRD_PRC_ORDER=STC_OBST_AVOID;
 					area_begin.clear();
@@ -165,8 +171,8 @@
 				th_dsp=1*std::abs(dyaw)/0.01*std::abs(j-cnw/2+0.5);
 //				th_mv=1.5*dt/0.10;///ddt;add1211
 				th_mv=0.1;///ddt;add1211
-				if(std::abs(dyaw)>0.015)
-					th_mv=th_mv*std::abs(dyaw)/0.015;
+//				if(std::abs(dyaw)>0.015)
+//					th_mv=th_mv*std::abs(dyaw)/0.015;
 				if(sp3d.sqr_p3d[i].line_p3d[j].y+0.23>0.1&&sp3d.sqr_p3d[i].line_p3d[j].y+0.23<=1.0//0->0.1 1211
 					&&!std::isnan(avept[i][j].x)
 //					&&std::abs(avept[i][j].x)>=th_mv /avez[i][j]
@@ -193,7 +199,7 @@
 
 */
 //pattern 1
-
+/*
 					p_mvarea[i][j]=1;//
 				}
 				else{
@@ -202,15 +208,15 @@
 					if(p_mvarea[i][j]!=0)
 						p_mvarea[i][j]=p_mvarea[i][j]-(double)1/m;
 				}
-
+*/
 //pattern 2
 
 //					double fc=50;//3~10 Hz
 //					double T_p_mvarea=1/fc;
 //					double T_p_mvarea=dt*5;
-/*					double T_p_mvarea;
+					double T_p_mvarea;
 					if(!std::isnan(dt)&&dt!=0)
-						T_p_mvarea=dt*2;
+						T_p_mvarea=dt/3;//2;
 					p_mvarea[i][j]=(T_p_mvarea*p_pmvarea[i][j]+dt*1)/(T_p_mvarea+dt);	
 					std::cout<<"p_mvarea["<<i<<"]["<<j<<"]:"<<p_mvarea[i][j]<<"\n";
 				}
@@ -220,10 +226,10 @@
 //					double T_p_mvarea=dt*5;
 					double T_p_mvarea;
 					if(!std::isnan(dt)&&dt!=0)
-						T_p_mvarea=dt*2;
+						T_p_mvarea=dt/3;///2;
 					p_mvarea[i][j]=(T_p_mvarea*p_pmvarea[i][j]+dt*0)/(T_p_mvarea+dt);					
-				}
-*/
+		}
+
 				p_pmvarea[i][j]=p_mvarea[i][j];
 
 			}
@@ -237,8 +243,8 @@
 				if(sp3d.sqr_p3d[i].line_p3d[j].y+0.23>0&&sp3d.sqr_p3d[i].line_p3d[j].y+0.23<=1.0){
 					all_count++;
 //					if(p_mvarea[i][j]!=0)
-//					if(p_mvarea[i][j]>=1/sqrt(2))
-					if(p_mvarea[i][j]>=0.30)
+					if(p_mvarea[i][j]>=1/sqrt(2))
+//					if(p_mvarea[i][j]>=0.30)
 							mvarea_count++;
 				}
 			}
@@ -264,7 +270,8 @@
 		//				if(p_mvarea[i][j]>=1/sqrt(2)){
 //		std::cout<<"i,j:"<<i<<","<<j<<"\n";
 		bool is_p_mvarea=false;
-		if(p_mvarea[i][j]>=0.30){
+		if(p_mvarea[i][j]>=1/sqrt(2)){
+//		if(p_mvarea[i][j]>=0.30){
 			is_p_mvarea=true;
 		//					std::cout<<"p_mvarea["<<i<<"]["<<j<<"]:"<<p_mvarea[i][j]<<"\n";
 			cv::Point2i temp;
@@ -514,7 +521,8 @@
 			}
 		}
 		for(int i=0;i<area_begin.size();i++){
-			obj_mv_dx=area_opt[i]*area_z[i]/dr;//
+//			obj_mv_dx=area_opt[i]*area_z[i]/dr;//
+			obj_mv_dx=area_opt[i]/dt*area_z[i]/0.2;//
 			for(int h=area_begin[i].y;h<area_end[i].y+1;h++){
 				for(int w=area_begin[i].x;w<area_end[i].x+1;w++){
 					pp_mvarea[h][w]=1;
@@ -574,6 +582,7 @@
 			int nan_count=0;
 			int count=0;
 			int all_count=0;
+			int prd_obj_count=0;
 			int max_flag=0;
 			for(int i=0;i<cnh;i++){
 //				if(sp3d.sqr_p3d[i].line_p3d[j].z==0)
@@ -609,6 +618,8 @@
 								min_z=sp3d.sqr_p3d[i].line_p3d[j].z;
 							if(max_z<sp3d.sqr_p3d[i].line_p3d[j].z)
 								max_z=sp3d.sqr_p3d[i].line_p3d[j].z;
+							if(prd_obj[i][j]!=0)
+								prd_obj_count++;
 						}
 //						if(p_mvarea[i][j]==1&&prd_obj[i][j]==0)
 //							max_flag=1;
@@ -624,7 +635,7 @@
 			if(all_count==0||min_z<0.5)//||min_z>6)//add
 				min_z=0.5;
 //			else if((float)nan_count/all_count>=0.70)
-			else if((float)nan_count/all_count>=0.50)
+			else if((float)nan_count/all_count>=0.50&&(float)prd_obj_count/nan_count<0.80)
 				min_z=0.5;
 /*			else if(min_z!=0.5&&min_z==max_z)
 				min_z=0.5;
@@ -662,7 +673,7 @@
 		std::vector<int> space_end;
 		std::vector<int> space_size;
 */		int space_temp=0;
-//set vel and max_vel_dif
+////set vel and max_vel_dif
 		double min_space_z=line_z[cnw/2+(-space_minsize/2)-dif_lens];
 		for(int j=-space_minsize/2-dif_lens+1;j<=space_minsize/2+dif_lens;j++){
 			if(min_space_z>line_z[cnw/2+(-space_minsize/2)])
@@ -676,6 +687,9 @@
 //		vel=min_space_z*50+50;
 		target_vel=min_space_z*50+50;
 //		vel=min_space_z*50+20;
+
+		target_vel=200;//in prac
+		
 
 //VFH
 		for(int j=0;j<cnw;j++){
@@ -797,8 +811,8 @@
 			target_length=sqrt(subtarget_x*subtarget_x+subtarget_z*subtarget_z);
 			target_sheta=atan(subtarget_x/subtarget_z);
 			std::cout<<"subtarget_z,target_sheta:"<<subtarget_z<<","<<target_sheta<<"\n";//debug
-
-			vel0=min_line_z*50+0;
+			vel0=200;///in prac
+///			vel0=min_line_z*50+0;
 			dif_v0=d*vel*sin(target_sheta)/min_line_z;
 			vel=(int)vel0;
 			dif_v=(int)dif_v0;
@@ -806,7 +820,8 @@
 			wheelMsg.vel_l=vel+dif_v;
 		}
 		else if(target_length>0){
-			vel=min_line_z*50+0;
+			vel=200;///in prac
+///			vel=min_line_z*50+0;
 			dif_v=dif_v0*vel/vel0;
 			wheelMsg.vel_r=vel-dif_v;
 			wheelMsg.vel_l=vel+dif_v;
