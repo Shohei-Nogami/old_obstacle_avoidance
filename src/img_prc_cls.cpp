@@ -10,6 +10,7 @@ ImageProcesser::ImageProcesser()//
 		pub_dpt=it2.advertise("output_dptimage",1);
 		pub_wheel=nh.advertise<obst_avoid::wheel_msg>("wheel_data",1);
 		pub_empty=nh.advertise<std_msgs::Empty>("empty_msg",1);
+		pub_target=nh.advertise<obst_avoid::point3d>("target_point3d",1);
 		nh1.setCallbackQueue(&image_queue);
 		nh2.setCallbackQueue(&depth_queue);
 		nh.setCallbackQueue(&odom_queue);

@@ -55,4 +55,7 @@
 			  <<new_time<<","
 			  <<std::endl;
 	}
+	void ImageProcesser::pub_target_point(void){
+		pub_target.publish(target_point_msg);
+	}
 

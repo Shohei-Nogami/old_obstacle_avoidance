@@ -26,14 +26,18 @@
 				if(min_line_z<0.7)
 					target_vel=0;
 				else
-					target_vel=20;
+//					target_vel=20;
+					target_vel=200;
 				dtct_mvarea();
 				target_point.x=width/2;
 				idle_time+=dt;
 				std::cout<<"PRD_PRC_ORDER:"<<PRD_PRC_ORDER<<"\n";
-				if(idle_time>=0.3)
+				if(idle_time>=0.2)//0.3)
 					PRD_PRC_ORDER=DTCT_TRUE_MV_AREA;
 				image_based_travel();
+				target_point_msg.x=target_point.x;
+				target_point_msg.y=target_point.y;
+				target_point_msg.z=0;
 				break;
 
 			}
@@ -233,7 +237,7 @@
 				p_pmvarea[i][j]=p_mvarea[i][j];
 
 			}
-
+			
 		}
 
 		int mvarea_count=0;
@@ -787,6 +791,10 @@
 		}
 */
 		ptarget_point=target_point;
+		target_point_msg.x=target_point.x;
+		target_point_msg.y=target_point.y;
+		target_point_msg.z=z_target;
+		
 	}
 
 
@@ -832,11 +840,14 @@
 			std::cout<<"subtarget_x,subtarget_z"<<subtarget_x<<","<<subtarget_z<<"\n";
 			std::cout<<"target_length:"<<target_length<<"\n";
 			std::cout<<"wheelMsg:"<<wheelMsg<<"\n";
+
 		}
 		else{
 			gool_flag=true;
 		}
-
+		target_point_msg.x=subtarget_x;
+		target_point_msg.y=0;
+		target_point_msg.z=subtarget_z;
 		return gool_flag;
 	}
 

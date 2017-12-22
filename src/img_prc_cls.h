@@ -70,6 +70,7 @@ public:
 	ros::Publisher pub_odm;
 	ros::Publisher pub_wheel;
 	ros::Publisher pub_empty;
+	ros::Publisher pub_target;
 //variable
 //画像
 	cv::Mat Limg,depth_img,Limg_view;
@@ -218,7 +219,9 @@ public:
 	double target_sheta;
 	double target_length;
 	double subtarget_z;
-	double subtarget_x;	
+	double subtarget_x;
+//
+	obst_avoid::point3d target_point_msg;	
 //ファイル出力
 	std::ofstream ofs;
 
@@ -343,6 +346,7 @@ public:
 	void print_cptsize(void);
 	void print_sp3dsize(void);
 	void write_odom(void);
+	void pub_target_point(void);
 
 };
 
