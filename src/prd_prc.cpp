@@ -9,21 +9,29 @@
 //		std::cout<<"PRD_PRC_ORDER:"<<PRD_PRC_ORDER<<"\n";
 		switch(PRD_PRC_ORDER){
 			case STC_OBST_AVOID:{
-///* <- without prediction of moving objects
+/* <- without prediction of moving objects
 				if(dtct_mvarea()){
 				//move slowly or stop
 					PRD_PRC_ORDER=MOVING_SLOWLY;///
 					idle_time=0;
 				}
-///*/
+*/
 				culc_linez();
-				obj_avoid();
+				obj_avoid();///
+/*				target_vel=200;
+				target_point.x=width/2;	
+				target_point.y=height/2;
+*/					
 				image_based_travel();
+/*				target_point_msg.x=target_point.x;
+				target_point_msg.y=target_point.y;
+				target_point_msg.z=z_target;
+*/
 				break;
 			}
 			case MOVING_SLOWLY:{
 				culc_linez();
-				if(min_line_z<0.7)
+				if(z_target<0.7)
 					target_vel=0;
 				else
 //					target_vel=20;
@@ -679,9 +687,9 @@
 */		int space_temp=0;
 ////set vel and max_vel_dif
 		double min_space_z=line_z[cnw/2+(-space_minsize/2)-dif_lens];
-		for(int j=-space_minsize/2-dif_lens+1;j<=space_minsize/2+dif_lens;j++){
-			if(min_space_z>line_z[cnw/2+(-space_minsize/2)])
-					min_space_z=line_z[cnw/2+(-space_minsize/2)];
+		for(int j=-space_minsize/2-dif_lens;j<=space_minsize/2-dif_lens;j++){
+			if(min_space_z>line_z[cnw/2+j])
+					min_space_z=line_z[cnw/2+j];
 		}
 		if(min_space_z>5)
 			min_space_z=5.0;
@@ -827,7 +835,7 @@
 			wheelMsg.vel_r=vel-dif_v;
 			wheelMsg.vel_l=vel+dif_v;
 		}
-		else if(target_length>0){
+		else if(target_length>0&&target_sheta>0){
 			vel=200;///in prac
 ///			vel=min_line_z*50+0;
 			dif_v=dif_v0*vel/vel0;
@@ -837,6 +845,7 @@
 				std::cout<<"line_z["<<j<<"]:"<<line_z[j]<<"\n";
 			}
 			target_length-=sqrt(dz*dz+dx*dx);
+			target_sheta-=atan(dx/dz);
 			std::cout<<"subtarget_x,subtarget_z"<<subtarget_x<<","<<subtarget_z<<"\n";
 			std::cout<<"target_length:"<<target_length<<"\n";
 			std::cout<<"wheelMsg:"<<wheelMsg<<"\n";
