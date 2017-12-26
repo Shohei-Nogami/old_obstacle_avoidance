@@ -34,8 +34,8 @@ public:
 	::obst_avoid::point3d p3d;
 	::obst_avoid::line_point3d lp3d;
 	::obst_avoid::sqr_point3d sp3d;
-	const int cn=12;
-	const int cnw=cn*2;
+	const int cn=12/1.2;
+	const int cnw=cn*1.8;
 	const int cnh=cn;
 	const double f=350;
 

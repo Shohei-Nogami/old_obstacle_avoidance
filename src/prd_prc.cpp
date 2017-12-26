@@ -4,7 +4,7 @@
 		pub_empty.publish(emptymsg);
 	}
 	void ImageProcesser::prd_process(void){
-
+				std::cout<<"cnw,cnh:"<<cnw<<","<<cnh<<"\n";
 		culc_area_param();
 //		std::cout<<"PRD_PRC_ORDER:"<<PRD_PRC_ORDER<<"\n";
 		switch(PRD_PRC_ORDER){
@@ -658,8 +658,8 @@
 				line_z[j]=max_z;
 			std::cout<<"line["<<j<<"](z,min,max):("<<line_z[j]<<","<<min_z<<","<<max_z<<")"<<"\n";
 		}
-		min_line_z=line_z[0];
-		for(int j=1;j<cnw;j++){
+		min_line_z=line_z[1];
+		for(int j=2;j<cnw;j++){
 			if(min_line_z>line_z[j])
 				min_line_z=line_z[j];
 		}
