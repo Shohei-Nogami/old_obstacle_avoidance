@@ -9,6 +9,9 @@
 		double T=dt*5;
 //		if(PRD_PRC_ORDER==MOVING_SLOWLY)
 //			std::cout<<"target_vel:"<<target_vel<<"\n";
+		if(z_target<0.7&&PRD_PRC_ORDER!=LOCATION_BASED_TRAVEL){
+			target_vel=0:
+		}
 		vel=(T*pvel+dt*target_vel)/(T+dt);
 		pvel=vel;
 		vel_r=vel;
@@ -42,6 +45,7 @@
 
 
 		if(z_target<0.7&&PRD_PRC_ORDER!=MOVING_SLOWLY&&PRD_PRC_ORDER!=LOCATION_BASED_TRAVEL){
+
 			double T=dt*5;
 			if(target_point.x==24){
 				wheelMsg.vel_r=-100;
@@ -62,6 +66,7 @@
 //				wheelMsg.vel_l=(T*pvel+dt*0)/(T+dt);				
 			}
 			pvel=0;
+
 //			vel_r=-100;
 //			vel_l=0;
 		}

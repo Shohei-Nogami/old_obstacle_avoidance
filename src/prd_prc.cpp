@@ -4,18 +4,18 @@
 		pub_empty.publish(emptymsg);
 	}
 	void ImageProcesser::prd_process(void){
-				std::cout<<"cnw,cnh:"<<cnw<<","<<cnh<<"\n";
+//				std::cout<<"cnw,cnh:"<<cnw<<","<<cnh<<"\n";
 		culc_area_param();
 //		std::cout<<"PRD_PRC_ORDER:"<<PRD_PRC_ORDER<<"\n";
 		switch(PRD_PRC_ORDER){
 			case STC_OBST_AVOID:{
-/* <- without prediction of moving objects
+///* <- without prediction of moving objects
 				if(dtct_mvarea()){
 				//move slowly or stop
 					PRD_PRC_ORDER=MOVING_SLOWLY;///
 					idle_time=0;
 				}
-*/
+//*/
 				culc_linez();
 				obj_avoid();///
 /*				target_vel=200;
@@ -126,7 +126,7 @@
 								if(!is_stc_pts[k])
 									avept[i][j].x+=newpoints[k].x-jnewpoints[k].x;
 								else 
-									avept[i][j].x=0;
+									avept[i][j].x+=0;
 								avept[i][j].y+=newpoints[k].y-jnewpoints[k].y;
 								avez[i][j]+=z[k];
 							}
@@ -146,13 +146,13 @@
 				avez[i][j]=avez[i][j]/(int)cpt[i][j].size();
 				if(dt!=0&&!std::isnan(pavept[i][j].x)&&!std::isnan(avez[i][j])){
 					//dX->dv_X
-					avept[i][j].x=avept[i][j].x/avez[i][j]/dt;
+					avept[i][j].x=avept[i][j].x*avez[i][j]/dt;
 					//LPF
 					avept[i][j].x=(ppT*pavept[i][j].x+dt*avept[i][j].x)/(ppT+dt);
 					//dv_X->dX
-					avept[i][j].x=avept[i][j].x*avez[i][j]*dt;
+					avept[i][j].x=avept[i][j].x/avez[i][j]*dt;
 	//				p_avez[i][j]=avez[i][j];
-					pavept[i][j].x=avept[i][j].x/avez[i][j]/dt;
+					pavept[i][j].x=avept[i][j].x*avez[i][j]/dt;
 //					std::cout<<"pavept[i][j].x:"<<pavept[i][j].x<<"\n";
 				}
 			}
@@ -296,7 +296,7 @@
 		//					int max_process_count=3;
 			pp_mvarea[mv_area[0].y][mv_area[0].x]=1;
 			for(int k=0;k<mv_area.size();k++){
-				if(p_mvarea[mv_area[k].y][mv_area[k].x]!=0){
+				if(pp_mvarea[mv_area[k].y][mv_area[k].x]!=0){
 					opt.push_back(avept[mv_area[k].y][mv_area[k].x].x);
 					if(area_begin0.x>mv_area[k].x)
 						area_begin0.x=mv_area[k].x;
@@ -380,10 +380,15 @@
 				if(synthesis_mvarea(i,j) ){
 //				
 					double ave_opt=0;
+					int opt_size=0;
 					for(int k=0;k<mv_area.size();k++){
-						ave_opt+=opt[k];
+						if(!std::isnan(opt[k]){
+							ave_opt+=opt[k];
+							opt_size++;
+						}
 					}
-					ave_opt=ave_opt/(int)opt.size();
+//					ave_opt=ave_opt/(int)opt.size();
+					ave_opt=ave_opt/opt_size;
 					
 					double obj_size=(area_end0.x+1-area_begin0.x)*(area_end0.y+1-area_begin0.y)*(width/cnw)*(height/cnh)*(obj_min_z*obj_min_z)/(f*f);
 
@@ -450,10 +455,15 @@
 			for(int i=0;i<cnh;i++){
 				if(synthesis_mvarea(i,j) ){
 					double ave_opt=0;
+					int opt_size=0;
 					for(int k=0;k<mv_area.size();k++){
-						ave_opt+=opt[k];
+						if(!std::isnan(opt[k]){
+							ave_opt+=opt[k];
+							opt_size++;
+						}
 					}
-					ave_opt=ave_opt/(int)opt.size();
+//					ave_opt=ave_opt/(int)opt.size();
+					ave_opt=ave_opt/opt_size;
 	//					std::cout<<"mv_area.size():"<<mv_area.size()<<"\n";
 	//					std::cout<<"area_begin(x,y):end(x,y)("<<area_begin.x<<","<<area_begin.y<<")\n"
 	//							<<"end("<<area_end.x<<","<<area_end.y<<"\n";
@@ -816,7 +826,7 @@
 //			subtarget_z=min_line_z/sp_k;
 			subtarget_x=(target_point.x-width/2)*z_target/f/sp_k;
 			while(ros::ok()){
-				if(subtarget_z>=0.3){
+				if(subtarget_z>=1.0){//0.3){
 					subtarget_z=subtarget_z/sp_k2;
 					subtarget_x=subtarget_x/sp_k2;				
 				}
