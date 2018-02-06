@@ -89,7 +89,9 @@
 			dyaw=w*dt;
 		}
 */
-		w_w=-(vr-vl)/d;//回転角速度
+		w_v=(vr+vl)/2;
+//		w_w=-(vr-vl)/d;//回転角速度
+		w_w=(vr-vl)/d;//回転角速度
 		w_dyaw=w_w*dt;//回転角
 	}
 //set global dx,dy

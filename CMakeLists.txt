@@ -65,6 +65,7 @@ find_package(OpenCV REQUIRED)
    pointz.msg
    line_pointz.msg
    sqr_pointz.msg
+   dvw.msg
 #   Message1.msg
 #   Message2.msg
  )
@@ -232,6 +233,8 @@ include_directories(
 add_executable(img_prc src/main.cpp src/img_prc_cls.cpp src/prcs_fnc.cpp src/image_function.cpp src/depth_function.cpp src/odom_function.cpp src/time_function.cpp src/cvArrow_function.cpp src/vector_function.cpp src/debug_function.cpp src/tracking_fp_function.cpp src/prd_prc.cpp src/wheel_control.cpp)
 target_link_libraries(img_prc ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
+add_executable(data_processing_v_and_w src/data_processing_dv_dw.cpp)
+target_link_libraries(data_processing_v_and_w ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(culc_area3d src/culc_area3d.cpp)
 target_link_libraries(culc_area3d ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})

@@ -24,6 +24,7 @@
 #include"obst_avoid/point3d.h"
 #include"obst_avoid/line_point3d.h"
 #include"obst_avoid/sqr_point3d.h"
+#include"obst_avoid/dvw.h"
 //service
 #include<obst_avoid/image.h>
 #include<obst_avoid/odometry.h>
@@ -71,6 +72,7 @@ public:
 	ros::Publisher pub_wheel;
 	ros::Publisher pub_empty;
 	ros::Publisher pub_target;
+	ros::Publisher pub_dvw;
 //variable
 //画像
 	cv::Mat Limg,depth_img,Limg_view;
@@ -94,6 +96,7 @@ public:
 	double d=0.276;//車輪幅
 	double w_w;
 	double w_dyaw;
+	double w_v;
 	double T;//LPF
 	double pw;
 	double w;

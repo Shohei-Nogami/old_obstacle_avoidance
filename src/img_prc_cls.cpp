@@ -17,10 +17,13 @@ ImageProcesser::ImageProcesser()//
 		nh3.setCallbackQueue(&wodom_queue);
 		nh4.setCallbackQueue(&avedepth_queue);
 
+		pub_dvw=nh.advertise<obst_avoid::dvw>("dvw_data",1);
+
+
 		sub_Limg=nh1.subscribe("/zed/left/image_rect_color",1,&ImageProcesser::image_callback,this);
 		sub_depth=nh2.subscribe("/zed/depth/depth_registered",1,&ImageProcesser::depth_callback,this);
 		sub_odom=nh.subscribe("/zed/odom",1,&ImageProcesser::odom_callback,this);
-//		sub_wodom=nh3.subscribe("/wheel_data",1,&ImageProcesser::wheelodom_callback,this);
+		sub_wodom=nh3.subscribe("/wheel_data",1,&ImageProcesser::wheelodom_callback,this);
 		sub_avedepth=nh4.subscribe("/ave_p3d",1,&ImageProcesser::avedepth_callback,this);
 
 		for(int i=0;i<cnh;i++){

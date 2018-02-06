@@ -12,7 +12,7 @@
 ///* <- without prediction of moving objects
 				if(dtct_mvarea()){
 				//move slowly or stop
-					PRD_PRC_ORDER=MOVING_SLOWLY;///
+//					PRD_PRC_ORDER=MOVING_SLOWLY;/// add
 					idle_time=0;
 				}
 //*/
@@ -382,7 +382,7 @@
 					double ave_opt=0;
 					int opt_size=0;
 					for(int k=0;k<mv_area.size();k++){
-						if(!std::isnan(opt[k]){
+						if(!std::isnan(opt[k]) ){
 							ave_opt+=opt[k];
 							opt_size++;
 						}
@@ -457,7 +457,7 @@
 					double ave_opt=0;
 					int opt_size=0;
 					for(int k=0;k<mv_area.size();k++){
-						if(!std::isnan(opt[k]){
+						if(!std::isnan(opt[k]) ){
 							ave_opt+=opt[k];
 							opt_size++;
 						}
@@ -555,6 +555,7 @@
 					//移動するエリアは考慮しない
 					if(0<=prd_j&&prd_j<cnw){
 						prd_obj[h][prd_j]=1;
+/*
 						//移動後z
 						if(!std::isnan(avez[h][w])){
 							if(sp3d.sqr_p3d[h].line_p3d[prd_j].z >avez[h][w]||sp3d.sqr_p3d[h].line_p3d[prd_j].z >sp3d.sqr_p3d[h].line_p3d[w].z){
@@ -569,6 +570,9 @@
 								sp3d.sqr_p3d[h].line_p3d[prd_j].z =sp3d.sqr_p3d[h].line_p3d[w].z;
 							}
 						}
+*/
+						sp3d.sqr_p3d[h].line_p3d[prd_j].z =0.5;//1229
+
 					}
 				}
 			}
@@ -796,7 +800,7 @@
 
 		std::cout<<"target_num:"<<target_num<<"\n";
 		std::cout<<"z_target:"<<z_target<<"\n";
-		target_point.x=(double)width/cnw*(double)target_num+width/cnw;
+		target_point.x=(double)width/cnw*(double)target_num;//+width/cnw/2;
 //		target_point.x=(pT*ptarget_point.x+dt*target_point.x)/(pT+dt);
 		target_point.y=height/2;
 /*		for(int i=0;i<cnh;i++){

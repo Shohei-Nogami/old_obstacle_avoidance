@@ -39,6 +39,7 @@ void ImageProcesser::imageProcess()
 //	std::cout<<"dz:"<<dz<<"\n";
 	float X,Y;
 	cv::Point2f ppt;
+
 	for(int j=0;j<pts.size();j++){
 		X=(float)(pts[j].x-width/2.0);//-width;
 		Y=(float)(pts[j].y-height/2.0);//-height;
@@ -48,13 +49,28 @@ void ImageProcesser::imageProcess()
 			dx/pz[j]-X/pz[j]*dz
 			-(f+pow(X,2.0)/f)*dyaw
 			);
+//		ppt.x=pts[j].x- (float)(//wheel only
+//			-X/pz[j]*w_v/1000*dt
+//			-(f+pow(X,2.0)/f)*(w_w)/1000*dt
+//			);
+		
 		ppt.y=pts[j].y-(float)(
 				-(Y/pz[j]*dz)
 				-(X*Y*dyaw/f
 				));
+		
 		jnpts.push_back(ppt) ;
 	}
-		npts.insert(npts.end(),jnpts.begin(),jnpts.end());
+//	std::cout<<"vr,vl:"<<vr<<","<<vl<<"\n";
+//	std::cout<<"dv,dw:"<<dz-(vr+vl)/2*dt<<","<<dyaw-(-vr+vl)/d*dt<<"\n";
+	obst_avoid::dvw dvw_msg;	
+	dvw_msg.v=w_v/1000;
+	dvw_msg.w=w_w/1000;
+	dvw_msg.dv=dz/dt-dvw_msg.v;//*dt;
+	dvw_msg.dw=dyaw/dt-dvw_msg.w;//*dt;
+	pub_dvw.publish(dvw_msg);
+
+	npts.insert(npts.end(),jnpts.begin(),jnpts.end());
 	//---オプティカルフローを得る-----------------------------
 //		cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(15,15), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
 		cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(13,13), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
