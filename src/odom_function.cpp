@@ -89,9 +89,11 @@
 			dyaw=w*dt;
 		}
 */
-		w_v=(vr+vl)/2;
+		std::cout<<"vr,vl:"<<vr<<","<<vl<<"\n";
+		w_v=(vr+vl)/2/1000;
+//		w_v=0.5447*w_v*w_v+0.6487*w_v+0.0146;
 //		w_w=-(vr-vl)/d;//回転角速度
-		w_w=(vr-vl)/d;//回転角速度
+		w_w=(vr-vl)/d/1000;//回転角速度
 		w_dyaw=w_w*dt;//回転角
 	}
 //set global dx,dy

@@ -45,14 +45,16 @@ void ImageProcesser::imageProcess()
 		Y=(float)(pts[j].y-height/2.0);//-height;
 		float value_x;
 		float value_y;
-		ppt.x=pts[j].x- (float)(
+/*		ppt.x=pts[j].x- (float)(
 			dx/pz[j]-X/pz[j]*dz
 			-(f+pow(X,2.0)/f)*dyaw
 			);
-//		ppt.x=pts[j].x- (float)(//wheel only
-//			-X/pz[j]*w_v/1000*dt
-//			-(f+pow(X,2.0)/f)*(w_w)/1000*dt
-//			);
+*/
+		ppt.x=pts[j].x- (float)(//wheel only
+			-X/pz[j]*w_v*dt
+//			-(f+pow(X,2.0)/f)*(w_w)*dt
+			-(f+pow(X,2.0)/f)*dyaw
+			);
 		
 		ppt.y=pts[j].y-(float)(
 				-(Y/pz[j]*dz)
@@ -64,8 +66,8 @@ void ImageProcesser::imageProcess()
 //	std::cout<<"vr,vl:"<<vr<<","<<vl<<"\n";
 //	std::cout<<"dv,dw:"<<dz-(vr+vl)/2*dt<<","<<dyaw-(-vr+vl)/d*dt<<"\n";
 	obst_avoid::dvw dvw_msg;	
-	dvw_msg.v=w_v/1000;
-	dvw_msg.w=w_w/1000;
+	dvw_msg.v=w_v;
+	dvw_msg.w=w_w;
 	dvw_msg.dv=dz/dt-dvw_msg.v;//*dt;
 	dvw_msg.dw=dyaw/dt-dvw_msg.w;//*dt;
 	pub_dvw.publish(dvw_msg);

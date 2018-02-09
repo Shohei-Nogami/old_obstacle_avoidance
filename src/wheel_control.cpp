@@ -34,6 +34,7 @@
 //		std::cout<<"vel_l,vel_r:"<<vel_l<<","<<vel_r<<"\n";
 		wheelMsg.vel_r=vel_r;
 		wheelMsg.vel_l=vel_l;
+
 //		std::cout<<"wheelMsg:"<<wheelMsg<<"\n";
 //		if(PRD_PRC_ORDER==MOVING_SLOWLY)
 //			std::cout<<"wheelMsg:"<<wheelMsg<<"\n";
