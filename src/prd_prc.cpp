@@ -196,7 +196,7 @@
 					&&dspz[i][j]<=0.15//0.10
 					&&avez[i][j]<=3.0
 					&&std::abs(avept[i][j].x)*avez[i][j]/f/dt>=0.10
-					&&std::abs(avept[i][j].x)*avez[i][j]/f/dt<=1.00){
+					&&std::abs(avept[i][j].x)*avez[i][j]/f/dt<=2.00){//1.00){
 //					&&std::abs(avept[i][j].x)*sp3d.sqr_p3d[i].line_p3d[j].z/f/dt>=0.10
 //					&&std::abs(avept[i][j].x)*sp3d.sqr_p3d[i].line_p3d[j].z/f/dt<=1.00){
 //					&&(int)cpt[i][j].size()>2){

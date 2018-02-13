@@ -16,6 +16,34 @@
 		roll=r;
 		pitch=p;
 		yaw=y;
+		// R.row(0).col(0) = cos(pitch)*cos(yaw) - sin(roll)*sin(pitch)*sin(yaw);
+		// R.row(0).col(1) = -cos(roll)*sin(yaw);
+		// R.row(0).col(2) = sin(pitch)*cos(yaw) + sin(roll)*cos(pitch)*sin(yaw);
+		// R.row(1).col(0) = cos(pitch)*sin(yaw) + sin(roll)*sin(pitch)*cos(yaw);
+		// R.row(1).col(1) = cos(roll)*cos(yaw);
+		// R.row(1).col(2) = sin(pitch)*sin(yaw) - sin(roll)*cos(pitch)*cos(yaw);
+		// R.row(2).col(0) = - cos(roll)*sin(pitch);
+		// R.row(2).col(1) = sin(roll);
+		// R.row(2).col(2) = cos(roll)*cos(pitch);
+		// position_x=msg->pose.pose.position.x;
+		// position_y=msg->pose.pose.position.y;
+		// position_z=msg->pose.pose.position.z;
+
+
+
+/*
+		position_x = ( cos(pitch)*cos(yaw) )*msg->pose.pose.position.x
+		- ( cos(pitch)*sin(yaw) )*msg->pose.pose.position.y
+		+ ( sin(pitch) )*msg->pose.pose.position.z;
+
+		position_y = ( cos(roll)*sin(yaw) + sin(roll)*sin(pitch)*cos(yaw) )*msg->pose.pose.position.x
+		+ ( cos(roll)*cos(yaw) - sin(roll)*sin(pitch)*sin(yaw) )*msg->pose.pose.position.y
+		- ( sin(roll)*cos(pitch) )*msg->pose.pose.position.z;
+
+		position_z = ( sin(roll)*sin(yaw) - cos(roll)*sin(pitch)*cos(yaw) )*msg->pose.pose.position.x
+		+ ( sin(roll)*cos(yaw) + cos(roll)*sin(pitch)*sin(yaw) )*msg->pose.pose.position.y;
+		+ ( cos(roll)*cos(pitch) )*msg->pose.pose.position.z;
+*/
 	}
 	void ImageProcesser::wheelodom_callback(const obst_avoid::wheel_msg::ConstPtr& msg){
 		vr=msg->vel_r;
@@ -103,7 +131,10 @@
 			+prev_position_x*prev_position_x)
 			+(position_y*position_y
 			-2*position_y*prev_position_y
-			+prev_position_y*prev_position_y));
+			+prev_position_y*prev_position_y)
+			+(position_z*position_z
+			-2*position_z*prev_position_z
+			+prev_position_z*prev_position_z));
 		global_dx=-dr*cos(-dyaw);
 		global_dy=dr*sin(-dyaw);
 //		std::cout<<"global_dx,dy:"<<global_dx<<","<<global_dy<<"\n";

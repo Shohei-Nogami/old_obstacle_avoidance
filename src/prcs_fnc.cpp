@@ -45,22 +45,28 @@ void ImageProcesser::imageProcess()
 		Y=(float)(pts[j].y-height/2.0);//-height;
 		float value_x;
 		float value_y;
-/*		ppt.x=pts[j].x- (float)(
+/*
+		ppt.x=pts[j].x- (float)(
 			dx/pz[j]-X/pz[j]*dz
 			-(f+pow(X,2.0)/f)*dyaw
 			);
+			ppt.y=pts[j].y-(float)(
+					-(Y/pz[j]*dz)
+					-(X*Y*dyaw/f
+					));
 */
+
+
 		ppt.x=pts[j].x- (float)(//wheel only
-			-X/pz[j]*w_v*dt
-//			-(f+pow(X,2.0)/f)*(w_w)*dt
+			w_v*sin(-dyaw)*dt/pz[j]-X/pz[j]*w_v*cos(-dyaw)*dt
 			-(f+pow(X,2.0)/f)*dyaw
 			);
-		
+
 		ppt.y=pts[j].y-(float)(
-				-(Y/pz[j]*dz)
+				-(Y/pz[j]*w_v*cos(-dyaw)*dt)
 				-(X*Y*dyaw/f
 				));
-		
+
 		jnpts.push_back(ppt) ;
 	}
 //	std::cout<<"vr,vl:"<<vr<<","<<vl<<"\n";
