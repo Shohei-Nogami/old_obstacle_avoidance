@@ -7,56 +7,97 @@
 #include<opencv2/imgproc/imgproc.hpp>
 #include<fstream>
 #include <std_msgs/Empty.h>
-#include"obst_avoid/point3d.h"
-#include"obst_avoid/line_point3d.h"
-#include"obst_avoid/sqr_point3d.h"
+#include"obst_avoid/points.h"
+#include"obst_avoid/rectangle.h"
+#include"obst_avoid/detected_objects.h"
 #include <ros/callback_queue.h>
 
 class detect_objects
 {
 
 	ros::NodeHandle nh,nh1,nh2;
-//subscriber
+	//subscriber
 	ros::Subscriber sub_depth;//DepthImage
 	ros::Subscriber sub_empty;
 	ros::CallbackQueue depth_queue;
 	ros::CallbackQueue empty_queue;
-//subscribe options
+	//subscribe options
 	ros::SubscribeOptions depth_option;
 	ros::SubscribeOptions empty_option;
 	ros::Publisher pub_dpt;
+	ros::Publisher pub_detected_objects;
+	//start time
 	ros::Time start_time;
-public:	
+public:
+	//received depth image
 	cv_bridge::CvImagePtr depthimg;
-	cv_bridge::CvImagePtr pubdepthimg;
 	cv::Mat depth_img;
-
-//	::obst_avoid::point3d p3d;
-//	::obst_avoid::line_point3d lp3d;
-//	::obst_avoid::sqr_point3d sp3d;
-
+	// rectangle and objects for publish
+	::obst_avoid::rectangle rect_temp;
+	::obst_avoid::detected_objects objects;
+	//camera param
 	const double f=350;
-
-	const int width=672;
-	const int height=376;
+	static const int width=672;
+	static const int height=376;
+	//response_flag
 	bool rf=false;
+	//time
 	double prev_time;	//
 	double new_time=0;	//
 	double dt;
-	detect_objects(){
-	 	pub_dpt=nh.advertise<obst_avoid::separate_object_msg>("separate_object",1);
+	//for detect process
+	std::vector< cv::Point2i > line_objects[height];
+	std::vector< cv::Point2i > task_objects;
+	std::vector< int > task_height;
+	
+	//------for debug program------
+	//debug switch flag
+	const bool debug_switch_flag=true;
+	// image treansport for publish detected image
+	image_transport::ImageTransport it;
+	//original image
+	cv_bridge::CvImagePtr original_image;
+	//detectd image
+	cv::Mat detectd_image;
+	//subsctibe original image
+	ros::NodeHandle nh3;
+	ros::Subscriber sub_original_image;
+	ros::CallbackQueue original_image_queue;
+	ros::SubscribeOptions original_image_option;
+	image_transport::Publisher pub_detected_image;
+	detect_objects()
+		:it(nh3)	
+	{		
+		ROS_INFO("prev define pub and nh1,nh2");
+	 	pub_detected_objects=nh.advertise<obst_avoid::detected_objects>("detected_objects",1);
 		nh1.setCallbackQueue(&depth_queue);
 		nh2.setCallbackQueue(&empty_queue);
-		sub_depth=nh1.subscribe("/output_dptimage",1,&culc_ave::depth_callback,this);
-		sub_empty=nh2.subscribe("/empty_msg",1,&culc_ave::empty_callback,this);
+		
+		sub_empty=nh2.subscribe("/empty_msg",1,&detect_objects::empty_callback,this);
+		ROS_INFO("prev sub_empty");
+		if(!debug_switch_flag){
+			sub_depth=nh1.subscribe("/output_dptimage",1,&detect_objects::depth_callback,this);
+		}
+		else{
+			sub_depth=nh1.subscribe("/zed/depth/depth_registered",1,&detect_objects::depth_callback,this);
+			
+			pub_detected_image=it.advertise("detected_image",1);
+			nh3.setCallbackQueue(&original_image_queue);
+			sub_original_image=nh3.subscribe("/zed/left/image_rect_color",1,&detect_objects::original_image_callback,this);
+		}
+		ROS_INFO("prev reserve");
+		//reverve memory of vector 
+		for(int i=0;i<height;i++){
+			line_objects[i].reserve(width);
+		}
+		task_height.reserve(width);
+		task_objects.reserve(width);
+		
 	}
 	~detect_objects(){
-
 	}
-	void depth_callback(const sensor_msgs::ImageConstPtr& msg)
-	{
-//		lp3d.line_p3d.clear();
-//		sp3d.sqr_p3d.clear();
+	
+	void depth_callback(const sensor_msgs::ImageConstPtr& msg){
 		try{
 			depthimg= cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_32FC1);
 			depth_img=depthimg->image;
@@ -68,20 +109,9 @@ public:
 		}
 	}
 	void detect_process(void){
-//		int cn=12;
-//		cnw=cn*2;
-//		cnh=cn;
-
-//		double ave_depth[cnh][cnw];
-//		int nan_count,count;
-
-//		std::vector< std::vector<bool> > line_objects[height];
-//		std::vector<bool> is_same_obj;
-		std::vector< cv::Point2i > line_objects[height];
+		objects.rect.clear();
 		cv::Point2i edge_point;
 		int count_same_number=0;
-//		int left_number=0;
-//		int right_number=0;
 		double previous_depth=depth_img.at<float>(0,0);
 		for(int h=0;h<height;h++){
 			for(int w=1;w<width;w++){
@@ -95,119 +125,131 @@ public:
 			    line_objects[h].push_back(edge_point);
 			    count_same_number=0;
 			  }
-			  
 			}
 		}
-		std::vector<cv::Rect> objects;
-		cv::Rect rect_temp;
-		std::vector<int> task_height;
+
+//		std::vector<int> task_height;
+		// bool on_next_process_flag;
+		// bool under_next_process_flag;
 		for(int h=0;h<height;h++){
 			for(int i=0;i<line_objects[h].size();i++){
 				if(line_objects[h][i].x==-1)//skip process
 					continue;
-
-				rect_temp.x=line_objects[h][0].x;//set param x,y,widht,height
-				rect_temp.y=h;
-				rect_temp.width=line_objects[h].y-line_objects[h].x;
-				rect_temp.height=0;
-				objects.push_back(rect_temp);//insert a initial object
-				task_object.push_back(line_objects[h][i]);
+				//initialize task_objects ,task_height
+				task_objects.clear();
+				task_height.clear();
+				task_objects.push_back(line_objects[h][i]);
 				task_height.push_back(h);
-				line_objects[h].x=-1;//flag
+				//already finished search flag
+				line_objects[h][i].x=-1;
+				//serch_process
 				for(int j=0;j<task_objects.size();j++){
-					if(task_height[j] > 1){
-						for(int k=0;k<line_objects[task_height[j]-1;k++){
+//				  on_next_process_flag=true;
+//				  under_next_process_flag=true;
+					//when search number < width-1
+					if(task_height[j] > 1){// && on_next_process_flag){
+						for(int k=0;k<line_objects[task_height[j]-1].size();k++){
 							if(line_objects[h][k].x==-1)//skip process
 								continue;
-							if(line_objects[task_height[j]-1][k].x < task_objects[ task_height[j] ][j].x){
-								if(line_objects[task_height[j]-1][k].y > task_objects[ task_height[j] ][j].x){ 
-									task_object.push_back(line_objects[ task_height[j]-1 ][k]);
+							if(line_objects[task_height[j]-1][k].x < task_objects[j].x){
+								if(line_objects[task_height[j]-1][k].y > task_objects[j].x){
+									task_objects.push_back(line_objects[ task_height[j]-1 ][k]);
 									task_height.push_back(task_height[j]-1);
+									line_objects[ task_height[j]-1 ][k].x=-1;
 								}
 							}
 							else{
-								if(line_objects[task_height[j]-1][k].x < task_objects[task_height[j] ][j].x+task_objects[ task_height[j] ][j].width){ 
-									task_object.push_back(line_objects[ task_height[j]-1 ][k]);
+								if(line_objects[task_height[j]-1][k].x < task_objects[j].y){
+									task_objects.push_back(line_objects[ task_height[j]-1 ][k]);
 									task_height.push_back(task_height[j]-1);
-									
+									line_objects[ task_height[j]-1 ][k].x=-1;
+
 								}
 								else
 									break;
+									// on_next_process_flag=false;
 							}
 						}
 					}
-					if(task_height[j] < width-1){
-						if(task_objects[j].x < line_objects[j+1].x){
-							if(task_objects[j].x > line_objects[j+1].y){ 
-							
+					//when search number < width-1
+					if(task_height[j] < width-1){// && under_next_process_flag){
+						for(int k=0;k<line_objects[task_height[j]-1].size();k++){
+							if(line_objects[h][k].x==-1)//skip process
+								continue;
+							if(task_objects[j].x < line_objects[task_height[j]+1][k].x){
+								if(task_objects[j].y > line_objects[task_height[j]+1][k].x){
+										task_objects.push_back(line_objects[ task_height[j]+1 ][k]);
+										task_height.push_back(task_height[j]+1);
+										line_objects[ task_height[j]+1 ][k].x=-1;
+								}
+							}
+							else{
+								if(task_objects[j].x < line_objects[task_height[j]+1][k].y){
+										task_objects.push_back(line_objects[ task_height[j]+1 ][k]);
+										task_height.push_back(task_height[j]+1);
+										line_objects[ task_height[j]+1 ][k].x=-1;
+								}
+								else
+									break;
+								  // under_next_process_flag=false;
 							}
 						}
-						else{
-							if(task_objects[j].y < line_objects[j+1].x){ 
-							
-							}
-						}					
 					}
-				}//end for(task)
-			}
-		}
-		long double sum_depth;
-		for(int i=0;i<cnh;i++){
-			for(int j=0;j<cnw;j++){
-				count=0;
-				nan_count=0;
-				sum_depth=0;
-				for(int h=(int)(i*height/cnh);h<(int)((i+1)*height/cnh);h++){
-					for(int w=(int)(j*width/cnw);w<(int)((j+1)*width/cnw);w++){
-						
-						if(!std::isnan(depth))
-							sum_depth+=depth;
-						else
-							nan_count++;
-						count++;
-					}
-				}
-				if((double)nan_count/count>=0.40)
-					sum_depth=0;
-				ave_depth[i][j]=sum_depth/(count-nan_count);
-				p3d.x=( -((double)j*width/cnw+(double)width/cnw/2)+(double)width/2 )*ave_depth[i][j]/f;
-				p3d.y=( -((double)i*height/cnh+(double)height/cnh/2)+(double)height/2 )*ave_depth[i][j]/f;
-				p3d.z=ave_depth[i][j];
-				lp3d.line_p3d.push_back(p3d);
-			}
-			sp3d.sqr_p3d.push_back(lp3d);
-			lp3d.line_p3d.clear();
-		}
 
-/*		double min_depth[cnh][cnw];
-		int nan_count,count;
-		for(int i=0;i<cnh;i++){
-			for(int j=0;j<cnw;j++){
-				count=0;
-				nan_count=0;
-				for(int h=(int)(i*height/cnh);h<(int)((i+1)*height/cnh);h++){
-					for(int w=(int)(j*width/cnw);w<(int)((j+1)*width/cnw);w++){
-						double depth=depth_img.at<float>(h,w);
-						if(!std::isnan(depth)){
-							if(count==0)
-								min_depth[i][j]=depth;
-							else if(min_depth[i][j]>depth)
-								min_depth[i][j]=depth;
-						}
-						else
-							nan_count++;
-						count++;
-					}
+				}//end for(task)
+				//culculate rectangle
+				::obst_avoid::points tl,br;
+				if(task_objects.size()){
+				  tl.x=task_objects[0].x;
+				  tl.y=task_height[0];
+				  br.x=task_objects[0].y;
+				  br.y=task_height[0];
+
+				for(int j=1;j<task_objects.size();j++){
+				  if(tl.x>task_objects[j].x)
+				    tl.x=task_objects[j].x;
+				  if(tl.y>task_height[j])
+				    tl.y=task_height[j];
+				  if(br.x<task_objects[j].x)
+				    br.x=task_objects[j].x;
+				  if(br.y<task_height[j])
+				    br.y=task_height[j];
 				}
-				p3d.x=( -((double)j*width/cnw+(double)width/cnw/2)+(double)width/2 )*min_depth[i][j]/f;
-				p3d.y=( -((double)i*height/cnh+(double)height/cnh/2)+(double)height/2 )*min_depth[i][j]/f;
-				p3d.z=min_depth[i][j];
-				lp3d.line_p3d.push_back(p3d);
+
+				rect_temp.tl=tl;
+				rect_temp.br=br;
+				//insert a rectangle
+				objects.rect.push_back(rect_temp);
+
+				}
 			}
-			sp3d.sqr_p3d.push_back(lp3d);
-			lp3d.line_p3d.clear();
 		}
-*/
+		//publish detected_objects
+		pub_detected_objects.publish(objects);
+	}
+	bool is_debug_flag(void){
+		return debug_switch_flag;
+	}
+	void original_image_callback(const sensor_msgs::ImageConstPtr& msg){
+		try{
+			original_image= cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+			detectd_image=original_image->image;
+		}
+		catch (cv_bridge::Exception& e) {
+			ROS_ERROR("Could not convert from '%s' to 'BGR8'.",
+			msg->encoding.c_str());
+			return ;
+		}
+	}
+	void publish_detected_image(void){
+		for(int i=0;i<objects.rect.size();i++){
+			rectangle(detectd_image, cv::Point(objects.rect[i].tl.x,objects.rect[i].tl.y) ,
+			 cv::Point(objects.rect[i].br.x,objects.rect[i].br.y) , cv::Scalar(0,200,0), 3, 4);
+		}
+		cv_bridge::CvImagePtr detectd_cvimage(new cv_bridge::CvImage);
+		detectd_cvimage->encoding=sensor_msgs::image_encodings::BGR8;
+		detectd_cvimage->image=detectd_image.clone();
+		pub_detected_image.publish(detectd_cvimage->toImageMsg());
 
 	}
 	void empty_callback(const std_msgs::Empty& msg){
@@ -215,6 +257,9 @@ public:
 	}
 	void depthcall(void){
 			depth_queue.callOne(ros::WallDuration(1));
+	}
+	void original_image_call(void){
+			original_image_queue.callOne(ros::WallDuration(1));
 	}
 	bool isdepth(void){
 		if(depth_img.empty())
@@ -231,9 +276,7 @@ public:
 		else
 			return false;
 	}
-	void pub3d(void){
-		pub_dpt.publish(sp3d);	
-	}
+
 	void emptycall(void){
 		empty_queue.callOne(ros::WallDuration(1));
 	}
@@ -258,44 +301,36 @@ public:
 			return false;
 		else
 			return true;
-	}	
+	}
 };
 
 	int main(int argc,char **argv){
-		ros::init(argc,argv,"culc_area3d");
-
-		culc_ave prc;
-//		image_transport::ImageTransport it(nh);
+		ros::init(argc,argv,"detect_objects");
+		ROS_INFO("process start");
+		
+		detect_objects prc;
 		prc.setstarttime();
+		ROS_INFO("prev while");
 		while(ros::ok()){
-//			ROS_INFO("prc.depthcall();");			
+			ROS_INFO("prev if1");
+			if(prc.is_debug_flag()){
+				prc.original_image_call();
+			}
+			ROS_INFO("prev depth call");
 			prc.depthcall();
-//			ROS_INFO("prc.depthcall();");
+			ROS_INFO("prev isdepth");
 			if(!prc.isdepth())
 				continue;
-			//
-			prc.culc_prc();
-			prc.initrf();
-//			ROS_INFO("prc.pub3d()");
-			prc.pub3d();
-//			ROS_INFO("prc.pub3d(),prc.emptycall();");
-//			while(ros::ok()&&!prc.isrf()){
+			ROS_INFO("prev detect_process");
+			prc.detect_process();
+			ROS_INFO("prev is_debug_flag");
+			if(prc.is_debug_flag()){
+				prc.initrf();
 				prc.emptycall();
-	//		}
-//			ROS_INFO("prc.emptycall();");
-/*			if(prc.isnew_time()){
-				prc.getprevtime();
-				prc.gettime();
-				prc.culcdt();
-//				prc.print_dt();
 			}
-			else 
-				prc.gettime();
-*/			//publish 
-			/*cv_bridge::CvImagePtr pubdepthimg(new cv_bridge::CvImage);
-		pubdepthimg->encoding=sensor_msgs::image_encodings::MONO8;
-		pubdepthimg->image=depth_img.clone();
-			pub_dpt.publish(pubdepthimg->toImageMsg());*/
+			else{
+				prc.publish_detected_image();
+			}
 		}
 		return 0;
 	}

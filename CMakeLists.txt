@@ -66,6 +66,8 @@ find_package(OpenCV REQUIRED)
    line_pointz.msg
    sqr_pointz.msg
    dvw.msg
+   rectangle.msg
+   detected_objects.msg
 #   Message1.msg
 #   Message2.msg
  )
@@ -235,6 +237,9 @@ target_link_libraries(img_prc ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(data_processing_v_and_w src/data_processing_dv_dw.cpp)
 target_link_libraries(data_processing_v_and_w ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(detect_objects src/detect_objects.cpp)
+target_link_libraries(detect_objects ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(culc_area3d src/culc_area3d.cpp)
 target_link_libraries(culc_area3d ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
