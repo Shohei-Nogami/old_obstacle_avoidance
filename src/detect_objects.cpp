@@ -32,6 +32,9 @@ public:
 	//received depth image
 	cv_bridge::CvImagePtr depthimg;
 	cv::Mat depth_img;
+	//depth image after filter process
+	static const int ksize=5;//filter param
+	cv::Mat depth_image;
 	// rectangle and objects for publish
 	::obst_avoid::rectangle rect_temp;
 	::obst_avoid::detected_objects objects;
@@ -66,15 +69,13 @@ public:
 	ros::SubscribeOptions original_image_option;
 	image_transport::Publisher pub_detected_image;
 	detect_objects()
-		:it(nh3)	
+		:it(nh)	
 	{		
-		ROS_INFO("prev define pub and nh1,nh2");
 	 	pub_detected_objects=nh.advertise<obst_avoid::detected_objects>("detected_objects",1);
 		nh1.setCallbackQueue(&depth_queue);
 		nh2.setCallbackQueue(&empty_queue);
 		
 		sub_empty=nh2.subscribe("/empty_msg",1,&detect_objects::empty_callback,this);
-		ROS_INFO("prev sub_empty");
 		if(!debug_switch_flag){
 			sub_depth=nh1.subscribe("/output_dptimage",1,&detect_objects::depth_callback,this);
 		}
@@ -85,7 +86,6 @@ public:
 			nh3.setCallbackQueue(&original_image_queue);
 			sub_original_image=nh3.subscribe("/zed/left/image_rect_color",1,&detect_objects::original_image_callback,this);
 		}
-		ROS_INFO("prev reserve");
 		//reverve memory of vector 
 		for(int i=0;i<height;i++){
 			line_objects[i].reserve(width);
@@ -93,6 +93,9 @@ public:
 		task_height.reserve(width);
 		task_objects.reserve(width);
 		
+		//create filter image
+		cv::Mat m(height/ksize,width/ksize,CV_32FC1);
+		depth_image=m.clone();
 	}
 	~detect_objects(){
 	}
@@ -108,15 +111,29 @@ public:
 			return ;
 		}
 	}
+	
+	void filter_process(void){
+		cv::medianBlur(depth_img,depth_img,ksize);
+		for(int h=0;h<height/ksize;h++){
+			double *src=depth_img.ptr<double>(h*ksize+ksize/2);
+			double *dst=depth_image.ptr<double>(h);
+			for(int w=0;w<width/ksize;w++){
+				dst[w]=src[w*ksize+ksize/2];
+			}
+		}
+	}
+	
 	void detect_process(void){
 		objects.rect.clear();
 		cv::Point2i edge_point;
 		int count_same_number=0;
-		double previous_depth=depth_img.at<float>(0,0);
+		double depth=depth_img.at<float>(0,0);
+		double previous_depth;
 		for(int h=0;h<height;h++){
 			for(int w=1;w<width;w++){
-			  double depth=depth_img.at<float>(h,w);
-			  if(abs(depth-previous_depth)<0.10 ){
+			  previous_depth=depth;
+			  depth=depth_img.at<float>(h,w);
+			  if(abs(depth-previous_depth)<0.10 &&!std::isnan(depth) ){
 			    count_same_number++;
 			  }
 			  else{
@@ -127,7 +144,12 @@ public:
 			  }
 			}
 		}
-
+/*		for(int h=0;h<height;h++){
+			if(line_objects[h].size()){		
+				std::cout<<"line_objects["<<h<<"].size():"<<line_objects[h].size()<<"\n";
+			}
+		}
+*/
 //		std::vector<int> task_height;
 		// bool on_next_process_flag;
 		// bool under_next_process_flag;
@@ -199,31 +221,33 @@ public:
 				}//end for(task)
 				//culculate rectangle
 				::obst_avoid::points tl,br;
-				if(task_objects.size()){
+				ROS_INFO("task_objects:size:%d",(int)task_objects.size());
+				if((int)task_objects.size()){
 				  tl.x=task_objects[0].x;
 				  tl.y=task_height[0];
 				  br.x=task_objects[0].y;
-				  br.y=task_height[0];
+				  br.y=task_height[0];				
+					for(int j=1;j<task_objects.size();j++){
+						if(tl.x>task_objects[j].x)
+						  tl.x=task_objects[j].x;
+						if(tl.y>task_height[j])
+						  tl.y=task_height[j];
+						if(br.x<task_objects[j].x)
+						  br.x=task_objects[j].x;
+						if(br.y<task_height[j])
+						  br.y=task_height[j];
+					}
 
-				for(int j=1;j<task_objects.size();j++){
-				  if(tl.x>task_objects[j].x)
-				    tl.x=task_objects[j].x;
-				  if(tl.y>task_height[j])
-				    tl.y=task_height[j];
-				  if(br.x<task_objects[j].x)
-				    br.x=task_objects[j].x;
-				  if(br.y<task_height[j])
-				    br.y=task_height[j];
-				}
-
-				rect_temp.tl=tl;
-				rect_temp.br=br;
-				//insert a rectangle
-				objects.rect.push_back(rect_temp);
+					rect_temp.tl=tl;
+					rect_temp.br=br;
+					//insert a rectangle
+					objects.rect.push_back(rect_temp);
 
 				}
 			}
+			std::cout<<"for:"<<h<< "\n";
 		}
+		std::cout<<"prev_pub\n";
 		//publish detected_objects
 		pub_detected_objects.publish(objects);
 	}
@@ -324,7 +348,7 @@ public:
 			ROS_INFO("prev detect_process");
 			prc.detect_process();
 			ROS_INFO("prev is_debug_flag");
-			if(prc.is_debug_flag()){
+			if(!prc.is_debug_flag()){
 				prc.initrf();
 				prc.emptycall();
 			}
