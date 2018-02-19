@@ -36,7 +36,6 @@ public:
 	static const int ksize=5;//filter param
 	cv::Mat depth_image;
 	// rectangle and objects for publish
-	::obst_avoid::rectangle rect_temp;
 	::obst_avoid::detected_objects objects;
 	//camera param
 	const double f=350;
@@ -48,15 +47,23 @@ public:
 	double prev_time;	//
 	double new_time=0;	//
 	double dt;
+	//filter process	
+	//--median
+	const int MEDIAN_FILTER=1;
+	bool use_cv_function=false;
+	std::vector<float> depth_median;
+	//--average
+	const int AVERAGE_FILTER=2;
+	int depth_sum;
+	int depth_element_num;
 	//for detect process
-	std::vector< cv::Point2i > line_objects[height];
 	std::vector< cv::Point2i > task_objects;
-	std::vector< int > task_height;
-	
+
 	//------for debug program------
 	//debug switch flag
 	const bool debug_switch_flag=true;
 	// image treansport for publish detected image
+	ros::NodeHandle nh4;
 	image_transport::ImageTransport it;
 	//original image
 	cv_bridge::CvImagePtr original_image;
@@ -67,39 +74,36 @@ public:
 	ros::Subscriber sub_original_image;
 	ros::CallbackQueue original_image_queue;
 	ros::SubscribeOptions original_image_option;
+	
 	image_transport::Publisher pub_detected_image;
 	detect_objects()
-		:it(nh)	
+		:it(nh4)	
 	{		
 	 	pub_detected_objects=nh.advertise<obst_avoid::detected_objects>("detected_objects",1);
 		nh1.setCallbackQueue(&depth_queue);
 		nh2.setCallbackQueue(&empty_queue);
-		
+
 		sub_empty=nh2.subscribe("/empty_msg",1,&detect_objects::empty_callback,this);
 		if(!debug_switch_flag){
 			sub_depth=nh1.subscribe("/output_dptimage",1,&detect_objects::depth_callback,this);
 		}
 		else{
 			sub_depth=nh1.subscribe("/zed/depth/depth_registered",1,&detect_objects::depth_callback,this);
-			
+
 			pub_detected_image=it.advertise("detected_image",1);
 			nh3.setCallbackQueue(&original_image_queue);
 			sub_original_image=nh3.subscribe("/zed/left/image_rect_color",1,&detect_objects::original_image_callback,this);
 		}
-		//reverve memory of vector 
-		for(int i=0;i<height;i++){
-			line_objects[i].reserve(width);
-		}
-		task_height.reserve(width);
-		task_objects.reserve(width);
-		
+		task_objects.reserve(width/ksize*height/ksize);
+		objects.rect.reserve(width/ksize*height/ksize);
+		depth_median.reserve(ksize*ksize);
 		//create filter image
-		cv::Mat m(height/ksize,width/ksize,CV_32FC1);
+		cv::Mat m = cv::Mat::zeros(cv::Size(width/ksize,height/ksize), CV_32FC1);
 		depth_image=m.clone();
 	}
 	~detect_objects(){
 	}
-	
+
 	void depth_callback(const sensor_msgs::ImageConstPtr& msg){
 		try{
 			depthimg= cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_32FC1);
@@ -111,145 +115,231 @@ public:
 			return ;
 		}
 	}
-	
+
 	void filter_process(void){
-		cv::medianBlur(depth_img,depth_img,ksize);
-		for(int h=0;h<height/ksize;h++){
-			double *src=depth_img.ptr<double>(h*ksize+ksize/2);
-			double *dst=depth_image.ptr<double>(h);
-			for(int w=0;w<width/ksize;w++){
-				dst[w]=src[w*ksize+ksize/2];
+		int FILTER_TYPE=MEDIAN_FILTER;//AVERAGE_FILTER;
+		if(FILTER_TYPE==MEDIAN_FILTER){
+//----median filter
+			//use opencv function
+			if(use_cv_function){
+				cv::medianBlur(depth_img,depth_img,ksize);
+				for(int h=0;h<height/ksize;h++){
+					for(int w=0;w<width/ksize;w++){
+						depth_image.at<float>(h,w)=depth_img.at<float>(h*ksize,w*ksize);
+					}
+				}
+			}//end if
+			//without to use opencv function
+			else{//self made
+				for(int h=0;h<height/ksize;h++){
+					for(int w=0;w<width/ksize;w++){
+						for(int l=-ksize/2;l<=ksize/2;l++){
+							for(int m=-ksize/2;l<=ksize/2;l++){
+								if(std::isnan(depth_img.at<float>(h*ksize+l,w*ksize+m))
+									||std::isinf(depth_img.at<float>(h*ksize+l,w*ksize+m)) 
+									||h+l<0||height/ksize<=h+l
+									||w+m<0||width/ksize<=w+m ){
+									continue;
+								}
+								depth_median.push_back(depth_img.at<float>(h*ksize+l,w*ksize+m) );
+							}
+						}
+						std::sort(depth_median.begin(),depth_median.end());
+						if((int)depth_median.size()){
+							depth_image.at<float>(h,w)=depth_median[(int)depth_median.size()/2];
+						}
+						else{
+							depth_image.at<float>(h,w)=0;						
+						}
+						depth_median.clear();
+					}
+				}
+			}//end else
+		}
+		else if(FILTER_TYPE==AVERAGE_FILTER){
+			for(int h=0;h<height/ksize;h++){
+				for(int w=0;w<width/ksize;w++){
+					depth_sum=0;
+					depth_element_num=0;
+					for(int l=-ksize/2;l<=ksize/2;l++){
+						for(int m=-ksize/2;l<=ksize/2;l++){
+							if(std::isnan(depth_img.at<float>(h*ksize+l,w*ksize+m))
+								||std::isinf(depth_img.at<float>(h*ksize+l,w*ksize+m))
+								||h+l<0||height/ksize<=h+l
+								||w+m<0||width/ksize<=w+m ){
+								continue;
+							}
+							depth_sum+=depth_img.at<float>(h*ksize+l,w*ksize+m);
+							depth_element_num++;
+						}
+					}
+					depth_image.at<float>(h,w)=depth_sum/depth_element_num;						
+				}
 			}
 		}
 	}
-	
-	void detect_process(void){
-		objects.rect.clear();
-		cv::Point2i edge_point;
-		int count_same_number=0;
-		double depth=depth_img.at<float>(0,0);
-		double previous_depth;
-		for(int h=0;h<height;h++){
-			for(int w=1;w<width;w++){
-			  previous_depth=depth;
-			  depth=depth_img.at<float>(h,w);
-			  if(abs(depth-previous_depth)<0.10 &&!std::isnan(depth) ){
-			    count_same_number++;
-			  }
-			  else{
-			    edge_point.y=w;
-			    edge_point.x=w-count_same_number;
-			    line_objects[h].push_back(edge_point);
-			    count_same_number=0;
-			  }
-			}
-		}
-/*		for(int h=0;h<height;h++){
-			if(line_objects[h].size()){		
-				std::cout<<"line_objects["<<h<<"].size():"<<line_objects[h].size()<<"\n";
-			}
-		}
-*/
-//		std::vector<int> task_height;
-		// bool on_next_process_flag;
-		// bool under_next_process_flag;
-		for(int h=0;h<height;h++){
-			for(int i=0;i<line_objects[h].size();i++){
-				if(line_objects[h][i].x==-1)//skip process
-					continue;
-				//initialize task_objects ,task_height
-				task_objects.clear();
-				task_height.clear();
-				task_objects.push_back(line_objects[h][i]);
-				task_height.push_back(h);
-				//already finished search flag
-				line_objects[h][i].x=-1;
-				//serch_process
-				for(int j=0;j<task_objects.size();j++){
-//				  on_next_process_flag=true;
-//				  under_next_process_flag=true;
-					//when search number < width-1
-					if(task_height[j] > 1){// && on_next_process_flag){
-						for(int k=0;k<line_objects[task_height[j]-1].size();k++){
-							if(line_objects[h][k].x==-1)//skip process
-								continue;
-							if(line_objects[task_height[j]-1][k].x < task_objects[j].x){
-								if(line_objects[task_height[j]-1][k].y > task_objects[j].x){
-									task_objects.push_back(line_objects[ task_height[j]-1 ][k]);
-									task_height.push_back(task_height[j]-1);
-									line_objects[ task_height[j]-1 ][k].x=-1;
+	void debug_filter(void){
+	//debug filter
+		int FILTER_TYPE=MEDIAN_FILTER;//AVERAGE_FILTER;
+		if(FILTER_TYPE==MEDIAN_FILTER){
+//----median filter
+			//use opencv function
+			if(use_cv_function){
+				cv::medianBlur(depth_img,depth_img,ksize);
+				for(int h=0;h<height/ksize;h++){
+					for(int w=0;w<width/ksize;w++){
+						depth_image.at<float>(h,w)=depth_img.at<float>(h*ksize,w*ksize);
+					}
+				}
+			}//end if
+			//without to use opencv function
+			else{//self made
+				for(int h=0;h<height/ksize;h++){
+					for(int w=0;w<width/ksize;w++){
+						for(int l=-ksize/2;l<=ksize/2;l++){
+							for(int m=-ksize/2;l<=ksize/2;l++){
+								if(std::isnan(depth_img.at<float>(h*ksize+l,w*ksize+m))
+									||std::isinf(depth_img.at<float>(h*ksize+l,w*ksize+m)) 
+									||h+l<0||height/ksize<=h+l
+									||w+m<0||width/ksize<=w+m ){
+									continue;
 								}
-							}
-							else{
-								if(line_objects[task_height[j]-1][k].x < task_objects[j].y){
-									task_objects.push_back(line_objects[ task_height[j]-1 ][k]);
-									task_height.push_back(task_height[j]-1);
-									line_objects[ task_height[j]-1 ][k].x=-1;
-
-								}
-								else
-									break;
-									// on_next_process_flag=false;
+								depth_median.push_back(depth_img.at<float>(h*ksize+l,w*ksize+m) );
 							}
 						}
+						std::sort(depth_median.begin(),depth_median.end());
+						if((int)depth_median.size()){
+							depth_image.at<float>(h,w)=depth_median[(int)depth_median.size()/2];
+						}
+						else{
+							depth_image.at<float>(h,w)=0;						
+						}
+						depth_median.clear();
 					}
-					//when search number < width-1
-					if(task_height[j] < width-1){// && under_next_process_flag){
-						for(int k=0;k<line_objects[task_height[j]-1].size();k++){
-							if(line_objects[h][k].x==-1)//skip process
+				}
+			}//end else
+		}
+		else if(FILTER_TYPE==AVERAGE_FILTER){
+			for(int h=0;h<height/ksize;h++){
+				for(int w=0;w<width/ksize;w++){
+					depth_sum=0;
+					depth_element_num=0;
+					for(int l=-ksize/2;l<=ksize/2;l++){
+						for(int m=-ksize/2;l<=ksize/2;l++){
+							if(std::isnan(depth_img.at<float>(h*ksize+l,w*ksize+m))
+								||std::isinf(depth_img.at<float>(h*ksize+l,w*ksize+m))
+								||h+l<0||height/ksize<=h+l
+								||w+m<0||width/ksize<=w+m ){
 								continue;
-							if(task_objects[j].x < line_objects[task_height[j]+1][k].x){
-								if(task_objects[j].y > line_objects[task_height[j]+1][k].x){
-										task_objects.push_back(line_objects[ task_height[j]+1 ][k]);
-										task_height.push_back(task_height[j]+1);
-										line_objects[ task_height[j]+1 ][k].x=-1;
-								}
 							}
-							else{
-								if(task_objects[j].x < line_objects[task_height[j]+1][k].y){
-										task_objects.push_back(line_objects[ task_height[j]+1 ][k]);
-										task_height.push_back(task_height[j]+1);
-										line_objects[ task_height[j]+1 ][k].x=-1;
-								}
-								else
-									break;
-								  // under_next_process_flag=false;
-							}
+							depth_sum+=depth_img.at<float>(h*ksize+l,w*ksize+m);
+							depth_element_num++;
 						}
 					}
-
-				}//end for(task)
-				//culculate rectangle
-				::obst_avoid::points tl,br;
-				ROS_INFO("task_objects:size:%d",(int)task_objects.size());
-				if((int)task_objects.size()){
-				  tl.x=task_objects[0].x;
-				  tl.y=task_height[0];
-				  br.x=task_objects[0].y;
-				  br.y=task_height[0];				
-					for(int j=1;j<task_objects.size();j++){
-						if(tl.x>task_objects[j].x)
-						  tl.x=task_objects[j].x;
-						if(tl.y>task_height[j])
-						  tl.y=task_height[j];
-						if(br.x<task_objects[j].x)
-						  br.x=task_objects[j].x;
-						if(br.y<task_height[j])
-						  br.y=task_height[j];
-					}
-
-					rect_temp.tl=tl;
-					rect_temp.br=br;
-					//insert a rectangle
-					objects.rect.push_back(rect_temp);
-
+					depth_image.at<float>(h,w)=depth_sum/depth_element_num;						
 				}
 			}
-			std::cout<<"for:"<<h<< "\n";
 		}
-		std::cout<<"prev_pub\n";
-		//publish detected_objects
-		pub_detected_objects.publish(objects);
+		cv_bridge::CvImagePtr detectd_cvimage(new cv_bridge::CvImage);
+		detectd_cvimage->encoding=sensor_msgs::image_encodings::TYPE_32FC1;
+		detectd_cvimage->image=depth_image.clone();
+		pub_detected_image.publish(detectd_cvimage->toImageMsg());
+	}
+
+	void detect_process(void){
+		
+		int search_range=1;
+		bool searched_flag[height/ksize][width/ksize];
+		//initialize searched_flag
+		for(int h=0;h<height/ksize;h++){
+			for(int w=0;w<width/ksize;w++){
+				searched_flag[h][w]=false;
+			}
+		}
+		//initialize 
+		objects.rect.clear();
+		//detect process
+		::obst_avoid::points tl,br;
+		::obst_avoid::rectangle rect_temp;
+		cv::Point2i temp;
+		for(int h=0+search_range;h<height/ksize-search_range;h++){
+			for(int w=0+search_range;w<width/ksize-search_range;w++){
+//				std::cout<<"depth_image.at<float>(h,w):"<<depth_image.at<float>(h,w)<<"\n";
+//				std::cout<<"w,width/ksize-search_range:"<<w<<","<<width/ksize-search_range<<"\n";
+//				std::cout<<"h<height/ksize-search_range:"<<h<<","<<height/ksize-search_range<<"\n";
+				if(searched_flag[h][w]||depth_image.at<float>(h,w)==0){
+					continue;
+				}
+				task_objects.clear();
+				tl.x=w;
+				tl.y=h;
+				br.x=w;
+				br.y=h;
+//				cv::Point2i temp;
+				temp.x=w;
+				temp.y=h;
+//				std::cout<<"temp:"<<temp<<"\n";
+				task_objects.push_back(temp);
+				searched_flag[h][w]=true;
+//				std::cout<<"task_objects.size:"<<task_objects.size()<<"\n";
+				//search process
+				for(int i=0;i<task_objects.size();i++){
+					float depth_0=depth_image.at<float>(task_objects[i].y,task_objects[i].x);
+					for(int l=-search_range;l<=search_range;l++){
+						for(int m=-search_range;m<=search_range;m++){
+
+							if(searched_flag[task_objects[i].y+l][task_objects[i].x+m])
+								continue;
+//							if(l==m)
+//								continue;
+							float depth_i=depth_image.at<float>(task_objects[i].y+l,task_objects[i].x+m);
+							if(depth_i==0)
+								continue;
+							if(0 > task_objects[i].y+l || task_objects[i].y+l > height/ksize
+								||0 > task_objects[i].x+m || task_objects[i].x+m > width/ksize)
+								continue;
+							if(abs(depth_i-depth_0)<=0.02){
+								searched_flag[task_objects[i].y+l][task_objects[i].x+m]=true;
+								temp.x=task_objects[i].x+m;
+								temp.y=task_objects[i].y+l;
+								task_objects.push_back(temp);
+							}
+//							std::cout<<"task_objects[i]:"<<task_objects[i]<<"\n";
+						}//m
+//						std::cout<<"task_objects:"<<task_objects.size()<<"\n";
+					}//l
+					if(tl.x<task_objects[i].x)
+						tl.x=task_objects[i].x;
+					else if(br.x>task_objects[i].x)
+						br.x=task_objects[i].x;
+					if(tl.y<task_objects[i].y)
+						tl.y=task_objects[i].y;
+					else if(br.y>task_objects[i].y)
+						br.y=task_objects[i].y;	
+
+				}//task
+
+				//debug
+				ROS_INFO("task_object.size:%d",(int)task_objects.size());
+
+				if((int)task_objects.size()>10){
+					rect_temp.tl.x=tl.x*ksize;
+					rect_temp.tl.y=tl.y*ksize;
+					rect_temp.br.x=br.x*ksize;
+					rect_temp.br.y=br.y*ksize;
+					//insert a rectangle
+					objects.rect.push_back(rect_temp);
+				}
+				
+			}
+		}
+
+		std::cout<<"end detect process\n";
+		//publish detected_objects		
+		if((int)objects.rect.size()){
+			pub_detected_objects.publish(objects);
+		}
+		std::cout<<"end publish process\n";
 	}
 	bool is_debug_flag(void){
 		return debug_switch_flag;
@@ -330,24 +420,23 @@ public:
 
 	int main(int argc,char **argv){
 		ros::init(argc,argv,"detect_objects");
-		ROS_INFO("process start");
-		
+
 		detect_objects prc;
 		prc.setstarttime();
-		ROS_INFO("prev while");
 		while(ros::ok()){
-			ROS_INFO("prev if1");
+//			std::cout<<"while start\n";
 			if(prc.is_debug_flag()){
 				prc.original_image_call();
 			}
-			ROS_INFO("prev depth call");
+//			std::cout<<"prev depth_call\n";
 			prc.depthcall();
-			ROS_INFO("prev isdepth");
+//			std::cout<<"prev isdepth\n";
 			if(!prc.isdepth())
 				continue;
-			ROS_INFO("prev detect_process");
+//			prc.debug_filter();
+			prc.filter_process();
+//			std::cout<<"a\n";
 			prc.detect_process();
-			ROS_INFO("prev is_debug_flag");
 			if(!prc.is_debug_flag()){
 				prc.initrf();
 				prc.emptycall();
@@ -355,6 +444,7 @@ public:
 			else{
 				prc.publish_detected_image();
 			}
+
 		}
 		return 0;
 	}
