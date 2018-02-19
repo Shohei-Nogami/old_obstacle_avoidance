@@ -33,21 +33,22 @@ public:
 	cv_bridge::CvImagePtr depthimg;
 	cv::Mat depth_img;
 	//depth image after filter process
-	static const int ksize=5;//filter param
+	static const int ksize=3;//filter param
 	cv::Mat depth_image;
 	// rectangle and objects for publish
 	::obst_avoid::detected_objects objects;
 	//camera param
-	const double f=350;
+	const float f=350;
 	static const int width=672;
 	static const int height=376;
 	//response_flag
 	bool rf=false;
 	//time
-	double prev_time;	//
-	double new_time=0;	//
-	double dt;
+	float prev_time;	//
+	float new_time=0;	//
+	float dt;
 	//filter process	
+	const int NOTHING=0;
 	//--median
 	const int MEDIAN_FILTER=1;
 	bool use_cv_function=false;
@@ -117,7 +118,7 @@ public:
 	}
 
 	void filter_process(void){
-		int FILTER_TYPE=MEDIAN_FILTER;//AVERAGE_FILTER;
+		int FILTER_TYPE=NOTHING;//AVERAGE_FILTER;//NOTHING;
 		if(FILTER_TYPE==MEDIAN_FILTER){
 //----median filter
 			//use opencv function
@@ -174,6 +175,19 @@ public:
 						}
 					}
 					depth_image.at<float>(h,w)=depth_sum/depth_element_num;						
+				}
+			}
+		}
+		else if(FILTER_TYPE==NOTHING){
+			for(int h=0;h<height/ksize;h++){
+				for(int w=0;w<width/ksize;w++){
+					if(std::isnan(depth_img.at<float>(h*ksize,w*ksize))
+						||std::isinf(depth_img.at<float>(h*ksize,w*ksize)) ){
+						depth_image.at<float>(h,w)=0;						
+					}
+					else{
+						depth_image.at<float>(h,w)=depth_img.at<float>(h*ksize,w*ksize);
+					}
 				}
 			}
 		}
@@ -232,7 +246,7 @@ public:
 								||w+m<0||width/ksize<=w+m ){
 								continue;
 							}
-							depth_sum+=depth_img.at<float>(h*ksize+l,w*ksize+m);
+							depth_sum+=depth_img.at<float>(h+l,w+m);
 							depth_element_num++;
 						}
 					}
@@ -249,6 +263,8 @@ public:
 	void detect_process(void){
 		
 		int search_range=1;
+		double depth_threshold=0.05;
+		double floor_threshold=0.10;
 		bool searched_flag[height/ksize][width/ksize];
 		//initialize searched_flag
 		for(int h=0;h<height/ksize;h++){
@@ -264,10 +280,13 @@ public:
 		cv::Point2i temp;
 		for(int h=0+search_range;h<height/ksize-search_range;h++){
 			for(int w=0+search_range;w<width/ksize-search_range;w++){
-//				std::cout<<"depth_image.at<float>(h,w):"<<depth_image.at<float>(h,w)<<"\n";
-//				std::cout<<"w,width/ksize-search_range:"<<w<<","<<width/ksize-search_range<<"\n";
-//				std::cout<<"h<height/ksize-search_range:"<<h<<","<<height/ksize-search_range<<"\n";
-				if(searched_flag[h][w]||depth_image.at<float>(h,w)==0){
+				double depth_init=depth_image.at<float>(h,w);
+				if(searched_flag[h][w]||depth_init==0){
+					continue;
+				}
+				double y_init=(-(h*ksize-height/2))*depth_init/f;
+//				std::cout<<"y_init:"<<y_init<<"\n";
+				if(y_init+0.23<=floor_threshold||y_init+0.23>1.0){
 					continue;
 				}
 				task_objects.clear();
@@ -275,38 +294,37 @@ public:
 				tl.y=h;
 				br.x=w;
 				br.y=h;
-//				cv::Point2i temp;
 				temp.x=w;
 				temp.y=h;
-//				std::cout<<"temp:"<<temp<<"\n";
 				task_objects.push_back(temp);
 				searched_flag[h][w]=true;
-//				std::cout<<"task_objects.size:"<<task_objects.size()<<"\n";
 				//search process
 				for(int i=0;i<task_objects.size();i++){
 					float depth_0=depth_image.at<float>(task_objects[i].y,task_objects[i].x);
+//					float y_0=f*(-(task_objects[i].y*ksize-height/2))/depth_0;
 					for(int l=-search_range;l<=search_range;l++){
 						for(int m=-search_range;m<=search_range;m++){
-
 							if(searched_flag[task_objects[i].y+l][task_objects[i].x+m])
 								continue;
-//							if(l==m)
-//								continue;
 							float depth_i=depth_image.at<float>(task_objects[i].y+l,task_objects[i].x+m);
 							if(depth_i==0)
+								continue;
+							float y_i=(-((task_objects[i].y+l)*ksize-height/2))*depth_i/f;
+							if(y_i+0.23<=floor_threshold||y_i+0.23>1.0)
 								continue;
 							if(0 > task_objects[i].y+l || task_objects[i].y+l > height/ksize
 								||0 > task_objects[i].x+m || task_objects[i].x+m > width/ksize)
 								continue;
-							if(abs(depth_i-depth_0)<=0.02){
+							if((depth_i-depth_0>0&&depth_i-depth_0<depth_threshold)||(depth_0-depth_i>0&&depth_0-depth_i<depth_threshold)){
 								searched_flag[task_objects[i].y+l][task_objects[i].x+m]=true;
 								temp.x=task_objects[i].x+m;
 								temp.y=task_objects[i].y+l;
 								task_objects.push_back(temp);
 							}
-//							std::cout<<"task_objects[i]:"<<task_objects[i]<<"\n";
+//							if(abs(depth_i-depth_0)==0)
+//								std::cout<<"abs(depth_i-depth_0)"<<abs(depth_i-depth_0)<<"\n";
+//								std::cout<<"depth 0,i:"<<depth_0<<","<<depth_i<<"\n";
 						}//m
-//						std::cout<<"task_objects:"<<task_objects.size()<<"\n";
 					}//l
 					if(tl.x<task_objects[i].x)
 						tl.x=task_objects[i].x;
@@ -320,7 +338,7 @@ public:
 				}//task
 
 				//debug
-				ROS_INFO("task_object.size:%d",(int)task_objects.size());
+//				ROS_INFO("task_object.size:%d",(int)task_objects.size());
 
 				if((int)task_objects.size()>10){
 					rect_temp.tl.x=tl.x*ksize;
