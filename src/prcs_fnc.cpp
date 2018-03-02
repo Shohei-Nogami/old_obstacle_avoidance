@@ -8,44 +8,37 @@ bool wfo_cf=true;
 const int th_dis_bias=2;
 const int th_count=5;
 //画像フレーム取得後呼び出される関数
-void ImageProcesser::imageProcess()
-{
-	//debug
-//	ROS_INFO("process start");
-
+void ImageProcesser::imageProcess(){
 	Limg_view=Limg.clone();//imshow用のMat
-	if(!isPrevimage())
+	if(!is_Previmage())
 		return ;
 
 //グレースケール化
-//	cv::Mat Lgray,PreLgray;
 	cv::cvtColor(Limg,Lgray,CV_BGR2GRAY);
 	cv::cvtColor(PreLimg,PreLgray,CV_BGR2GRAY);
-//参照URL:http://opencv.jp/opencv-2svn/cpp/motion_analysis_and_object_tracking.html#cv-calcopticalflowpyrlk
-
+//separate original image
 	for(int i=0;i<cnh;i++){
 		for(int j=0;j<cnw;j++){
 			clp_img[i][j]=PreLgray(cv::Rect((int)(j*(width)/cnw),(int)(i*(height)/cnh),(int)(width/cnw),(int)(height/cnh)));
 		}
 	}
-//	//std::cout<<"count\n";
+//tracking and adding feature points
 	count_feature_points();
 	add_feature_points();
 	if(!pts.size()){
 		return ;
 	}
-//
 //修正必要
-//	std::cout<<"dz:"<<dz<<"\n";
 	float X,Y;
 	cv::Point2f ppt;
 
 	for(int j=0;j<pts.size();j++){
-		X=(float)(pts[j].x-width/2.0);//-width;
-		Y=(float)(pts[j].y-height/2.0);//-height;
+		X=(float)(pts[j].x-width/2.0);
+		Y=(float)(pts[j].y-height/2.0);
 		float value_x;
 		float value_y;
 /*
+//only visual odometry
 		ppt.x=pts[j].x- (float)(
 			dx/pz[j]-X/pz[j]*dz
 			-(f+pow(X,2.0)/f)*dyaw
@@ -56,8 +49,8 @@ void ImageProcesser::imageProcess()
 					));
 */
 
-
-		ppt.x=pts[j].x- (float)(//wheel only
+//v by wheel odometry and dyaw by visual odometry
+		ppt.x=pts[j].x- (float)(
 			w_v*sin(-dyaw)*dt/pz[j]-X/pz[j]*w_v*cos(-dyaw)*dt
 			-(f+pow(X,2.0)/f)*dyaw
 			);
@@ -69,41 +62,41 @@ void ImageProcesser::imageProcess()
 
 		jnpts.push_back(ppt) ;
 	}
-//	std::cout<<"vr,vl:"<<vr<<","<<vl<<"\n";
-//	std::cout<<"dv,dw:"<<dz-(vr+vl)/2*dt<<","<<dyaw-(-vr+vl)/d*dt<<"\n";
+/*//publish wheel vel data
 	obst_avoid::dvw dvw_msg;	
 	dvw_msg.v=w_v;
 	dvw_msg.w=w_w;
 	dvw_msg.dv=dz/dt-dvw_msg.v;//*dt;
 	dvw_msg.dw=dyaw/dt-dvw_msg.w;//*dt;
 	pub_dvw.publish(dvw_msg);
-
+*/
+//set predictional points to use LK method	
 	npts.insert(npts.end(),jnpts.begin(),jnpts.end());
-	//---オプティカルフローを得る-----------------------------
-//		cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(15,15), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
-		cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(13,13), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
+//---オプティカルフローを得る-----------------------------
+	cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(13,13), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
 
-		float pnz;
-		for(int i=0;i<pts.size();i++){
-			float depth_np=depth_img.at<float>(npts[i].y,npts[i].x);
-			if(sts[i]&&!std::isnan(depth_np)&&!std::isinf(depth_np)&&depth_np>=0.5){
-				points.push_back(pts[i]);
-				newpoints.push_back(npts[i]);
-				z.push_back(pz[i]);
-				jnewpoints.push_back(jnpts[i]);
-				nz.push_back(depth_np);
-				tracking_count.push_back(tracking_count_p[i]+1);
-				is_stc_pts.push_back(is_stc_pts_p[i]);
-				is_mv_pts.push_back(is_mv_pts_p[i]);
-			}
+//renew points, depth, tracking count and (static and movement) flag
+	float pnz;
+	for(int i=0;i<pts.size();i++){
+		float depth_np=depth_img.at<float>(npts[i].y,npts[i].x);
+		if(sts[i]&&!std::isnan(depth_np)&&!std::isinf(depth_np)&&depth_np>=0.5){
+			points.push_back(pts[i]);
+			newpoints.push_back(npts[i]);
+			z.push_back(pz[i]);
+			jnewpoints.push_back(jnpts[i]);
+			nz.push_back(depth_np);
+			tracking_count.push_back(tracking_count_p[i]+1);
+			is_stc_pts.push_back(is_stc_pts_p[i]);
+			is_mv_pts.push_back(is_mv_pts_p[i]);
 		}
+	}
 
 
 	for(int j=0;j<points.size();j++){
 //----矢印描写---
 		float L1=std::abs(newpoints[j].x-jnewpoints[j].x);//sqrt(z[j]);
 		float L2=sqrt((newpoints[j].x-jnewpoints[j].x)*(newpoints[j].x-jnewpoints[j].x)
-			+(newpoints[j].y-jnewpoints[j].y)*(newpoints[j].y-jnewpoints[j].y));//sqrt(z[j]);
+			+(newpoints[j].y-jnewpoints[j].y)*(newpoints[j].y-jnewpoints[j].y));
 //newpoints==points+LK
 //jnewpoints==points+jacobi
 //newpoints-jnewpoints==LK-jacobi
@@ -115,8 +108,6 @@ void ImageProcesser::imageProcess()
 				cv::Point((int)(newpoints[j].x-jnewpoints[j].x+points[j].x),
 					(int)(newpoints[j].y-jnewpoints[j].y+points[j].y)),
 				cv::Scalar(0,200,200));//
-
-			//detect moving area	
 
 
 

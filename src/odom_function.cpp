@@ -31,7 +31,7 @@
 
 
 
-/*
+
 		position_x = ( cos(pitch)*cos(yaw) )*msg->pose.pose.position.x
 		- ( cos(pitch)*sin(yaw) )*msg->pose.pose.position.y
 		+ ( sin(pitch) )*msg->pose.pose.position.z;
@@ -43,18 +43,18 @@
 		position_z = ( sin(roll)*sin(yaw) - cos(roll)*sin(pitch)*cos(yaw) )*msg->pose.pose.position.x
 		+ ( sin(roll)*cos(yaw) + cos(roll)*sin(pitch)*sin(yaw) )*msg->pose.pose.position.y;
 		+ ( cos(roll)*cos(pitch) )*msg->pose.pose.position.z;
-*/
+
 	}
 	void ImageProcesser::wheelodom_callback(const obst_avoid::wheel_msg::ConstPtr& msg){
 		vr=msg->vel_r;
 		vl=msg->vel_l;
 	}
-	void ImageProcesser::setwodom(void){
+	void ImageProcesser::set_wodom(void){
 		wodom_queue.callOne(ros::WallDuration(0.001));
 	}
 	//set odometry
-	void ImageProcesser::setodom(void){
-		if(isOdom()){
+	void ImageProcesser::set_odom(void){
+		if(is_Odom()){
 			//---get previous time
 			getprevtime();
 			//get time
@@ -62,34 +62,32 @@
 			//culculation dt
 			culcdt();
 			//---一つ前のodometryを格納
-			setPrevodom();
+			set_Prevodom();
 			//現在のodometryを格納
-			setparam();
+			set_param();
 			//set delta r,p,y
-			setdpose();
+			set_dpose();
 			//set global odometry
-			setglobalodom();
+			set_globalodom();
 			bool front=pose_detection(position_x,position_y,prev_yaw);
-//			std::cout<<"front:"<<front<<"\n";
 			if(!front)
 				dxsignchange();
-			setdzdx();
-//			std::cout<<"dz:"<<dz<<"\n";
+			set_dzdx();
 		}
 		else{
 			//現在のodometryを格納
-			setparam();
-			setodomrcvd();
+			set_param();
+			set_odomrcvd();
 			//get time
 			gettime();
 		}
 	}
 //set x,y,z,r,p,y
-	void ImageProcesser::setparam(void){
+	void ImageProcesser::set_param(void){
 		odom_queue.callOne(ros::WallDuration(1));
 	}
 	//set previous odometry
-	void ImageProcesser::setPrevodom(void){
+	void ImageProcesser::set_Prevodom(void){
 		prev_position_x=position_x;
 		prev_position_y=position_y;
 		prev_position_z=position_z;
@@ -98,7 +96,7 @@
 		prev_yaw=yaw;
 	}
 //set delta r,p,y
-	void ImageProcesser::setdpose(void){
+	void ImageProcesser::set_dpose(void){
 		pw=w;
 		pdyaw=dyaw;
 		droll=roll-prev_roll;
@@ -109,23 +107,25 @@
 			dyaw=(yaw-2*PI)-prev_yaw;
 		else
 			dyaw=yaw-prev_yaw;
+
+		std::cout<<"vr,vl:"<<vr<<","<<vl<<"\n";
+		w_v=(vr+vl)/2/1000;
+		w_v=0.5447*w_v*w_v+0.6487*w_v+0.0146;
+		w_w=(vr-vl)/d/1000;//回転角速度
+		w_dyaw=w_w*dt;//回転角
+
 //LPF
 		w=dyaw/dt;
-/*		if(std::abs(w_w)>=0.01){
+		if(std::abs(w_w)>=0.01){
 			T=2*PI*d/std::abs(w_w);
 			w=(T*pw+dt*w)/(T+dt);
 			dyaw=w*dt;
 		}
-*/
-		std::cout<<"vr,vl:"<<vr<<","<<vl<<"\n";
-		w_v=(vr+vl)/2/1000;
-//		w_v=0.5447*w_v*w_v+0.6487*w_v+0.0146;
-//		w_w=-(vr-vl)/d;//回転角速度
-		w_w=(vr-vl)/d/1000;//回転角速度
-		w_dyaw=w_w*dt;//回転角
+
+
 	}
 //set global dx,dy
-	void ImageProcesser::setglobalodom(void){
+	void ImageProcesser::set_globalodom(void){
 		dr=sqrt((position_x*position_x
 			-2*position_x*prev_position_x
 			+prev_position_x*prev_position_x)
@@ -137,9 +137,8 @@
 			+prev_position_z*prev_position_z));
 		global_dx=-dr*cos(-dyaw);
 		global_dy=dr*sin(-dyaw);
-//		std::cout<<"global_dx,dy:"<<global_dx<<","<<global_dy<<"\n";
 	}
-	void ImageProcesser::setdzdx(void){
+	void ImageProcesser::set_dzdx(void){
 		double prev_dz=dz;
 		double prev_dx=dx;
 		double T_odm=dt*5;
@@ -150,14 +149,14 @@
 		
 	}
 //wheater image exist
-	bool ImageProcesser::isOdom(void){
+	bool ImageProcesser::is_Odom(void){
 		if(ODOMETRY_RECEIVED)
 			return true;
 		else
 			return false;
 	}
 //set odometryflag
-	void ImageProcesser::setodomrcvd(void){
+	void ImageProcesser::set_odomrcvd(void){
 		ODOMETRY_RECEIVED=true;
 	}
 //odometry dx's sign change
@@ -165,8 +164,7 @@
 		global_dx=(-global_dx);
 	}
 //進行の向きを取得
-	bool ImageProcesser::pose_detection(double position_x,double position_y,double prev_yaw)
-	{
+	bool ImageProcesser::pose_detection(double position_x,double position_y,double prev_yaw){
 		bool status=true;
 		if(-prev_yaw<(PI/2.0)&&-prev_yaw>0&&
 			(-(position_y-prev_position_y)>0||(position_x-prev_position_x)>0)){

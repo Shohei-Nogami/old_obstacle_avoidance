@@ -67,7 +67,7 @@ public:
 	image_transport::Publisher pub_orgimg;
 	image_transport::Publisher pub_Limg;
 	image_transport::Publisher pub_Lmsk;
-	image_transport::Publisher pub_dpt;
+	image_transport::Publisher pub_depth;
 	ros::Publisher pub_odm;
 	ros::Publisher pub_wheel;
 	ros::Publisher pub_empty;
@@ -76,6 +76,7 @@ public:
 //variable
 //画像
 	cv::Mat Limg,depth_img,Limg_view;
+	cv::Mat depth_image;//filtered depth image  
 	cv::Mat PreLimg,Predepth;//1つ前のフレームを格納
 	cv::Mat Lgray,PreLgray;
 
@@ -105,6 +106,16 @@ public:
 	double prev_img_time;
 	double new_img_time;
 	double img_dt;
+//filter process
+	const int NOTHING=0;
+	const int MEDIAN_FILTER=1;
+	const int AVERAGE_FILTER=2;
+	static const int ksize=7;//filter param
+	bool use_cv_function=false;
+	std::vector<float> depth_median;
+//VFH
+	double line_depth[(int)(width/ksize)];
+	bool mask_line_depth[(int)(width/ksize)];
 //odometry
 	double position_x,position_y,position_z;
 	double prev_position_x,prev_position_y,prev_position_z;
@@ -117,17 +128,18 @@ public:
 //--特徴点抽出
 	static const int max_points=1200;//720;//800;//500
 	const int point_size=max_points*2;
-//	static const int cn=12;
+//separate areas
 	static const int cn=12/1.2;
 	static const int cnh=cn;
-//	static const int cnw=cn*2;
 	static const int cnw=cn*1.8;
+//max points
 	const int clp_max_points=max_points/(cnh*cnw);
 	const int clp_point_size=(int)(clp_max_points*10);
 //特徴点追加の閾値
 	const int threshold_fp=(int)(max_points*0.8);
 	const int th_clpimg=(int)(clp_max_points*0.8);
 	std::vector<cv::Point2i> cp[cnh][cnw];
+//separate images
 	cv::Mat clp_img[cnh][cnw];
 //vector point,z
 	std::vector<cv::Point2f> pts;   //特徴点
@@ -242,67 +254,70 @@ public:
 //image,depth,odometry取り込み用メソッド
 //---image----
 //set original image	要改善(1つ前の画像の有無等)
-	void setimage(void);
-	//set original image
+	void set_image(void);
+//set original image
 	void set_orgimg(void);
-	//set previous image
-	void setPrevimage(void);
-	//set Left image
+//set previous image
+	void set_Previmage(void);
+//set Left image
 	void set_Limg(void);
-	//wheater image exist
-	bool isPrevimage(void);
-	bool isLimage(void);
-	//publish original image
+//wheater image exist
+	bool is_Previmage(void);
+	bool is_Limage(void);
+//publish original image
 	void pub_org_img(void);
-	//publish view left image
+//publish view left image
 	void pub_left_img(void);
 
 //----depth----
-	//manege depth function
+//manege depth function
 	void set_depth(void);
-	//wheater depth exist
-	bool isdepth(void);
-   	//set previous image
-	void setPrevdepth(void);
-	//set depth cv_bridge image
-	void setcvdepth(void);
-	//set mat depth image
-	void setmtdepth(void);
-	//publish depth image
+//wheater depth exist
+	bool is_depth(void);
+//set previous image
+	void set_Prevdepth(void);
+//set depth cv_bridge image
+	void set_cvdepth(void);
+//set mat depth image
+	void set_mtdepth(void);
+//publish depth image
 	void pub_depthimg(void);
-	//Linear approximation
-	void approx_depth_img(void);
-	//set ave 3d
-	void setave3d(void);
+//set ave 3d
+	void set_ave3d(void);
+//filtering depth image  
+	void filtering_depthimage(void);
+
 //-----odometry----
 //set wheel odometry
-	void setwodom(void);
+	void set_wodom(void);
 //set previous odometry
-	void setPrevodom(void);
+	void set_Prevodom(void);
 //set odometry
-	void setodom(void);
+	void set_odom(void);
 //set x,y,z,r,p,y
-	void setparam(void);
+	void set_param(void);
 //set delta r,p,y
-	void setdpose(void);
+	void set_dpose(void);
 //set global dx,dy
-	void setglobalodom(void);
+	void set_globalodom(void);
 //wheater image exist
-	bool isOdom(void);
+	bool is_Odom(void);
 //set odometryflag
-	void setodomrcvd(void);
+	void set_odomrcvd(void);
 //odometry dx's sign change
 	void dxsignchange(void);
 //進行の向きを取得
 	bool pose_detection(double position_x,double position_y,double prev_yaw);
 //set dz dx
-	void setdzdx(void);
+	void set_dzdx(void);
 //-----画像処理----
 //画像処理
 	void imageProcess();
 //特徴点追跡
 	void add_feature_points(void);
 	void count_feature_points(void);
+//VFH
+	void vector_field_histgram(void);
 //移動物体予測,目標点算出
 	void prd_prcess(void);
 //wheel control
