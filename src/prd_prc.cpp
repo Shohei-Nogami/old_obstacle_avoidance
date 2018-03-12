@@ -12,7 +12,7 @@
 ///* <- without prediction of moving objects
 				if(dtct_mvarea()){
 				//move slowly or stop
-//					PRD_PRC_ORDER=MOVING_SLOWLY;/// add
+					PRD_PRC_ORDER=MOVING_SLOWLY;
 					idle_time=0;
 				}
 //*/

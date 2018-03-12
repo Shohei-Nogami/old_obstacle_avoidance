@@ -20,7 +20,7 @@ int main(int argc,char **argv){
 		prc.renew_vectors();	//renew pts, pz, tracking_count_p
 		prc.clear_vectors();	//clear npts, sts, ers, keypoints, cp[i][j], jnpts
 
-		prc.vector_field_histgram();
+//		prc.vector_field_histgram();
 
 //		ROS_INFO("prc.setave3d();");
 		prc.set_ave3d();
@@ -28,7 +28,7 @@ int main(int argc,char **argv){
 		prc.pub_response();
 //		ROS_INFO("prc.pub_response();");
 		prc.prd_process();
-//		prc.wheel_control();
+		prc.wheel_control();
 		prc.clear_dtctvectors();
 		prc.pub_left_img();
 //		rate.sleep();
