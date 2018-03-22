@@ -1,4 +1,97 @@
-#include"img_prc_cls.h"
+#include"ros/ros.h"
+#include <ros/callback_queue.h>
+//odometry取得用
+#include <tf/LinearMath/Quaternion.h>
+#include <tf/LinearMath/Matrix3x3.h>
+//ros msgファイル
+#include<nav_msgs/Odometry.h>
+//円周率
+#define PI 3.141593
+
+class odometry_class{
+	private:
+		double position_x,position_y,position_z;
+		double prev_position_x,prev_position_y,prev_position_z;
+		double global_dx,global_dy,global_dz;
+		double roll,pitch,yaw;
+		double prev_roll,prev_pitch,prev_yaw;
+		double droll,dpitch,dyaw;
+		double pdyaw;
+		double dr;
+		double dx,dy,dz;
+		bool first_process;
+	public:
+		odometry_class()
+			:first_process(true)
+		{
+			
+		}
+		bool is_cur_odometry(void){
+			if(first_process)
+				return false;
+			else 
+				return true;
+		}
+		void subscribe_odometry(void){
+			
+		}
+		void set_cur_image(void);
+		void set_image(void);
+		void set_debug_image(cv::Mat& temp_image);
+		cv::Mat& get_cur_image_by_ref(void);
+		cv::Mat& get_pre_image_by_ref(void);
+		virtual ~image_class();
+
+	protected:
+		ros::NodeHandle nh_pub,nh_sub;
+		ros::Publisher pub;
+		ros::Subscriber sub;
+		ros::CallbackQueue queue;
+
+
+		virtual void set_pre_odometry(void){
+			prev_position_x=position_x;
+			prev_position_y=position_y;
+			prev_position_z=position_z;
+			
+		}
+		virtual void define_variable(void){			
+			pub=nh_pub.advertise<nav_msgs::Odometry>("odometry",1);
+			nh_sub.setCallbackQueue(&queue);
+			sub=nh.subscribe("/zed/odom",1,&ImageProcesser::odom_callback,this);
+		}
+		virtual void odometry_callback(const nav_msgs::Odometry::ConstPtr& msg){
+			//現在のodometryを取得
+			double r,p,y;//一時的に格納するための変数
+			tf::Quaternion quat(
+				msg->pose.pose.orientation.x,
+				msg->pose.pose.orientation.y,
+				msg->pose.pose.orientation.z,
+				msg->pose.pose.orientation.w);
+			tf::Matrix3x3(quat).getRPY(r,p,y);
+			//set
+			position_x=msg->pose.pose.position.x;
+			position_y=msg->pose.pose.position.y;
+			position_z=msg->pose.pose.position.z;
+			roll=r;
+			pitch=p;
+			yaw=y;
+
+
+			position_x = ( cos(pitch)*cos(yaw) )*msg->pose.pose.position.x
+			- ( cos(pitch)*sin(yaw) )*msg->pose.pose.position.y
+			+ ( sin(pitch) )*msg->pose.pose.position.z;
+
+			position_y = ( cos(roll)*sin(yaw) + sin(roll)*sin(pitch)*cos(yaw) )*msg->pose.pose.position.x
+			+ ( cos(roll)*cos(yaw) - sin(roll)*sin(pitch)*sin(yaw) )*msg->pose.pose.position.y
+			- ( sin(roll)*cos(pitch) )*msg->pose.pose.position.z;
+
+			position_z = ( sin(roll)*sin(yaw) - cos(roll)*sin(pitch)*cos(yaw) )*msg->pose.pose.position.x
+			+ ( sin(roll)*cos(yaw) + cos(roll)*sin(pitch)*sin(yaw) )*msg->pose.pose.position.y;
+			+ ( cos(roll)*cos(pitch) )*msg->pose.pose.position.z;	
+		}
+		virtual void publish_debug_image(void);
+
 
 	void ImageProcesser::odom_callback(const nav_msgs::Odometry::ConstPtr& msg){
 		//現在のodometryを取得
@@ -16,20 +109,6 @@
 		roll=r;
 		pitch=p;
 		yaw=y;
-		// R.row(0).col(0) = cos(pitch)*cos(yaw) - sin(roll)*sin(pitch)*sin(yaw);
-		// R.row(0).col(1) = -cos(roll)*sin(yaw);
-		// R.row(0).col(2) = sin(pitch)*cos(yaw) + sin(roll)*cos(pitch)*sin(yaw);
-		// R.row(1).col(0) = cos(pitch)*sin(yaw) + sin(roll)*sin(pitch)*cos(yaw);
-		// R.row(1).col(1) = cos(roll)*cos(yaw);
-		// R.row(1).col(2) = sin(pitch)*sin(yaw) - sin(roll)*cos(pitch)*cos(yaw);
-		// R.row(2).col(0) = - cos(roll)*sin(pitch);
-		// R.row(2).col(1) = sin(roll);
-		// R.row(2).col(2) = cos(roll)*cos(pitch);
-		// position_x=msg->pose.pose.position.x;
-		// position_y=msg->pose.pose.position.y;
-		// position_z=msg->pose.pose.position.z;
-
-
 
 /*
 		position_x = ( cos(pitch)*cos(yaw) )*msg->pose.pose.position.x
@@ -206,3 +285,4 @@
 		return status;
 	}
 
+};

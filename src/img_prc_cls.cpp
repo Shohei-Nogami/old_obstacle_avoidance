@@ -7,7 +7,7 @@ ImageProcesser::ImageProcesser()//
 		pub_orgimg=it.advertise("output_originalimage",1);
 		pub_Limg=it.advertise("output_Limage",1);
 		pub_Lmsk=it.advertise("output_Mskimage",1);
-		pub_depth=it2.advertise("output_dptimage",1);
+		pub_dpt=it2.advertise("output_dptimage",1);
 		pub_wheel=nh.advertise<obst_avoid::wheel_msg>("wheel_data",1);
 		pub_empty=nh.advertise<std_msgs::Empty>("empty_msg",1);
 		pub_target=nh.advertise<obst_avoid::point3d>("target_point3d",1);
@@ -35,7 +35,5 @@ ImageProcesser::ImageProcesser()//
 				pavept[i][j].y=0;
 			}
 		}
-		//create filter image
-		cv::Mat m = cv::Mat::zeros(cv::Size(width/ksize,height/ksize), CV_32FC1);
-		depth_image=m.clone();
+
 	}

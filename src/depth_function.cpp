@@ -17,51 +17,44 @@
 	}
 	//set depth関連を一括管理
 	void ImageProcesser::set_depth(void){
-		if(is_depth())
-			set_Prevdepth();
-		set_cvdepth();
-		set_mtdepth();
+		if(isdepth())
+			setPrevdepth();
+		setcvdepth();
+		setmtdepth();
 	}
 	//wheater there is mtdepth
-	bool ImageProcesser::is_depth(void){
+	bool ImageProcesser::isdepth(void){
 		if(depth_img.empty())
 			return false;
 		else
 			return true;
 	}
 	//set previous mat depth
-	void ImageProcesser::set_Prevdepth(void){
+	void ImageProcesser::setPrevdepth(void){
 		 Predepth=depth_img.clone();
 	}
 	//set depth cvbridge image
-	void ImageProcesser::set_cvdepth(void){
+	void ImageProcesser::setcvdepth(void){
 		depth_queue.callOne(ros::WallDuration(1));
 	}
 	//set depth mat image
-	void ImageProcesser::set_mtdepth(void){
+	void ImageProcesser::setmtdepth(void){
 		depth_img=depthimg->image.clone();
 	}
-	//publish depth image after filtering
+	//publish depth image
 	void ImageProcesser::pub_depthimg(void){
-		cv_bridge::CvImagePtr detectd_cvimage(new cv_bridge::CvImage);
-		detectd_cvimage->encoding=sensor_msgs::image_encodings::TYPE_32FC1;
-		detectd_cvimage->image=depth_image.clone();
-		pub_depth.publish(detectd_cvimage->toImageMsg());
-//		pub_dpt.publish(depthimg->toImageMsg());
-		
+		pub_dpt.publish(depthimg->toImageMsg());
 	}
-	void ImageProcesser::set_ave3d(void){
+	void ImageProcesser::setave3d(void){
 		avedepth_queue.callOne(ros::WallDuration(1));
 	}
 
-	void ImageProcesser::filtering_depthimage(void){
-		double depth_sum;
-		int depth_element_num;
+	void ImageProcesser::filter_process(void){
 		int FILTER_TYPE=MEDIAN_FILTER;//AVERAGE_FILTER;//NOTHING;
 		if(FILTER_TYPE==MEDIAN_FILTER){
 //----median filter
 			//median filter parameter
-			int median_param=7;
+			int median_param=5;
 			//use opencv function
 			if(use_cv_function){
 				cv::medianBlur(depth_img,depth_img,ksize);
@@ -133,5 +126,3 @@
 			}
 		}
 	}
-
-

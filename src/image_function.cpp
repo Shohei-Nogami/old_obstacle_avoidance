@@ -13,15 +13,15 @@
 	    }
 	}
 //set original image	要改善(1つ前の画像の有無等)
-	void ImageProcesser::set_image(void){
-		if(is_Limage()){
-			set_Previmage();
+	void ImageProcesser::setimage(void){
+		if(isLimage()){
+			setPrevimage();
 			getprevimgtime();
 		}
 		set_orgimg();
 		set_Limg();
 		getimgtime();
-		if(is_Limage())
+		if(isLimage())
 			culcimgdt();
 
 	}
@@ -34,17 +34,17 @@
 		Limg=org_img->image.clone();
 	}
 	//set previous image
-	void ImageProcesser::set_Previmage(void){
+	void ImageProcesser::setPrevimage(void){
 		PreLimg=org_img->image.clone();
 	}
 //wheater image exist
-	bool ImageProcesser::is_Previmage(void){
+	bool ImageProcesser::isPrevimage(void){
 		if(PreLimg.empty())
 			return false;
 		else
 			return true;
 	}
-	bool ImageProcesser::is_Limage(void){
+	bool ImageProcesser::isLimage(void){
 		if(Limg.empty())
 			return false;
 		else

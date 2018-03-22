@@ -12,7 +12,7 @@
 ///* <- without prediction of moving objects
 				if(dtct_mvarea()){
 				//move slowly or stop
-					PRD_PRC_ORDER=MOVING_SLOWLY;
+//					PRD_PRC_ORDER=MOVING_SLOWLY;/// add 
 					idle_time=0;
 				}
 //*/
@@ -35,7 +35,7 @@
 					target_vel=0;
 				else
 //					target_vel=20;
-					target_vel=200;
+					target_vel=200;//
 				dtct_mvarea();
 				target_point.x=width/2;
 				idle_time+=dt;
@@ -858,8 +858,9 @@
 			for(int j=0;j<cnw;j++){
 				std::cout<<"line_z["<<j<<"]:"<<line_z[j]<<"\n";
 			}
-			target_length-=sqrt(dz*dz+dx*dx);
-			target_sheta-=atan(dx/dz);
+			target_length-=sqrt( (w_v*sin(-dyaw)*dt)*(w_v*sin(-dyaw)*dt)
+						+(w_v*cos(-dyaw)*dt)*(w_v*cos(-dyaw)*dt) );//sqrt(dz*dz+dx*dx);
+			target_sheta-=-dyaw;//atan(dx/dz);
 			std::cout<<"subtarget_x,subtarget_z"<<subtarget_x<<","<<subtarget_z<<"\n";
 			std::cout<<"target_length:"<<target_length<<"\n";
 			std::cout<<"wheelMsg:"<<wheelMsg<<"\n";

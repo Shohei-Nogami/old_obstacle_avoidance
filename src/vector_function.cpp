@@ -39,9 +39,10 @@
 		is_stc_pts.reserve(point_size);
 		is_stc_pts_p.reserve(point_size);
 		is_mv_pts.reserve(point_size);
-		depth_median.reserve(ksize*ksize);
+
 	}
 	void ImageProcesser::clear_vectors(void){
+//		pts.clear();   //特徴点
 		npts.clear();  //移動後の特徴点
 		sts.clear();
 		ers.clear();
@@ -53,6 +54,7 @@
 			}
 		}	
 		jnpts.clear();
+
 	}
 	void ImageProcesser::renew_vectors(void){
 		pts.clear();

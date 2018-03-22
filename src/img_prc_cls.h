@@ -67,7 +67,7 @@ public:
 	image_transport::Publisher pub_orgimg;
 	image_transport::Publisher pub_Limg;
 	image_transport::Publisher pub_Lmsk;
-	image_transport::Publisher pub_depth;
+	image_transport::Publisher pub_dpt;
 	ros::Publisher pub_odm;
 	ros::Publisher pub_wheel;
 	ros::Publisher pub_empty;
@@ -76,7 +76,6 @@ public:
 //variable
 //画像
 	cv::Mat Limg,depth_img,Limg_view;
-	cv::Mat depth_image;//filtered depth image  
 	cv::Mat PreLimg,Predepth;//1つ前のフレームを格納
 	cv::Mat Lgray,PreLgray;
 
@@ -106,16 +105,22 @@ public:
 	double prev_img_time;
 	double new_img_time;
 	double img_dt;
-//filter process
-	const int NOTHING=0;
-	const int MEDIAN_FILTER=1;
-	const int AVERAGE_FILTER=2;
+//comp depth image
+	//depth image after filter process
 	static const int ksize=7;//filter param
+	cv::Mat depth_image;
+	//filter process	
+	const int NOTHING=0;
+	//--median
+	const int MEDIAN_FILTER=1;
 	bool use_cv_function=false;
 	std::vector<float> depth_median;
-//VFH
-	double line_depth[(int)(width/ksize)];
-	bool mask_line_depth[(int)(width/ksize)];
+	//--average
+	const int AVERAGE_FILTER=2;
+	int depth_sum;
+	int depth_element_num;
+//tracking rectangle
+	std::vector<cv::Point2i> tracking_rect;
 //odometry
 	double position_x,position_y,position_z;
 	double prev_position_x,prev_position_y,prev_position_z;
@@ -128,18 +133,17 @@ public:
 //--特徴点抽出
 	static const int max_points=1200;//720;//800;//500
 	const int point_size=max_points*2;
-//separate areas
+//	static const int cn=12;
 	static const int cn=12/1.2;
 	static const int cnh=cn;
+//	static const int cnw=cn*2;
 	static const int cnw=cn*1.8;
-//max points
 	const int clp_max_points=max_points/(cnh*cnw);
 	const int clp_point_size=(int)(clp_max_points*10);
 //特徴点追加の閾値
 	const int threshold_fp=(int)(max_points*0.8);
 	const int th_clpimg=(int)(clp_max_points*0.8);
 	std::vector<cv::Point2i> cp[cnh][cnw];
-//separate images
 	cv::Mat clp_img[cnh][cnw];
 //vector point,z
 	std::vector<cv::Point2f> pts;   //特徴点
@@ -217,7 +221,7 @@ public:
 	double min_z;
 //control wheel
 	obst_avoid::wheel_msg wheelMsg;
-	int vel=200;//100;//200;
+	int vel=300;//100;//200;
 	int max_vel_dif=100;
 	double z_target=0.5;
 	int target_vel;
@@ -254,70 +258,71 @@ public:
 //image,depth,odometry取り込み用メソッド
 //---image----
 //set original image	要改善(1つ前の画像の有無等)
-	void set_image(void);
-//set original image
+	void setimage(void);
+	//set original image
 	void set_orgimg(void);
-//set previous image
-	void set_Previmage(void);
-//set Left image
+	//set previous image
+	void setPrevimage(void);
+	//set Left image
 	void set_Limg(void);
-//wheater image exist
-	bool is_Previmage(void);
-	bool is_Limage(void);
-//publish original image
+	//wheater image exist
+	bool isPrevimage(void);
+	bool isLimage(void);
+	//publish original image
 	void pub_org_img(void);
-//publish view left image
+	//publish view left image
 	void pub_left_img(void);
 
 //----depth----
-//manege depth function
+	//manege depth function
 	void set_depth(void);
-//wheater depth exist
-	bool is_depth(void);
-//set previous image
-	void set_Prevdepth(void);
-//set depth cv_bridge image
-	void set_cvdepth(void);
-//set mat depth image
-	void set_mtdepth(void);
-//publish depth image
+	//wheater depth exist
+	bool isdepth(void);
+   	//set previous image
+	void setPrevdepth(void);
+	//set depth cv_bridge image
+	void setcvdepth(void);
+	//set mat depth image
+	void setmtdepth(void);
+	//publish depth image
 	void pub_depthimg(void);
-//set ave 3d
-	void set_ave3d(void);
-//filtering depth image  
-	void filtering_depthimage(void);
-
+	//filting depth image
+	void filter_process(void);
+	//set ave 3d
+	void setave3d(void);
 //-----odometry----
 //set wheel odometry
-	void set_wodom(void);
+	void setwodom(void);
 //set previous odometry
-	void set_Prevodom(void);
+	void setPrevodom(void);
 //set odometry
-	void set_odom(void);
+	void setodom(void);
 //set x,y,z,r,p,y
-	void set_param(void);
+	void setparam(void);
 //set delta r,p,y
-	void set_dpose(void);
+	void setdpose(void);
 //set global dx,dy
-	void set_globalodom(void);
+	void setglobalodom(void);
 //wheater image exist
-	bool is_Odom(void);
+	bool isOdom(void);
 //set odometryflag
-	void set_odomrcvd(void);
+	void setodomrcvd(void);
 //odometry dx's sign change
 	void dxsignchange(void);
 //進行の向きを取得
 	bool pose_detection(double position_x,double position_y,double prev_yaw);
 //set dz dx
-	void set_dzdx(void);
+	void setdzdx(void);
 //-----画像処理----
 //画像処理
 	void imageProcess();
 //特徴点追跡
 	void add_feature_points(void);
 	void count_feature_points(void);
-//VFH
-	void vector_field_histgram(void);
+//tracking objects
+	void set_previous_objects(void);
+	void tracking_process(void);
+	void debug_tracking_process(void);
 //移動物体予測,目標点算出
 	void prd_prcess(void);
 //wheel control

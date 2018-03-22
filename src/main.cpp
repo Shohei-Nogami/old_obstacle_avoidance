@@ -8,25 +8,28 @@ int main(int argc,char **argv){
 	//while文でloop
 	ros::Rate rate(10);
 	while(ros::ok()){
-		prc.set_image();	//get original image
-		prc.set_depth();	//get depth image
-		prc.set_odom();		//get odometry, dx, dz and dt
-		prc.set_wodom();	//get wheel odometry
-		prc.filtering_depthimage();
-		prc.pub_depthimg();	//publish depth image
-//		prc.show_speed();	//print dx, dz, dt, vx and vz to terminal 
-		prc.imageProcess();	//tracking and adding feature points , culculating opticalflow
-		
-		prc.renew_vectors();	//renew pts, pz, tracking_count_p
-		prc.clear_vectors();	//clear npts, sts, ers, keypoints, cp[i][j], jnpts
-
-//		prc.vector_field_histgram();
-
-//		ROS_INFO("prc.setave3d();");
-		prc.set_ave3d();
-//		ROS_INFO("prc.setave3d();,prc.pub_response();");
+		prc.setimage();
+		prc.set_depth();
+		prc.setodom();
+		prc.setwodom();
+		ROS_INFO("prc.pub_depthimg();");
+		prc.pub_depthimg();
+		ROS_INFO("prc.pub_depthimg();");
+//		prc.approx_depth_img();
+//		prc.show_speed();
+		prc.imageProcess();
+		prc.print_points_size();
+//		prc.pub_org_img();
+//		prc.pub_left_img();
+//		prc.print_points_size();
+		prc.renew_vectors();
+//		prc.print_points_size();
+		prc.clear_vectors();
+		ROS_INFO("prc.setave3d();");
+		prc.setave3d();
+		ROS_INFO("prc.setave3d();,prc.pub_response();");
 		prc.pub_response();
-//		ROS_INFO("prc.pub_response();");
+		ROS_INFO("prc.pub_response();");
 		prc.prd_process();
 		prc.wheel_control();
 		prc.clear_dtctvectors();
