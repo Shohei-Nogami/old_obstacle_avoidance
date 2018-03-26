@@ -25,18 +25,42 @@ void depth_image_class::define_variable(void){
 	nh_sub.setCallbackQueue(&queue);
 	sub=nh_sub.subscribe("/zed/depth/depth_registered",1,&depth_image_class::image_callback,this);
 }
+void depth_image_class::publish_debug_image(cv::Mat& temp_image){
+	cv_bridge::CvImagePtr publish_cvimage(new cv_bridge::CvImage);
+	publish_cvimage->encoding=sensor_msgs::image_encodings::TYPE_32FC1;
+	publish_cvimage->image=temp_image.clone();
+	pub.publish(publish_cvimage->toImageMsg());
+
+}
+void depth_image_class::publish_filted_cur_image(void){
+	cv_bridge::CvImagePtr publish_cvimage(new cv_bridge::CvImage);
+	publish_cvimage->encoding=sensor_msgs::image_encodings::TYPE_32FC1;
+	publish_cvimage->image=filted_cur_image.clone();
+	pub.publish(publish_cvimage->toImageMsg());
+
+}
 
 void depth_image_class::image_callback(const sensor_msgs::ImageConstPtr& msg)
 {
 	try{
-		cvbridge_image=
-		cv_bridge::toCvCopy(msg,sensor_msgs::image_encodings::TYPE_32FC1);
+		std::cout<<"depth_image_callback \n";
+		cvbridge_image=cv_bridge::toCvCopy(msg,sensor_msgs::image_encodings::TYPE_32FC1);
+		PROCESS_ONCE=false;
 	}
   catch(cv_bridge::Exception& e) {
+	std::cout<<"depth_image_callback Error \n";
 	  ROS_ERROR("Could not convert from '%s' to 'TYPE_32FC1'.",
 	  msg->encoding.c_str());
 	  return ;
   }
+}
+
+cv::Mat& depth_image_class::get_filted_cur_image(void){
+	return filted_cur_image;
+}
+
+cv::Mat& depth_image_class::get_filted_pre_image(void){
+	return filted_pre_image;
 }
 
 void depth_image_class::filtering_depth_image(void){
@@ -109,7 +133,18 @@ void depth_image_class::filtering_depth_image(void){
 int main(int argc,char **argv){
 	ros::init(argc,argv,"depth_image_class_test");
 	depth_image_class depth_image;
-	std::cout<<"finish\n";
+	std::cout<<"defined class\n";
+	cv::Mat temp_image;
+	depth_image.define_variable();
+	while(ros::ok()){
+		depth_image.set_image();
+		if(!depth_image.is_cur_image())
+			continue;
+		depth_image.filtering_depth_image();
+		depth_image.publish_debug_image(depth_image.get_filted_cur_image());
+
+	}
+
 	return 0;
 }
 

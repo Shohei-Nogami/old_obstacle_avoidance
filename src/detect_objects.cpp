@@ -316,7 +316,7 @@ public:
 							if(depth_i==0)
 								continue;
 							float y_i=(-((task_objects[i].y+l)*ksize-height/2))*depth_i/f;
-							if(y_i+0.23<=floor_threshold||y_i+0.23>1.0)
+							if(y_i+0.23<=floor_threshold)//||y_i+0.23>1.0)
 								continue;
 							if(0 > task_objects[i].y+l || task_objects[i].y+l > height/ksize
 								||0 > task_objects[i].x+m || task_objects[i].x+m > width/ksize)
