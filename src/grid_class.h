@@ -14,12 +14,15 @@ class grid_class{
 	private:
 		//pcl::PointCloud<pcl::PointXYZRGB> pcl_data;
 		//pcl::PointCloud<pcl::PointXYZ> pcl_data;
-		ros::NodeHandle nh_pub,nh_sub;
+		ros::NodeHandle nh_pub,nh_pub2,nh_sub;
 		ros::Subscriber sub;
 		ros::CallbackQueue queue;
 		cv::Mat grid_map;
+		cv::Mat grid_map_view,binary_grid_map_view;
 		image_transport::ImageTransport it_pub;
 		image_transport::Publisher pub;
+		image_transport::ImageTransport it_pub2;
+		image_transport::Publisher pub2;
 		cv_bridge::CvImagePtr cvbridge_image;
 		cv::Mat depth_image;
 		int grid_resolution;//
@@ -29,6 +32,9 @@ class grid_class{
 		const int width=672;
 		const int height=376;
 		const float f=350.505;
+		
+		bool EXECUTED_CALLBACK;
+		uchar binary_threshold;
 	public:
 		grid_class();
 		~grid_class();
@@ -36,7 +42,11 @@ class grid_class{
 		void subscribe_depth_image(void);
 		//void pcl_callback(const sensor_msgs::PointCloud2ConstPtr& msg);
 		void image_callback(const sensor_msgs::ImageConstPtr& msg);
+		bool is_cvbridge_image(void);
 		void set_grid_map(void);
-		void publish_grid_map(void);
+		void set_grid_map_view(void);
+		void set_binary_grid_map_view(void);
+		void publish_grid_map_view(void);
+		void publish_binary_grid_map_view(void);
 };
 
