@@ -39,8 +39,9 @@ class grid_class{
 		uint8_t/*uchar*/ binary_threshold;
 
 //parameter of trajectory
-		const int vel_patern=9;
+		const int vel_resolution=9;
 		const float temp_v=0.2;
+	const float temp_v_dif_max=0.2;
 		const float d=0.138;
 //		float temp_vl[vel_patern],temp_vr[vel_patern];
 		std::vector<float> temp_vl,temp_vr;
