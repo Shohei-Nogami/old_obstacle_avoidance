@@ -22,10 +22,10 @@ grid_class::grid_class()
 	temp_p.reserve(vel_patern);
 	max_process_n.reserve(vel_patern);
 	rank_trajectory.reserve(vel_patern);
-	float d_vel=temp_v*2/(vel_patern-1);
+	float delta_vel_dif=temp_v_dif_max/(vel_patern-1);
 	for(int i=0;i<vel_patern;i++){
-		temp_vr.push_back(i*d_vel);
-		temp_vl.push_back(temp_v*2-temp_vr[i]);
+		temp_vr.push_back(temp_v-temp_v_dif_max/2+i*delta_vel_dif);
+		temp_vl.push_back(temp_v+temp_v_dif_max/2-i*delta_vel_dif);
 		temp_w.push_back( (temp_vr[i]-temp_vl[i])/(2*d) );
 		if(temp_w[i]!=0){
 			double temptemp_p=temp_v/temp_w[i];
