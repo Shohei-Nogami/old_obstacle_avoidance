@@ -156,9 +156,9 @@ void grid_class::select_best_trajectory(void){
 				xr=0;
 				yr=j*R;
 			}
-			if(i==7)
+//			if(i==7)
 //				std::cout<<"max_process_n[i]:j::"<<max_process_n[i]<<","<<j<<"\n";
-				transport_robot_to_gridn(xr,yr,nx,ny);
+			transport_robot_to_gridn(xr,yr,nx,ny);
 			if( is_obstacle(nx,ny) ){
 				LOOP_OUT=true;
 				rank_trajectory.push_back(j);
