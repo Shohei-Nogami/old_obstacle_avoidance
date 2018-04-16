@@ -16,6 +16,7 @@ find_package(catkin REQUIRED
 	image_transport
     tf
     nav_msgs
+    pcl_ros
 )
 
 ## System dependencies are found with CMake's conventions
@@ -246,6 +247,9 @@ target_link_libraries(wheel_odometry_class_test  ${catkin_LIBRARIES} ${OpenCV_LI
 
 add_executable(time_class_test src/time_class.cpp )
 target_link_libraries(time_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(grid_class_test src/grid_class.cpp )
+target_link_libraries(grid_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #add_executable(img_prc src/main.cpp src/img_prc_cls.cpp src/prcs_fnc.cpp src/image_function.cpp src/depth_function.cpp src/odom_function.cpp src/time_function.cpp src/cvArrow_function.cpp src/vector_function.cpp src/debug_function.cpp src/tracking_fp_function.cpp src/prd_prc.cpp src/wheel_control.cpp)
 #target_link_libraries(img_prc ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
