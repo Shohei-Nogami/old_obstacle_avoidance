@@ -16,14 +16,14 @@ grid_class::grid_class()
 	grid_cell_size=grid_size/grid_resolution;
 
 //set parameter of trajectory
-	temp_vl.reserve(vel_patern);
-	temp_vr.reserve(vel_patern);
-	temp_w.reserve(vel_patern);
-	temp_p.reserve(vel_patern);
-	max_process_n.reserve(vel_patern);
-	rank_trajectory.reserve(vel_patern);
-	float delta_vel_dif=temp_v_dif_max/(vel_patern-1);
-	for(int i=0;i<vel_patern;i++){
+	temp_vl.reserve(vel_resolution);
+	temp_vr.reserve(vel_resolution);
+	temp_w.reserve(vel_resolution);
+	temp_p.reserve(vel_resolution);
+	max_process_n.reserve(vel_resolution);
+	rank_trajectory.reserve(vel_resolution);
+	float delta_vel_dif=temp_v_dif_max/(vel_resolution-1);
+	for(int i=0;i<vel_resolution;i++){
 		temp_vr.push_back(temp_v-temp_v_dif_max/2+i*delta_vel_dif);
 		temp_vl.push_back(temp_v+temp_v_dif_max/2-i*delta_vel_dif);
 		temp_w.push_back( (temp_vr[i]-temp_vl[i])/(2*d) );
@@ -38,7 +38,8 @@ grid_class::grid_class()
 			temp_p.push_back(0);
 		}
 		delta_theta.push_back(R/temp_p[i]);
-		max_process_n.push_back((int)(2*M_PI/delta_theta[i]));
+//		max_process_n.push_back((int)(2*M_PI/delta_theta[i]));
+		max_process_n.push_back((int)(M_PI/delta_theta[i]));
 	}
 //set parameter of collision avoidance
 	int n_circle_size=2*(int)( 2*(R+d_r)/grid_cell_size / 2 ) + ( (int)(2*(R+d_r)/grid_cell_size) / 2 ) % 2; 
@@ -51,7 +52,7 @@ grid_class::grid_class()
 			(int)( 2*(temp_x)/grid_cell_size / 2 ) + ( (int)(2*(temp_x)/grid_cell_size)  ) % 2 );
 	}
 //debug
-	for(int i=0;i<vel_patern;i++){
+	for(int i=0;i<vel_resolution;i++){
 		std::cout<<"vr,vl,w,p,dtheta,:"<<temp_vr[i]<<","<<temp_vl[i]<<","<<temp_w[i]<<","<<temp_p[i]<<","<<delta_theta[i]<<","<<max_process_n[i]<<"\n";
 	}
 	std::cout<<"R+d_r,int(R+d_r),Sc:"<<R+d_r<<","<<n_circle_size<<","<<grid_cell_size<<"\n";
@@ -156,8 +157,6 @@ void grid_class::select_best_trajectory(void){
 				xr=0;
 				yr=j*R;
 			}
-//			if(i==7)
-//				std::cout<<"max_process_n[i]:j::"<<max_process_n[i]<<","<<j<<"\n";
 			transport_robot_to_gridn(xr,yr,nx,ny);
 			if( is_obstacle(nx,ny) ){
 				LOOP_OUT=true;
@@ -171,7 +170,7 @@ void grid_class::select_best_trajectory(void){
 	float good_trajectory_value=0;
 	int good_trajectory_num=0;
 	float evaluation_formula;
-	for(int i=0;i<vel_patern;i++){
+	for(int i=0;i<vel_resolution;i++){
 		evaluation_formula=rank_trajectory[i];
 		std::cout<<"trajectory["<<i<<"]:"<<evaluation_formula<<"\n";
 
@@ -219,8 +218,7 @@ void grid_class::draw_best_trajectory(const int& num){
 	double xr=0;
 	double yr=0;
 	double theta=0;
-	int j_max=15;//test param
-	for(int j=0;j<j_max && (j<max_process_n[num] || num==temp_p.size()/2) ;j++,theta+=good_delta_theta){
+	for(int j=0;j<rank_trajectory[num] ;j++,theta+=good_delta_theta){
 		if(good_w>0){
 			xr=good_p*(cos(good_delta_theta*j)-1);
 			yr=good_p*sin(good_delta_theta*j);
@@ -234,7 +232,7 @@ void grid_class::draw_best_trajectory(const int& num){
 			yr=j*R;
 		}
 		transport_robot_to_gridn(xr,yr,nx,ny);
-		if(j>0&&nx_1!=nx&&ny_1!=ny){
+		if(j>0&&( (nx_1!=nx&&ny_1!=ny)||num==vel_resolution/2 ) ){
 			cv::line(grid_map_view, cv::Point(nx_1, ny_1), cv::Point(nx, ny), cv::Scalar(0,255,255), 1, 4);	
 		}
 		nx_1=nx;
@@ -257,8 +255,6 @@ void grid_class::draw_all_trajectory(void){
 		ny_1=0;
 		nx=0;
 		ny=0;
-//		std::cout<<"i,(int)(2*M_PI/delta_theta[i]):"<<i<<","<<(int)(2*M_PI/delta_theta[i])<<"\n";
-//		std::cout<<"i:"<<i<<"\n";
 		for(/*int j=0*/;j<j_max && (j<max_process_n[i] || i==temp_p.size()/2) ;j++,theta+=delta_theta[i]){
 			if(temp_w[i]>0){
 				xr=temp_p[i]*(cos(delta_theta[i]*j)-1);
@@ -269,19 +265,15 @@ void grid_class::draw_all_trajectory(void){
 				yr=temp_p[i]*sin(delta_theta[i]*j);
 			}
 			else{
-//				std::cout<<"else in i:"<<i<<"\n";
 				xr=0;
 				yr=j*R;
 			}
-//			std::cout<<"-j,(x,y):"<<j<<",("<<xr<<","<<yr<<")\n";
 
 			transport_robot_to_gridn(xr,yr,nx,ny);
 			if( is_obstacle(nx,ny) ){
-//				std::cout<<"i,j:break::"<<i<<","<<j<<"\n";
 				break;
 			}
 			else{
-//				std::cout<<"draw line\n";
 				if(nx_1!=nx&&ny_1!=ny)
 					cv::line(grid_map_view, cv::Point(nx_1, ny_1), cv::Point(nx, ny), cv::Scalar(0,255,255), 1, 4);	
 			}
@@ -317,11 +309,17 @@ void grid_class::publish_grid_map_view(void){
 
 	float robot_r=R;
 	int robot_cell_size=(int)(robot_r/grid_cell_size);
+//	int temp;
+//	transport_gridx_to_gridn(robot_r,robot_r,robot_cell_size,temp);
 	for(int h=grid_resolution/2-robot_cell_size;h<grid_resolution/2+robot_cell_size;h++){
 		for(int w=grid_resolution/2-robot_cell_size;w<grid_resolution/2+robot_cell_size;w++){
 			grid_map_view.at<cv::Vec3b>(h,w)[2]=255;			
 		}
 	}
+	
+	grid_map_view.at<cv::Vec3b>(grid_resolution/2,grid_resolution/2)[0]=255;
+	grid_map_view.at<cv::Vec3b>(grid_resolution/2,grid_resolution/2)[2]=255;
+	grid_map_view.at<cv::Vec3b>(grid_resolution/2,grid_resolution/2)[1]=255;
 
 	cv_bridge::CvImagePtr publish_cvimage(new cv_bridge::CvImage);
 	publish_cvimage->encoding=sensor_msgs::image_encodings::BGR8;
@@ -333,6 +331,8 @@ void grid_class::publish_binary_grid_map_view(void){
 
 	float robot_r=R;
 	int robot_cell_size=(int)(robot_r/grid_cell_size);
+//	int temp;
+//	transport_gridx_to_gridn(robot_r,robot_r,robot_cell_size,temp);
 /*
 	for(int h=grid_resolution/2-robot_cell_size/2;h<grid_resolution/2+robot_cell_size/2;h++){
 		for(int w=grid_resolution/2-robot_cell_size/2;w<grid_resolution/2+robot_cell_size/2;w++){
@@ -342,11 +342,11 @@ void grid_class::publish_binary_grid_map_view(void){
 */
 	int cp_grid_map=grid_resolution/2;
 	for(int j=0;j<jn_Rd;j++){
-		for(int i=-in_Rd[j]+grid_resolution/2;i<=in_Rd[j]+grid_resolution/2;i++){
+		for(int i=-in_Rd[j]+cp_grid_map;i<=in_Rd[j]+cp_grid_map;i++){
 			binary_grid_map_view.at<cv::Vec3b>((j-jn_Rd/2)+grid_resolution/2,i)[2]=255;	
 		}
 	} 
-	for(int h=grid_resolution/2-robot_cell_size;h<grid_resolution/2+robot_cell_size;h++){
+	for(int h=cp_grid_map-robot_cell_size;h<cp_grid_map+robot_cell_size;h++){
 		for(int w=grid_resolution/2-robot_cell_size;w<grid_resolution/2+robot_cell_size;w++){
 			binary_grid_map_view.at<cv::Vec3b>(h,w)[0]=255;
 			binary_grid_map_view.at<cv::Vec3b>(h,w)[2]=0;		
