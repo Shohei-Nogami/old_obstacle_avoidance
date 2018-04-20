@@ -101,7 +101,7 @@ public:
 		float ppre_z;
 		for(int i=0;i<cnh;i++){
 			for(int j=0;j<cnw;j++){
-			detector.detect(clp_img[i][j], keypoints);	
+				detector.detect(clp_img[i][j], keypoints);	
 				for(std::vector<cv::KeyPoint>::iterator itk = keypoints.begin()
 		 			itk != keypoints.end(); ++itk){
 				 	ppts.x=(j*width/cnw+itk->pt.x)/ksize;
@@ -130,7 +130,17 @@ public:
 		
 		for(int i=0;i<pts.size();i++){
 			if(sts[i]){
-				
+				points.push_back(pts[i]);
+//				newpoints.push_back(npts[i]);
+				ppt.x=pts[j].x- (float)(//wheel only
+					w_v*sin(-dyaw)*dt/pz[j]-X/pz[j]*w_v*cos(-dyaw)*dt
+					-(f+pow(X,2.0)/f)*dyaw
+					);
+
+				ppt.y=pts[j].y-(float)(
+						-(Y/pz[j]*w_v*cos(-dyaw)*dt)
+						-(X*Y*dyaw/f
+						));
 				
 			}
 		}
