@@ -4,18 +4,18 @@ odometry_class::odometry_class()
 	:first_process_flag(true),first_delta_process_flag(true)
 	,dx(0),dy(0),dz(0),droll(0),dpitch(0),dyaw(0)
 {
-	
+
 }
 bool odometry_class::is_cur_odometry(void){
 	if(first_process_flag)
 		return false;
-	else 
+	else
 		return true;
 }
 bool odometry_class::is_delta_odometry(void){
 	if(first_delta_process_flag)
 		return false;
-	else 
+	else
 		return true;
 }
 void odometry_class::turn_first_process_flag(void){
@@ -61,7 +61,9 @@ void odometry_class::get_delta_odometry(double& return_dx,double& return_dz,doub
 }
 odometry_class::~odometry_class(){
 }
-
+double& odometry_class::get_delta_yaw(void){
+	return dyaw;
+}
 void odometry_class::set_pre_odometry(void){
 	pre_position_x=position_x;
 	pre_position_y=position_y;
@@ -80,7 +82,7 @@ void odometry_class::set_delta_orientetion(void){
 	droll=roll-pre_roll;
 	dpitch=pitch-pre_pitch;
 }
-void odometry_class::define_variable(void){			
+void odometry_class::define_variable(void){
 	pub=nh_pub.advertise<nav_msgs::Odometry>("odometry",1);
 	nh_sub.setCallbackQueue(&queue);
 	sub=nh_sub.subscribe("/zed/odom",1,&odometry_class::odometry_callback,this);
@@ -112,7 +114,7 @@ void odometry_class::odometry_callback(const nav_msgs::Odometry::ConstPtr& msg){
 
 	position_z = ( sin(roll)*sin(yaw) - cos(roll)*sin(pitch)*cos(yaw) )*msg->pose.pose.position.x
 	+ ( sin(roll)*cos(yaw) + cos(roll)*sin(pitch)*sin(yaw) )*msg->pose.pose.position.y;
-	+ ( cos(roll)*cos(pitch) )*msg->pose.pose.position.z;	
+	+ ( cos(roll)*cos(pitch) )*msg->pose.pose.position.z;
 }
 void odometry_class::set_pre_delta_odometry(void){
 	pre_dx=dx;
@@ -197,6 +199,3 @@ int main(int argc,char **argv){
 	std::cout<<"finish\n";
 	return 0;
 }
-
-
-

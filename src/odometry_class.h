@@ -48,10 +48,11 @@ class odometry_class{
 		void set_delta_position(void);
 		bool pose_detection(void);
 		void set_delta_odometry(void);//<-use
+		double& get_delta_yaw(void);
 
 //		virtual void publish_debug_image(void);
 
-		
+
 /*
 	void ImageProcesser::wheelodom_callback(const obst_avoid::wheel_msg::ConstPtr& msg){
 		vr=msg->vel_r;
