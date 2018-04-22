@@ -52,7 +52,7 @@ public:
 	virtual ~culculate_optical_flow();
 	void set_gray_images(const cv::Mat& pre_img,const cv::Mat& cur_img);
 	void set_clip_images(const int& nh=cnh,const int& nw=cnw);
-  bool obtain_feature_points(const cv::Mat& pre_image,const int& nh=cnh,const int& nw=cnw);
+  bool obtain_feature_points(const int& nh=cnh,const int& nw=cnw);
 	void culculating_observed_opticalflow(const int& window_size=13);
   void culculating_moving_objects_opticalflow(const cv::Mat& cur_image);
 

@@ -2,6 +2,7 @@
 #include"depth_image_class.h"
 #include"odometry_class.h"
 #include"wheel_odometry_class.h"
+#include"time_class.h"
 
 culculate_optical_flow::culculate_optical_flow()
   :point_size(max_points*2)
@@ -51,7 +52,7 @@ void culculate_optical_flow::set_clip_images(const int& nh=cnh,const int& nw=cnw
     }
   }
 }
-bool culculate_optical_flow::obtain_feature_points(const cv::Mat& pre_image,const int& nh=cnh,const int& nw=cnw){
+bool culculate_optical_flow::obtain_feature_points(const int& nh=cnh,const int& nw=cnw){
   //nh=nw=16 -> fp.size:987
   int clp_max_points=max_points/(nh*nw);
   auto detector = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
@@ -214,8 +215,22 @@ void culculate_optical_flow::cvArrow(cv::Mat* img, cv::Point2i pt1, cv::Point2i 
 
 int main(int argc,char **argv){
 	ros::init(argc,argv,"culculating_opticalflow_class_test");
-  image_class img;
-	depth_image_class depth_img;
+  image_class img_cls;
+	depth_image_class depth_img_cls;
+  odometry_class odm_cls;
+  wheel_odometry_class wodm_cls;
+  time_class time_cls;
+  culculate_optical_flow cul_optflw;
 
-
+  while(ros::ok()){
+    img_cls.set_image();
+    depth_img_cls.set_image();
+    time_cls.set_time();
+    odm_cls.set_odometry();
+    odm_cls.set_delta_odometry();
+    wodm_cls.set_delta_odometry(time_cls.get_delta_time());
+    cul_optflw.set_gray_images(img_cls.get_pre_image_by_ref(),img_cls.get_cur_image_by_ref());
+    cul_optflw.set_clip_images(/*default*/);
+    cul_optflw.obtain_feature_points();
+  }
 }
