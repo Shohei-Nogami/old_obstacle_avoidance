@@ -15,5 +15,8 @@ class time_class{
 		void set_cur_time(void);
 		void set_pre_time(void);
 		void set_delta_time(void);
-		void get_delta_time(double& dt);
+		// void get_delta_time(double& dt);
+		double& get_delta_time(void);
+		void set_time(void);
+
 };
