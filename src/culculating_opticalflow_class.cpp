@@ -108,10 +108,11 @@ void culculate_optical_flow::culculating_observed_opticalflow(const int& window_
   cv::calcOpticalFlowPyrLK(PreLgray,Lgray, pts, npts, sts, ers, cv::Size(window_size,window_size), 3,cvTermCriteria (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 30, 0.05), 1);
 
 }
-void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Mat& cur_image){//+V,Ω
+void culculate_optical_flow::culculating_moving_objects_opticalflow(const double& w_v,const double& dyaw,const double& dt){//+V,Ω
   float pcur_z;
   cv::Point2i ppt;
   cv::Point3f dX_element;
+	float X,Y;
 
   for(int i=0;i<pts.size();i++){
     if(sts[i]){
@@ -120,12 +121,13 @@ void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Ma
           npts[i].x
           );
       if(!std::isnan(pcur_z)&&!std::isinf(pcur_z)&&pcur_z>=0.5){
-
-  //画像ヤコビアンではなく並進と回転行列で計算
-       ppt.x=pts[j].x- (float)(//wheel only
-        w_v*sin(-dyaw)*dt/pz[j]-X/pz[j]*w_v*cos(-dyaw)*dt
-        -(f+pow(X,2.0)/f)*dyaw
-        );
+        X=(float)(pts[j].x-width/2.0);//-width;
+    		Y=(float)(pts[j].y-height/2.0);//-height;
+        //画像ヤコビアンではなく並進と回転行列で計算
+        ppt.x=pts[j].x- (float)(//wheel only
+          w_v*sin(-dyaw)*dt/pz[j]-X/pz[j]*w_v*cos(-dyaw)*dt
+          -(f+pow(X,2.0)/f)*dyaw
+          );
 
       ppt.y=pts[j].y-(float)(
           -(Y/pz[j]*w_v*cos(-dyaw)*dt)
@@ -231,6 +233,12 @@ int main(int argc,char **argv){
     wodm_cls.set_delta_odometry(time_cls.get_delta_time());
     cul_optflw.set_gray_images(img_cls.get_pre_image_by_ref(),img_cls.get_cur_image_by_ref());
     cul_optflw.set_clip_images(/*default*/);
-    cul_optflw.obtain_feature_points();
+    cul_optflw.obtain_feature_points(/*default*/);
+    cul_optflw.culculating_observed_opticalflow(/*default*/);
+    cul_optflw.culculating_moving_objects_opticalflow(wodm_cls.get_wheel_velocity(),odm_cls.get_delta_yaw());
+    cul_optflw.publish_flow_image(img_cls.get_cur_image_by_ref());
+    img.publish_debug_image(cul_optflw.get_view_image());
+    cul_optflw.clear_vector();
   }
+  return 0;
 }

@@ -16,6 +16,7 @@ class culculate_optical_flow
 
 	const int width=672;
 	const int height=376;
+  const float f=350.505;
 //--特徴点抽出
 	const int max_points=1200;//720;//800;//500
 	int point_size;
@@ -54,7 +55,7 @@ public:
 	void set_clip_images(const int& nh=cnh,const int& nw=cnw);
   bool obtain_feature_points(const int& nh=cnh,const int& nw=cnw);
 	void culculating_observed_opticalflow(const int& window_size=13);
-  void culculating_moving_objects_opticalflow(const cv::Mat& cur_image);
+  void culculating_moving_objects_opticalflow(const double& w_v,const double& dyaw,const double& dt);
 
 	void publish_flow_image(const cv::Mat& cur_image);
   void clear_vector(void);
