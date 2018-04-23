@@ -41,7 +41,7 @@ class image_class{
 		ros::CallbackQueue queue;
 		cv_bridge::CvImagePtr cvbridge_image;
 		
-		virtual void set_pre_image(void);
+		void set_pre_image(void);
 		virtual void image_callback(const sensor_msgs::ImageConstPtr& msg);
 };
 

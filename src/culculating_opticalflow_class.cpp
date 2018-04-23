@@ -48,11 +48,14 @@ void culculate_optical_flow::set_clip_images(void){
 //bool culculate_optical_flow::obtain_feature_points(const cv::Mat& cur_depth_image,const int& nh=cnh,const int& nw=cnw){
 bool culculate_optical_flow::obtain_feature_points(const cv::Mat& pre_depth_image){
   //nh=nw=16 -> fp.size:987
-  int clp_max_points=max_points/(cnh*cnw);
+  int clp_max_points=max_points/(cnh*cnw)*4;
   auto detector = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
   cv::Point2i ppts;
   float ppre_z;
-  for(int i=0;i<cnh;i++){
+	float y;
+	const float y_th=0.1;
+	//METHOD1
+  for(int i=0;i<cnh-cnh/5;i++){
     for(int j=0;j<cnw;j++){
       detector.detect(clp_img[i][j], keypoints);
       for(std::vector<cv::KeyPoint>::iterator itk = keypoints.begin();
@@ -63,38 +66,74 @@ bool culculate_optical_flow::obtain_feature_points(const cv::Mat& pre_depth_imag
           ppts.y,
           ppts.x
           );
-        if(!std::isnan(ppre_z)&&!std::isinf(ppre_z)&&ppre_z>=0.5){
-          pts.push_back(ppts);
-          pre_z.push_back(ppre_z);
+//        if(!std::isnan(ppre_z)&&!std::isinf(ppre_z)&&ppre_z>=0.5){
+        if(ppre_z>=0.5){
+					y=(height/2-i)*ppre_z/f;
+					if(y+0.23>y_th&&y+0.23<=3.0){
+		        pts.push_back(ppts);
+		        pre_z.push_back(ppre_z);
+					}
         }//end if
       }//end for
     }//end for
   }//end for
-  /*
-  for(int i=0;i<nh;i++){
-    for(int j=0;j<nw;j++){
+  //METHOD2
+	/*
+	int count;
+	const int COUNT_MAX=30;
+  for(int i=0;i<cnh-cnh/5;i++){
+    for(int j=0;j<cnw;j++){
+			count=0;
       detector.detect(clp_img[i][j], keypoints);
-      for(std::vector<cv::KeyPoint>::iterator itk = keypoints.begin()
+      for(std::vector<cv::KeyPoint>::iterator itk = keypoints.begin();
         itk != keypoints.end(); ++itk){
-        ppts.x=(j*width/nw+itk->pt.x)/ksize;
-        ppts.y=i*height/nh+itk->pt.y/ksize;
-        ppre_z=filted_pre_image.at<float>(
+        ppts.x=j*width/cnw+itk->pt.x;
+        ppts.y=i*height/cnh+itk->pt.y;
+        ppre_z=pre_depth_image.at<float>(
           ppts.y,
           ppts.x
           );
         if(ppre_z>=0.5){
-          pts.push_back(ppts);
-          pre_z.push_back(ppre_z);
-          break;
+					y=(height/2-i)*ppre_z/f;
+					if(y+0.23>y_th&&y+0.23<=3.0){
+		        pts.push_back(ppts);
+		        pre_z.push_back(ppre_z);
+						count++;
+		        if(count>=COUNT_MAX){
+							break;
+						}
+					}
         }//end if
       }//end for
     }//end for
   }//end for
-  */
+	*/
+  ///METHOD 3
+	/*
+  for(int i=0;i<height;i++){
+    for(int j=0;j<width;j++){
+      ppts.x=i;
+      ppts.y=j;
+      ppre_z=pre_depth_image.at<float>(
+        ppts.y,
+        ppts.x
+        );
+
+      if(ppre_z>=0.5){
+				y=(height/2-i)*ppre_z/f;
+				if(y+0.23>y_th&&y+0.23<=3.0){
+	        pts.push_back(ppts);
+	        pre_z.push_back(ppre_z);
+				}
+      }//end if
+    }//end for
+  }//end for
+	*/
 
   if(!pts.size()){
     return false;
   }
+	std::cout<<"pts.size():"<<pts.size()<<"\n";
   return true;
 }
 void culculate_optical_flow::culculating_observed_opticalflow(void){
@@ -107,32 +146,37 @@ void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Ma
   cv::Point2i ppt;
   cv::Point3f dX_element;
 	float X,Y;
+//	std::cout<<"w_v,dyaw,dt):("<<w_v<<","<<dyaw<<","<<dt<<")\n";
 
   for(int i=0;i<pts.size();i++){
     if(sts[i]){
       pcur_z=cur_depth_image.at<float>(
-          npts[i].y,
-          npts[i].x
+          (int)npts[i].y,
+          (int)npts[i].x
           );
       if(!std::isnan(pcur_z)&&!std::isinf(pcur_z)&&pcur_z>=0.5){
         X=(float)(pts[i].x-width/2.0);//-width;
     		Y=(float)(pts[i].y-height/2.0);//-height;
         //画像ヤコビアンではなく並進と回転行列で計算
-/*        ppt.x=pts[j].x- (float)(//wheel only
-          w_v*sin(-dyaw)*dt/pz[j]-X/pz[j]*w_v*cos(-dyaw)*dt
+        ppt.x=pts[i].x- (float)(//wheel only
+          w_v*sin(-dyaw)*dt/pre_z[i]-X/pre_z[i]*w_v*cos(-dyaw)*dt
           -(f+pow(X,2.0)/f)*dyaw
           );
 
-      ppt.y=pts[j].y-(float)(
-          -(Y/pz[j]*w_v*cos(-dyaw)*dt)
+      ppt.y=pts[i].y-(float)(
+          -(Y/pre_z[i]*w_v*cos(-dyaw)*dt)
           -(X*Y*dyaw/f
           ));
-
+//	std::cout<<"pts[i],ppt,npts[i]:"<<pts[i]<<","<<ppt<<","<<npts[i]<<"\n";
       points.push_back(pts[i]);
-      newpoints.push_back(npts[i]-ppt);
+			cv::Point2i newpoints_temp;
+			newpoints_temp.x=(int)(npts[i].x-ppt.x)+pts[i].x;
+			newpoints_temp.y=(int)(npts[i].y-ppt.y)+pts[i].y;
+      newpoints.push_back(newpoints_temp);
+			z.push_back(pre_z[i]);
+			nz.push_back(cur_z[i]);
 
-
-			
+/*			
       dX_element.x=dx;
       dX_element.y=dy;
       dX_element.z=dz;
@@ -145,7 +189,7 @@ void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Ma
 }
 void culculate_optical_flow::publish_flow_image(const cv::Mat& cur_image){
   view_image=cur_image.clone();
-  for(int i=0;i<pts.size();i++){
+  for(int i=0;i<points.size();i++){
     cvArrow(&view_image,
     cv::Point( (int)(points[i].x),
       (int)(points[i].y) ),
@@ -238,16 +282,18 @@ int main(int argc,char **argv){
 			std::cout<<"8\n";
 		  cul_optflw.set_clip_images(/*default*/);
 			std::cout<<"9\n";
-		  cul_optflw.obtain_feature_points(depth_img_cls.get_pre_image_by_ref());
-			std::cout<<"10\n";
-		  cul_optflw.culculating_observed_opticalflow();
-			std::cout<<"11\n";
-		  cul_optflw.culculating_moving_objects_opticalflow(depth_img_cls.get_pre_image_by_ref(),wodm_cls.get_wheel_velocity(),odm_cls.get_delta_yaw(),time_cls.get_delta_time());
-			std::cout<<"12\n";
-		  cul_optflw.publish_flow_image(img_cls.get_cur_image_by_ref());
-			std::cout<<"13\n";
-		  img_cls.publish_debug_image(cul_optflw.get_view_image());
-			std::cout<<"14\n";
+		  if(cul_optflw.obtain_feature_points(depth_img_cls.get_pre_image_by_ref()) ){
+				std::cout<<"10\n";
+				cul_optflw.culculating_observed_opticalflow();
+				std::cout<<"11\n";
+				cul_optflw.culculating_moving_objects_opticalflow(depth_img_cls.get_pre_image_by_ref(),wodm_cls.get_wheel_velocity(),odm_cls.get_delta_yaw(),time_cls.get_delta_time());
+				std::cout<<"12\n";
+				cul_optflw.publish_flow_image(img_cls.get_cur_image_by_ref());
+				std::cout<<"13\n";
+				img_cls.publish_debug_image(cul_optflw.get_view_image());
+				std::cout<<"14\n";
+				std::cout<<"dt:"<<time_cls.get_delta_time()<<"\n";
+			}
 		}
     cul_optflw.clear_vector();
   }

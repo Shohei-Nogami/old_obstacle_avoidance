@@ -20,8 +20,8 @@ class culculate_optical_flow
 //--特徴点抽出
 	const int max_points=1200;//720;//800;//500
 	int point_size;
-	static const int cnh=10;
-	static const int cnw=18;
+	static const int cnh=9;//10;//cnh=cnw=16 -> fp.size:987
+	static const int cnw=14;//18;
 	const int window_size=13;
 	// int clp_max_points;//=max_points/(cnh*cnw);
 	//int clp_point_size;//=(int)(clp_max_points*10);

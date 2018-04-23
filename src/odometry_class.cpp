@@ -31,10 +31,10 @@ void odometry_class::subscribe_odometry(void){
 //		void set_cur_image(void);
 void odometry_class::set_odometry(void){
 	if(is_cur_odometry()){
-		set_pre_odometry();
-		turn_first_process_flag();
+		set_pre_odometry();	
 	}
 	subscribe_odometry();
+	turn_first_process_flag();
 }
 void odometry_class::get_cur_odometry(double& x,double& y,double& z,double& r,double& p,double& yw){
 	x=position_x;
@@ -186,11 +186,11 @@ bool odometry_class::pose_detection()
 }
 void odometry_class::set_delta_odometry(void){
 	if(is_delta_odometry()){
-		set_pre_delta_odometry();
-		turn_first_delta_process_flag();
+		set_pre_delta_odometry();		
 	}
 	set_delta_orientetion();
 	set_delta_position();
+	turn_first_delta_process_flag();
 }
 /*
 int main(int argc,char **argv){

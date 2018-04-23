@@ -16,9 +16,11 @@ depth_image_class::~depth_image_class(){
 	filted_pre_image.release();
 }
 
+/*
 void depth_image_class::set_pre_image(void){
 	filted_pre_image=filted_cur_image.clone();
 }
+*/
 
 void depth_image_class::define_variable(void){
 	pub=it.advertise("depth_image",1);
