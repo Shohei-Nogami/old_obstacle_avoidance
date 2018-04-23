@@ -27,7 +27,10 @@ class wheel_odometry_class{
 		void get_cur_odometry(double& x,double& z,double& yw);//<-use
 		void get_pre_odometry(double& x,double& z,double& yw);//<-use
 		void get_delta_odometry(double& x,double& z,double& yw);//<-use
+		double& get_wheel_velocity(void);
 		virtual ~wheel_odometry_class();
+		void set_delta_odometry(double& dt);//<-use
+		virtual void define_variable(void);
 
 	protected:
 		ros::NodeHandle nh_pub,nh_sub;
@@ -40,10 +43,8 @@ class wheel_odometry_class{
 		virtual void set_pre_odometry(void);
 		virtual void set_delta_position(double& dt);
 		virtual void set_delta_orientetion(double& dt);
-		virtual void define_variable(void);
 		virtual void wheel_odometry_callback(const obst_avoid::wheel_msg::ConstPtr& msg);
 		void set_pre_delta_odometry(void);
-		void set_delta_odometry(double& dt);//<-use
 
 
 };

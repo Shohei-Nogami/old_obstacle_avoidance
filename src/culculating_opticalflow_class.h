@@ -20,12 +20,13 @@ class culculate_optical_flow
 //--特徴点抽出
 	const int max_points=1200;//720;//800;//500
 	int point_size;
-	const int cnh=10;
-	const int cnw=18;
+	static const int cnh=10;
+	static const int cnw=18;
+	const int window_size=13;
 	// int clp_max_points;//=max_points/(cnh*cnw);
-	int clp_point_size;//=(int)(clp_max_points*10);
-	int threshold_fp;//=(int)(max_points*0.8);
-	const int th_clpimg;//=(int)(clp_max_points*0.8);
+	//int clp_point_size;//=(int)(clp_max_points*10);
+	//int threshold_fp;//=(int)(max_points*0.8);
+	//const int th_clpimg;//=(int)(clp_max_points*0.8);
 	std::vector<cv::Point2i> cp[cnh][cnw];
 	cv::Mat clp_img[cnh][cnw];
 
@@ -52,10 +53,12 @@ public:
 	culculate_optical_flow();
 	virtual ~culculate_optical_flow();
 	void set_gray_images(const cv::Mat& pre_img,const cv::Mat& cur_img);
-	void set_clip_images(const int& nh=cnh,const int& nw=cnw);
-  bool obtain_feature_points(const int& nh=cnh,const int& nw=cnw);
-	void culculating_observed_opticalflow(const int& window_size=13);
-  void culculating_moving_objects_opticalflow(const double& w_v,const double& dyaw,const double& dt);
+//	void set_clip_images(const int& nh=cnh,const int& nw=cnw);
+	void set_clip_images(void);
+//  bool obtain_feature_points(const cv::Mat& cur_depth_image,const int& nh=cnh,const int& nw=cnw);
+  bool obtain_feature_points(const cv::Mat& pre_depth_image);
+	void culculating_observed_opticalflow(void);
+  void culculating_moving_objects_opticalflow(const cv::Mat& cur_depth_image,const double& w_v,const double& dyaw,const double& dt);
 
 	void publish_flow_image(const cv::Mat& cur_image);
   void clear_vector(void);

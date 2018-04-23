@@ -129,7 +129,7 @@ void depth_image_class::filtering_depth_image(void){
 		}
 	}
 }
-
+/*
 int main(int argc,char **argv){
 	ros::init(argc,argv,"depth_image_class_test");
 	depth_image_class depth_image;
@@ -147,6 +147,6 @@ int main(int argc,char **argv){
 
 	return 0;
 }
-
+*/
 
 

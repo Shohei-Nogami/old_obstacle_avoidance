@@ -40,12 +40,12 @@ private:
 	ros::Publisher pc_pub;
 	ros::Publisher pc_pub2;
 
-  os::NodeHandle nh_im_pub;
+  ros::NodeHandle nh_im_pub;
   image_transport::Publisher im_pub;
   image_transport::ImageTransport it_pub;
 
-	uint32_t height;
-	uint32_t width;
+//	uint32_t height;
+//	uint32_t width;
 	std::vector<sensor_msgs::PointField> fields;
 	bool is_bigendian;
 	uint32_t  point_step;
@@ -67,19 +67,21 @@ public:
     :it_pub(nh_im_pub)
 	{
 		apc.setCallbackQueue(&pc_queue);
-		pc_sub = apc.subscribe("/camera/depth_registered/points",1,&AnalysisPointCloud::pointcloud_callback,this);
+//		pc_sub = apc.subscribe("/camera/depth_registered/points",1,&AnalysisPointCloud::pointcloud_callback,this);
 		apc2.setCallbackQueue(&pc_queue2);
-		pc_sub2 = apc2.subscribe("/camera/depth_registered/points",1,&AnalysisPointCloud::processing_pc,this);
+		pc_sub2 = apc2.subscribe("/zed/point_cloud/cloud_registered",1,&AnalysisPointCloud::processing_pc,this);
 		pc_pub = apcp.advertise<sensor_msgs::PointCloud2>("edit_cloud", 1);
 		pc_pub2 = apcp.advertise<sensor_msgs::PointCloud2>("edit_cloud2", 1);
     im_pub=it_pub.advertise("transed_image",1);
 
-    cv::Mat m = cv::Mat::zeros(cv::Size(width/ksize,height/ksize), CV_8UC3);
+    cv::Mat m = cv::Mat::zeros(cv::Size(width,height), CV_8UC3);
     transed_mat_temp=m.clone();
 	};
 	~AnalysisPointCloud(){};
-	void pointcloud_callback(const sensor_msgs::PointCloud2::ConstPtr& pc_msg);
+	//void pointcloud_callback(const sensor_msgs::PointCloud2::ConstPtr& pc_msg);
 	void processing_pc(const sensor_msgs::PointCloud2::ConstPtr& ppc_msg);
+	cv::Mat& get_transed_image(void);
+	void publish_image(cv::Mat& req_image);
 };
 
 
@@ -99,17 +101,26 @@ void AnalysisPointCloud::processing_pc(const sensor_msgs::PointCloud2::ConstPtr&
 	vgf.setLeafSize (0.1f, 0.1f, 0.1f);
 	vgf.filter (*filtered_cloud);
 */
-  std::std::cout << "test_cloud->points.size(),h,ps/h:" << test_cloud->points.size()<<","<<height<<","<<test_cloud->points.size()/height<<","<<'\n';
-	for(int i=0;i<test_cloud->points.size();i++)
+  std::cout << "test_cloud->points.size(),h,ps/h:" << test_cloud.points.size()<<","<<height<<","<<test_cloud.points.size()/height<<","<<'\n';
+	for(int i=0;i<test_cloud.points.size();i++)
 	{
 		// test_cloud->points[i].x+=1.0;
-    transed_mat_temp.at<uint8_t>(i/width,i%width)[0]=test_cloud->points[i].b;
-    transed_mat_temp.at<uint8_t>(i/width,i%width)[1]=test_cloud->points[i].g;
-    transed_mat_temp.at<uint8_t>(i/width,i%width)[2]=test_cloud->points[i].r;
+		//		transed_mat_temp.at<cv::Vec3b>(0,0)[0]=test_cloud.points[i].b;
+    transed_mat_temp.at<cv::Vec3b>(i/width,i%width)[0]= test_cloud.points[i].b;
+    transed_mat_temp.at<cv::Vec3b>(i/width,i%width)[1]=test_cloud.points[i].g;
+    transed_mat_temp.at<cv::Vec3b>(i/width,i%width)[2]=test_cloud.points[i].r;
     // transed_mat_temp.at<uint8_t>(i/width,i%width)[0]=test_cloud.points[i].b;
     // transed_mat_temp.at<uint8_t>(i/width,i%width)[1]=test_cloud.points[i].g;
     // transed_mat_temp.at<uint8_t>(i/width,i%width)[2]=test_cloud.points[i].r;
-
+		/*if(std::isnan(test_cloud.points[i].z)||std::isinf(test_cloud.points[i].z)){
+			std::cout<<"(z,r,g,b,a):("<<+test_cloud.points[i].z
+				<<","<<+test_cloud.points[i].r
+				<<","<<+test_cloud.points[i].g
+				<<","<<+test_cloud.points[i].b
+				<<","<<+test_cloud.points[i].a
+				<<"\n";
+		}
+		*/
 		//std::cout << test_cloud.points[i].x << ", " << test_cloud.points[i].y << ", " << test_cloud.points[i].z << std::endl;
 	//", " << +test_cloud.points[i].r << ", " << +test_cloud.points[i].g << ", " << +test_cloud.points[i].b << std::endl;
 		if(!ros::ok())
@@ -125,6 +136,10 @@ void AnalysisPointCloud::processing_pc(const sensor_msgs::PointCloud2::ConstPtr&
 	std::cout << "publish_cloud" << std::endl;
 
 }
+cv::Mat& AnalysisPointCloud::get_transed_image(void){
+	return transed_mat_temp;
+}
+
 void AnalysisPointCloud::publish_image(cv::Mat& req_image){
   cv_bridge::CvImagePtr publish_cvimage(new cv_bridge::CvImage);
 	publish_cvimage->encoding=sensor_msgs::image_encodings::BGR8;
@@ -133,6 +148,7 @@ void AnalysisPointCloud::publish_image(cv::Mat& req_image){
 }
 
 //使用しない関数のcallback_func
+/*
 void AnalysisPointCloud::pointcloud_callback(const sensor_msgs::PointCloud2::ConstPtr& pc_msg)
 {
 	height = pc_msg -> height;
@@ -168,16 +184,17 @@ void AnalysisPointCloud::pointcloud_callback(const sensor_msgs::PointCloud2::Con
 			break;
 	}
 }
-
+*/
 
 int main(int argc, char** argv)
 {
-	ros::init(argc, argv, "analysis_point_cloud");
+	ros::init(argc, argv, "point_cloud_test");
 	AnalysisPointCloud apc;
 	while(ros::ok()){
 		//apc.pc_queue.callOne(ros::WallDuration(1));//使用しない関数
 		std::cout << "0" << std::endl;
-		apc.pc_queue2.callOne(ros::WallDuration(10));
+		apc.pc_queue2.callOne(ros::WallDuration(1));
+		apc.publish_image(apc.get_transed_image());
 	}
 	return 0;
 }

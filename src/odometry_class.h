@@ -33,6 +33,9 @@ class odometry_class{
 		void get_pre_odometry(double& x,double& y,double& z,double& r,double& p,double& yw);//<-use
 		void get_delta_odometry(double& return_dx,double& return_dz,double& return_dyaw);//<-use
 		virtual ~odometry_class();
+		double& get_delta_yaw(void);
+		void set_delta_odometry(void);//<-use
+		virtual void define_variable(void);
 
 	protected:
 		ros::NodeHandle nh_pub,nh_sub;
@@ -42,13 +45,11 @@ class odometry_class{
 
 		virtual void set_pre_odometry(void);
 		virtual void set_delta_orientetion(void);
-		virtual void define_variable(void);
 		virtual void odometry_callback(const nav_msgs::Odometry::ConstPtr& msg);
 		void set_pre_delta_odometry(void);
 		void set_delta_position(void);
 		bool pose_detection(void);
-		void set_delta_odometry(void);//<-use
-		double& get_delta_yaw(void);
+
 
 //		virtual void publish_debug_image(void);
 

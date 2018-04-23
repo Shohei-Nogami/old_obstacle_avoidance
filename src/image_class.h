@@ -21,6 +21,7 @@ class image_class{
 
 		image_class();
 		bool is_cur_image(void);
+		bool is_pre_image(void);
 		void subscribe_image(void);
 		void set_cur_image(void);
 		void set_image(void);
@@ -28,6 +29,8 @@ class image_class{
 		cv::Mat& get_cur_image_by_ref(void);
 		cv::Mat& get_pre_image_by_ref(void);
 		virtual ~image_class();
+		virtual void publish_debug_image(cv::Mat& temp_image);
+		virtual void define_variable(void);
 
 	protected:
 		bool PROCESS_ONCE;
@@ -39,9 +42,7 @@ class image_class{
 		cv_bridge::CvImagePtr cvbridge_image;
 		
 		virtual void set_pre_image(void);
-		virtual void define_variable(void);
 		virtual void image_callback(const sensor_msgs::ImageConstPtr& msg);
-		virtual void publish_debug_image(cv::Mat& temp_image);
 };
 
 #endif 

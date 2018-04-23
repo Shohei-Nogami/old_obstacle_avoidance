@@ -236,20 +236,26 @@ include_directories(
 #add_executable(image_class_test src/image_class.cpp)
 #target_link_libraries(image_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(depth_image_class_test src/depth_image_class.cpp src/image_class.cpp)
-target_link_libraries(depth_image_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#add_executable(depth_image_class_test src/depth_image_class.cpp src/image_class.cpp)
+#target_link_libraries(depth_image_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(odometry_class_test src/odometry_class.cpp )
-target_link_libraries(odometry_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#add_executable(odometry_class_test src/odometry_class.cpp )
+#target_link_libraries(odometry_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(wheel_odometry_class_test src/wheel_odometry_class.cpp )
-target_link_libraries(wheel_odometry_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#add_executable(wheel_odometry_class_test src/wheel_odometry_class.cpp )
+#target_link_libraries(wheel_odometry_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(time_class_test src/time_class.cpp )
-target_link_libraries(time_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#add_executable(time_class_test src/time_class.cpp )
+#target_link_libraries(time_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(grid_class_test src/grid_class.cpp )
 target_link_libraries(grid_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(point_cloud_test src/point_cloud_test.cpp )
+target_link_libraries(point_cloud_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(culculating_opticalflow_class_test src/culculating_opticalflow_class.cpp src/image_class.cpp src/depth_image_class.cpp src/odometry_class.cpp src/wheel_odometry_class.cpp src/time_class.cpp)
+target_link_libraries(culculating_opticalflow_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #add_executable(img_prc src/main.cpp src/img_prc_cls.cpp src/prcs_fnc.cpp src/image_function.cpp src/depth_function.cpp src/odom_function.cpp src/time_function.cpp src/cvArrow_function.cpp src/vector_function.cpp src/debug_function.cpp src/tracking_fp_function.cpp src/prd_prc.cpp src/wheel_control.cpp)
 #target_link_libraries(img_prc ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
@@ -257,8 +263,8 @@ target_link_libraries(grid_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 #add_executable(data_processing_v_and_w src/data_processing_dv_dw.cpp)
 #target_link_libraries(data_processing_v_and_w ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-#add_executable(detect_objects src/detect_objects.cpp)
-#target_link_libraries(detect_objects ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(detect_objects_median src/detect_objects_median.cpp)
+target_link_libraries(detect_objects_median ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(culc_area3d src/culc_area3d.cpp)
 target_link_libraries(culc_area3d ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})

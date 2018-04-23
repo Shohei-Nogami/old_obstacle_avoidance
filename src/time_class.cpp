@@ -29,10 +29,12 @@ void time_class::set_time(void){
 	set_cur_time();
 	set_delta_time();
 }
-
+/*
 int main(int argc,char **argv){
 	ros::init(argc,argv,"time_class_test");
 	time_class time;
 	std::cout<<"finish\n";
 	return 0;
 }
+*/
+

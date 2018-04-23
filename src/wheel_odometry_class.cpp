@@ -40,6 +40,9 @@ void wheel_odometry_class::get_pre_odometry(double& x,double& z,double& yw){//<-
 void wheel_odometry_class::get_delta_odometry(double& x,double& z,double& yw){//<-use
 //on hold
 }
+double& wheel_odometry_class::get_wheel_velocity(void){
+	return v;
+}
 wheel_odometry_class::~wheel_odometry_class(){
 }
 
@@ -84,7 +87,7 @@ void wheel_odometry_class::set_delta_odometry(double& dt){//<-use
 	set_delta_orientetion(dt);
 	set_delta_position(dt);
 }
-
+/*
 int main(int argc,char **argv){
 	ros::init(argc,argv,"wheel_odometry_class_test");
 	wheel_odometry_class wheel_odometry;
@@ -92,5 +95,6 @@ int main(int argc,char **argv){
 	return 0;
 }
 
+*/
 
 

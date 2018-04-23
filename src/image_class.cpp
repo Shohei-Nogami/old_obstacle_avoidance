@@ -3,6 +3,7 @@
 image_class::image_class()
 	:it(nh_pub),PROCESS_ONCE(true)
 {
+	std::cout<<"in image_class constracter\n";
 //		  cur_image.reserve();
 //		  pre_image.reserve();
 //		  debug_image.reserve();
@@ -10,6 +11,9 @@ image_class::image_class()
 }
 bool image_class::is_cur_image(void){
 	return (!cur_image.empty());
+}
+bool image_class::is_pre_image(void){
+	return (!pre_image.empty());
 }
 void image_class::subscribe_image(void){
 	queue.callOne(ros::WallDuration(1));

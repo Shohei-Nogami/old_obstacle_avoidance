@@ -192,10 +192,12 @@ void odometry_class::set_delta_odometry(void){
 	set_delta_orientetion();
 	set_delta_position();
 }
-
+/*
 int main(int argc,char **argv){
 	ros::init(argc,argv,"odometry_class_test");
 	odometry_class odometry;
 	std::cout<<"finish\n";
 	return 0;
 }
+*/
+
