@@ -67,7 +67,7 @@ bool culculate_optical_flow::obtain_feature_points(const cv::Mat& pre_depth_imag
           ppts.x
           );
 //        if(!std::isnan(ppre_z)&&!std::isinf(ppre_z)&&ppre_z>=0.5){
-        if(ppre_z>=0.5){
+        if(ppre_z>=0.5&&!std::isinf(ppre_z)){
 					y=(height/2-i)*ppre_z/f;
 					if(y+0.23>y_th&&y+0.23<=3.0){
 		        pts.push_back(ppts);
@@ -154,7 +154,7 @@ void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Ma
           (int)npts[i].y,
           (int)npts[i].x
           );
-      if(!std::isnan(pcur_z)&&!std::isinf(pcur_z)&&pcur_z>=0.5){
+      if(!std::isinf(pcur_z)&&pcur_z>=0.5){
         X=(float)(pts[i].x-width/2.0);//-width;
     		Y=(float)(pts[i].y-height/2.0);//-height;
         //画像ヤコビアンではなく並進と回転行列で計算
