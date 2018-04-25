@@ -10,6 +10,8 @@
 #include <pcl_ros/point_cloud.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/extract_indices.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/segmentation/extract_clusters.h>
 
 //#include <pcl/visualization/cloud_viewer.h>
 //#include <pcl/io/pcd_io.h>  
@@ -17,7 +19,8 @@
 //#include <iostream>
 class detect_objects{
 	private:
-		ros::NodeHandle nh_pub1,nh_pub2,nh_sub,nh_pubpcl;
+		ros::NodeHandle nh_pub1,nh_pub2,nh_sub;
+		ros::NodeHandle nh_pubpcl,nh_pubpcl2,nh_pubpcl3,nh_pubpcl4,nh_pubpcl5;
 		ros::Subscriber sub;
 		ros::CallbackQueue queue;
 		image_transport::ImageTransport it_pub1,it_pub2;
@@ -41,7 +44,15 @@ class detect_objects{
 		cv::Mat depth_image;
 		
 		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
-  	ros::Publisher pc_pub;
+		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud2;
+		pcl::PointCloud<pcl::PointXYZ>::Ptr voxeled_cloud;
+		pcl::PointCloud<pcl::PointXYZ>::Ptr ground_deleted_cloud;
+//		pcl::PointCloud<pcl::PointXYZRGB>::Ptr Eclusted_cloud;
+  	ros::Publisher pc_pub,pc_pub2,pc_pub3,pc_pub4,pc_pub5;
+		
+		pcl::SACSegmentation<pcl::PointXYZ> seg;
+		pcl::PointIndices::Ptr inliers;// (new pcl::PointIndices);
+		pcl::ModelCoefficients::Ptr coefficients;// (new pcl::ModelCoefficients);
 
 		public:
 			detect_objects();
@@ -52,6 +63,7 @@ class detect_objects{
 			void set_depth_image(void);
 			bool convert_coordinate_xz_nxz(const float x,const float z,int& nx,int& nz);
 			void invert_coordinate_xz_nxz(const int& nx,const int& nz,float& x,float& z);
+			void convet_image_to_pcl(void);
 			void set_DEM_map(void);	
 			void clustering_DEM_elements(void);
 			void clustering_schema(void);

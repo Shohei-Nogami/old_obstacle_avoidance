@@ -3,7 +3,7 @@
 
 
 detect_objects::detect_objects()
-	:it_pub1(nh_pub1),it_pub2(nh_pub2),EXECUTED_CALLBACK(false),cloud(new pcl::PointCloud<pcl::PointXYZ>)
+	:it_pub1(nh_pub1),it_pub2(nh_pub2),EXECUTED_CALLBACK(false),cloud(new pcl::PointCloud<pcl::PointXYZ>),cloud2(new pcl::PointCloud<pcl::PointXYZ>),voxeled_cloud (new pcl::PointCloud<pcl::PointXYZ>),ground_deleted_cloud (new pcl::PointCloud<pcl::PointXYZ>),inliers (new pcl::PointIndices),coefficients(new pcl::ModelCoefficients)//,Eclusted_cloud(new pcl::PointCloud<pcl::PointXYZRGB>)
 {
 	
 	pub1=it_pub1.advertise("detected_objects_image",1);//test string
@@ -16,10 +16,14 @@ detect_objects::detect_objects()
 			dem_element[nz][nx].reserve(width);
 		}
 	}
-  pc_pub = nh_pubpcl.advertise<sensor_msgs::PointCloud2>("edit_cloud", 1);
-  cloud->width  = width;
-  cloud->height = height;
-  cloud->points.resize (cloud->width * cloud->height);
+  pc_pub = nh_pubpcl.advertise<sensor_msgs::PointCloud2>("dem_cloud", 1);
+  pc_pub2 = nh_pubpcl2.advertise<sensor_msgs::PointCloud2>("trans_image_to_cloud", 1);
+  pc_pub3 = nh_pubpcl3.advertise<sensor_msgs::PointCloud2>("vocel_cloud", 1);
+  pc_pub4 = nh_pubpcl4.advertise<sensor_msgs::PointCloud2>("ground_delete_cloud", 1);
+  pc_pub5 = nh_pubpcl5.advertise<sensor_msgs::PointCloud2>("Eclusted_cloud", 1);
+//  cloud->width  = width;
+//  cloud->height = height;
+//  cloud->points.resize (cloud->width * cloud->height);
 
 }
 detect_objects::~detect_objects(){
@@ -62,11 +66,160 @@ bool detect_objects::convert_coordinate_xz_nxz(const float x,const float z,int& 
 	}
 }
 void detect_objects::invert_coordinate_xz_nxz(const int& nx,const int& nz,float& x,float& z){
-	x=(nx-map_size_nx/2)*cell_size;
-	z=(map_size_nz-nz)*cell_size;
+	x=-((float)nx-(float)map_size_nx/2)*cell_size;
+	z=((float)map_size_nz-(float)nz)*cell_size;
 
 }
+void detect_objects::convet_image_to_pcl(void){
+//	std::cout<<"1\n";
+	cloud2->width  = width;
+  cloud2->height = height;
+	
+  cloud2->points.resize (cloud2->width * cloud2->height);
+	const float ground_threshold=0;	
+	float z_temp,x_temp,y_temp;
+	float cam_x=0.12/2;
+	int k=0;
+	//std::cout<<"width,width/2:"<<width<<","<<width/2<<"\n";
+	for(int h=0;h<height;h++){
+		for(int w=0;w<width;w++){
+			z_temp=depth_image.at<float>(h,w);
+			if(z_temp>0.5&&!std::isinf(z_temp)){//
+				y_temp=((float)height/2-(float)h)*z_temp/f;
+				if(y_temp+0.23>ground_threshold&&y_temp+0.23<1.5){
+					x_temp=-( ((float)w-(float)width/2)*z_temp/f-cam_x );
+					cloud2->points[k].x=z_temp;
+					cloud2->points[k].y=x_temp;
+					cloud2->points[k++].z=y_temp;
+				}
+			}
+		}
+	}
+	cloud2->width  = k;
+  cloud2->height = 1;
+  cloud2->points.resize (cloud2->width * cloud2->height);
+	std::cout<<"original size:"<< cloud2->points.size()<<"\n";
+/*
+  sensor_msgs::PointCloud2 edit_cloud;
+  pcl::toROSMsg (*cloud2, edit_cloud);
+	edit_cloud.header.frame_id="/zed_current_frame";
+  pc_pub2.publish(edit_cloud);
+*/
 
+	pcl::VoxelGrid<pcl::PointXYZ> vg;
+	vg.setInputCloud (cloud2);
+	vg.setLeafSize (0.015f, 0.015f, 0.015f);
+	vg.filter (*voxeled_cloud);
+	std::cout<<"voxceled size:"<< voxeled_cloud->points.size()<<"\n";
+
+  sensor_msgs::PointCloud2 edit_cloud3;
+  pcl::toROSMsg (*voxeled_cloud, edit_cloud3);
+	edit_cloud3.header.frame_id="/zed_current_frame";
+  pc_pub3.publish(edit_cloud3);
+
+/*	
+	pcl::SACSegmentation<pcl::PointXYZ> seg;
+//	pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
+//	pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
+	seg.setOptimizeCoefficients (true);
+	//seg.setModelType (pcl::SACMODEL_PLANE);//全平面抽出
+
+	seg.setModelType (pcl::SACMODEL_PERPENDICULAR_PLANE);//ある軸に垂直な平面を抽出
+	seg.setMethodType (pcl::SAC_RANSAC);
+	seg.setMaxIterations (500);//RANSACの繰り返し回数
+	seg.setDistanceThreshold (0.1);//モデルとどのくらい離れていてもいいか???謎
+	seg.setAxis(Eigen::Vector3f (0.0,0.0,1.0));//法線ベクトル
+	seg.setEpsAngle(20.0f * (M_PI/180.0f));//許容出来る平面の傾きラジアン
+
+	seg.setInputCloud (voxeled_cloud);
+*/
+/*	coefficients->values[0]=-0.25;
+	coefficients->values[1]=0;
+	coefficients->values[2]=0;
+	coefficients->values[3]=0.388003;
+*/	
+//	seg.segment (*inliers, *coefficients);
+
+//	ground_deleted_cloud->points.resize(cloud2->points.size());
+
+
+	ground_deleted_cloud->width=voxeled_cloud->points.size();
+  ground_deleted_cloud->height = 1;
+	ground_deleted_cloud->points.resize(ground_deleted_cloud->width*ground_deleted_cloud->height);
+//	ground_deleted_cloud->points.reserve(ground_deleted_cloud->width);
+	
+	for(int k=0;k<voxeled_cloud->points.size();k++){
+//		y_temp=(0.20*voxeled_cloud->points[k].x-0.388)/0.95;
+		y_temp=(0.08*voxeled_cloud->points[k].x-0.388)/0.95;
+//		std::cout<<"y_temp:"<<y_temp<<"\n";
+		if(y_temp+0.23<voxeled_cloud->points[k].z){
+			ground_deleted_cloud->points[k]=voxeled_cloud->points[k];
+//			ground_deleted_cloud->points.push_back(voxeled_cloud->points[k]);
+//			cloud2->points[k].x;
+//			cloud2->points[k].y;
+//			cloud2->points[k].z;
+		}
+	}
+	ground_deleted_cloud->width=ground_deleted_cloud->points.size();
+  ground_deleted_cloud->height = 1;
+	std::cout<<"ground_deleted_cloud->width:"<<ground_deleted_cloud->width<<"\n";
+	ground_deleted_cloud->points.resize(ground_deleted_cloud->width*ground_deleted_cloud->height);	
+/*
+	pcl::ExtractIndices<pcl::PointXYZ> extract;
+	extract.setInputCloud (voxeled_cloud);
+	extract.setIndices (inliers);
+	extract.setNegative (true);//true:平面を削除、false:平面以外削除
+	extract.filter (*ground_deleted_cloud);
+  std::cout << "Model coefficients: " << coefficients->values[0] << " " 
+                                      << coefficients->values[1] << " "
+                                      << coefficients->values[2] << " " 
+                                      << coefficients->values[3] << std::endl;
+*/
+	sensor_msgs::PointCloud2 edit_cloud4;
+  pcl::toROSMsg (*ground_deleted_cloud, edit_cloud4);
+	edit_cloud4.header.frame_id="/zed_current_frame";
+  pc_pub4.publish(edit_cloud4);
+
+	std::cout<<"publish ground_deleted_cloud\n";
+	pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);//何か探索用にツリーを作る
+	tree->setInputCloud (ground_deleted_cloud);
+	std::vector<pcl::PointIndices> cluster_indices;
+	pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
+	ec.setClusterTolerance (0.02);//同じクラスタとみなす距離
+	ec.setMinClusterSize (100);//クラスタを構成する最小の点数
+	ec.setMaxClusterSize (15000);//クラスタを構成する最大の点数
+	ec.setSearchMethod (tree);
+	ec.setInputCloud (ground_deleted_cloud);
+	ec.extract (cluster_indices);
+	std::cout<<"EuclideanClusterExtraction\n";
+
+
+	int j = 0;
+	float colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト
+//	pcl::PointCloud<pcl::PointXYZRGB>::Ptr Eclusted_cloud;
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr Eclusted_cloud(new  pcl::PointCloud<pcl::PointXYZRGB>);
+	pcl::copyPointCloud(*ground_deleted_cloud, *Eclusted_cloud);
+
+	for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
+  {
+      for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); pit++)
+			{
+					Eclusted_cloud->points[*pit].r = colors[j%12][0];
+					Eclusted_cloud->points[*pit].g = colors[j%12][1];
+					Eclusted_cloud->points[*pit].b = colors[j%12][2];
+      }
+      j++;
+	}
+	sensor_msgs::PointCloud2 edit_cloud5;
+  pcl::toROSMsg (*Eclusted_cloud, edit_cloud5);
+	edit_cloud5.header.frame_id="/zed_current_frame";
+  pc_pub5.publish(edit_cloud5);
+
+	
+
+
+
+}
 void detect_objects::set_DEM_map(void){
 
 	const float ground_threshold=0.10;
@@ -80,9 +233,9 @@ void detect_objects::set_DEM_map(void){
 			z_temp=depth_image.at<float>(h,w);
 			if(z_temp>0.5&&!std::isinf(z_temp)){//
 				y_temp=(height/2-h)*z_temp/f;
-				if(y_temp+0.23>ground_threshold){		
+				if(y_temp+0.23>ground_threshold){
 					x_temp=(w-width/2)*z_temp/f;
-					if(convert_coordinate_xz_nxz(x_temp,y_temp,nx,nz)){
+					if(convert_coordinate_xz_nxz(x_temp,z_temp,nx,nz)){
 						dem_element[nz][nx].push_back(y_temp);
 					}
 				}
@@ -196,20 +349,26 @@ void detect_objects::convert_dem_to_pcl(void){
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
 			points_size+=(int)dem_element[nz][nx].size();
+			
+    }
+  }
+	cloud->width=points_size;//points_size;
+	cloud->height=1;
+  cloud->points.resize (cloud->width * cloud->height);
+	for(int nz=0;nz<map_size_nz;nz++){
+		for(int nx=0;nx<map_size_nx;nx++){
 			for(int k=0;k<(int)dem_element[nz][nx].size();k++){
 		    pcl::PointXYZ point;
-				invert_coordinate_xz_nxz(nx,nz,point.x,point.z);
-		    point.y = dem_element[nz][nx][k];
+				invert_coordinate_xz_nxz(nx,nz,point.y,point.x);
+		    point.z = dem_element[nz][nx][k];
 		    cloud->points[count++]=point;
 			}
     }
   }
+
 //	std::cout<<"points_size:"<<points_size<<"\n";
 //	std::cout<<"finished push_back\n";
-	cloud->width=count;//points_size;
-	cloud->height=1;
-  cloud->points.resize (cloud->width * cloud->height);
-	std::cout<<"resized size:"<<cloud->width * cloud->height<<"\n";
+	std::cout<<"resized size,count:"<<cloud->width * cloud->height<<","<<count<<"\n";
 //
 //	points_size+=(int)dem_element[nz][nx].size();
 /*
@@ -235,7 +394,7 @@ void detect_objects::convert_dem_to_pcl(void){
 
   sensor_msgs::PointCloud2 edit_cloud;
   pcl::toROSMsg (*cloud, edit_cloud);
-	edit_cloud.header.frame_id="/zed_current_frame";
+	edit_cloud.header.frame_id="ZED_left_camera";//"/zed_current_frame";
 //	edit_cloud.header.stamp=ros::Time::now();
 //	edit_cloud.header.seq+=1;
   pc_pub.publish(edit_cloud);
@@ -246,11 +405,11 @@ void detect_objects::convert_dem_to_pcl(void){
 //  }
 	std::cout<<"published\n";
 //	cloud->points.clear();
-	cloud->clear();
+//	cloud->clear();
 //	std::cout<<"cleared size:"<<cloud->width * cloud->height<<"\n";
-  cloud->width  = width;
-  cloud->height = height;
-  cloud->points.resize (cloud->width * cloud->height);
+//  cloud->width  = width;
+//  cloud->height = height;
+//  cloud->points.resize (cloud->width * cloud->height);
 
 	
 }
@@ -294,12 +453,13 @@ int main(int argc,char **argv){
 //		std::cout<<"subsctibed cvbridgeimage\n";
 		dtct_obj.set_depth_image();
 //		std::cout<<"set matimage\n";
-		dtct_obj.set_DEM_map();
+//		dtct_obj.set_DEM_map();
+		dtct_obj.convet_image_to_pcl();
 //		std::cout<<"set demmap\n";
 //		dtct_obj.clustering_DEM_elements();
 //		std::cout<<"now processing!\n";
-		dtct_obj.convert_dem_to_pcl(); 
-		dtct_obj.clear_dem_element();
+//		dtct_obj.convert_dem_to_pcl(); 
+//		dtct_obj.clear_dem_element();
 		time_cls.set_time();
 		std::cout<<"dt:"<<time_cls.get_delta_time()<<"\n";
 	
