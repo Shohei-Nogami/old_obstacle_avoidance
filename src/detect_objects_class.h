@@ -63,7 +63,7 @@ class detect_objects{
 			void set_depth_image(void);
 			bool convert_coordinate_xz_nxz(const float x,const float z,int& nx,int& nz);
 			void invert_coordinate_xz_nxz(const int& nx,const int& nz,float& x,float& z);
-			void convet_image_to_pcl(void);
+			void convet_image_to_pcl(cv::Mat& image);
 			void set_DEM_map(void);	
 			void clustering_DEM_elements(void);
 			void clustering_schema(void);

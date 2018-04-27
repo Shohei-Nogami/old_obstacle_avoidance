@@ -23,6 +23,11 @@ double& time_class::get_delta_time(/*double& dt*/void){
 	// dt=delta_time;
 	return delta_time;
 }
+double& time_class::get_time_now(void){
+	temp_time = ros::Time::now()-start_time;
+	nowtime=temp_time.toSec();
+	return nowtime;
+}
 void time_class::set_time(void){
 	if(!first_process_flag){
 		set_pre_time();

@@ -1,5 +1,6 @@
 #include"detect_objects_class.h"
 #include"time_class.h"
+#include"image_class.h"
 
 
 detect_objects::detect_objects()
@@ -70,7 +71,7 @@ void detect_objects::invert_coordinate_xz_nxz(const int& nx,const int& nz,float&
 	z=((float)map_size_nz-(float)nz)*cell_size;
 
 }
-void detect_objects::convet_image_to_pcl(void){
+void detect_objects::convet_image_to_pcl(cv::Mat& image){
 //	std::cout<<"1\n";
 	cloud2->width  = width;
   cloud2->height = height;
@@ -80,13 +81,20 @@ void detect_objects::convet_image_to_pcl(void){
 	float z_temp,x_temp,y_temp;
 	float cam_x=0.12/2;
 	int k=0;
+//	cv::Vec3b white(255,255,255);
+	uint8_t color_th=3;
 	//std::cout<<"width,width/2:"<<width<<","<<width/2<<"\n";
 	for(int h=0;h<height;h++){
 		for(int w=0;w<width;w++){
 			z_temp=depth_image.at<float>(h,w);
-			if(z_temp>0.5&&!std::isinf(z_temp)){//
+			if(z_temp>0.5&&!std::isinf(z_temp)
+				&&(image.at<cv::Vec3b>(h,w)[0]<=255-color_th
+				||image.at<cv::Vec3b>(h,w)[1]<=255-color_th
+				||image.at<cv::Vec3b>(h,w)[2]<=255-color_th)){//
 				y_temp=((float)height/2-(float)h)*z_temp/f;
-				if(y_temp+0.23>ground_threshold&&y_temp+0.23<1.5){
+//				if(y_temp+0.23>ground_threshold&&y_temp+0.23<1.5){
+//				if(y_temp+0.4125>ground_threshold&&y_temp+0.4125<1.5){
+				if(y_temp+0.4125<1.5){
 					x_temp=-( ((float)w-(float)width/2)*z_temp/f-cam_x );
 					cloud2->points[k].x=z_temp;
 					cloud2->points[k].y=x_temp;
@@ -99,16 +107,17 @@ void detect_objects::convet_image_to_pcl(void){
   cloud2->height = 1;
   cloud2->points.resize (cloud2->width * cloud2->height);
 	std::cout<<"original size:"<< cloud2->points.size()<<"\n";
-/*
+
   sensor_msgs::PointCloud2 edit_cloud;
   pcl::toROSMsg (*cloud2, edit_cloud);
 	edit_cloud.header.frame_id="/zed_current_frame";
   pc_pub2.publish(edit_cloud);
-*/
 
+	float voxel_size=0.030f;
 	pcl::VoxelGrid<pcl::PointXYZ> vg;
 	vg.setInputCloud (cloud2);
-	vg.setLeafSize (0.015f, 0.015f, 0.015f);
+//	vg.setLeafSize (0.015f, 0.015f, 0.015f);
+	vg.setLeafSize (voxel_size, voxel_size, voxel_size);
 	vg.filter (*voxeled_cloud);
 	std::cout<<"voxceled size:"<< voxeled_cloud->points.size()<<"\n";
 
@@ -117,10 +126,8 @@ void detect_objects::convet_image_to_pcl(void){
 	edit_cloud3.header.frame_id="/zed_current_frame";
   pc_pub3.publish(edit_cloud3);
 
-/*	
+	
 	pcl::SACSegmentation<pcl::PointXYZ> seg;
-//	pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
-//	pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
 	seg.setOptimizeCoefficients (true);
 	//seg.setModelType (pcl::SACMODEL_PLANE);//全平面抽出
 
@@ -129,52 +136,64 @@ void detect_objects::convet_image_to_pcl(void){
 	seg.setMaxIterations (500);//RANSACの繰り返し回数
 	seg.setDistanceThreshold (0.1);//モデルとどのくらい離れていてもいいか???謎
 	seg.setAxis(Eigen::Vector3f (0.0,0.0,1.0));//法線ベクトル
-	seg.setEpsAngle(20.0f * (M_PI/180.0f));//許容出来る平面の傾きラジアン
+	seg.setEpsAngle(10.0f * (M_PI/180.0f));//許容出来る平面の傾きラジアン
 
 	seg.setInputCloud (voxeled_cloud);
-*/
+
 /*	coefficients->values[0]=-0.25;
 	coefficients->values[1]=0;
 	coefficients->values[2]=0;
 	coefficients->values[3]=0.388003;
 */	
-//	seg.segment (*inliers, *coefficients);
+	seg.segment (*inliers, *coefficients);
 
-//	ground_deleted_cloud->points.resize(cloud2->points.size());
-
-
-	ground_deleted_cloud->width=voxeled_cloud->points.size();
-  ground_deleted_cloud->height = 1;
-	ground_deleted_cloud->points.resize(ground_deleted_cloud->width*ground_deleted_cloud->height);
-//	ground_deleted_cloud->points.reserve(ground_deleted_cloud->width);
-	
-	for(int k=0;k<voxeled_cloud->points.size();k++){
-//		y_temp=(0.20*voxeled_cloud->points[k].x-0.388)/0.95;
-		y_temp=(0.08*voxeled_cloud->points[k].x-0.388)/0.95;
-//		std::cout<<"y_temp:"<<y_temp<<"\n";
-		if(y_temp+0.23<voxeled_cloud->points[k].z){
-			ground_deleted_cloud->points[k]=voxeled_cloud->points[k];
-//			ground_deleted_cloud->points.push_back(voxeled_cloud->points[k]);
-//			cloud2->points[k].x;
-//			cloud2->points[k].y;
-//			cloud2->points[k].z;
-		}
-	}
-	ground_deleted_cloud->width=ground_deleted_cloud->points.size();
-  ground_deleted_cloud->height = 1;
-	std::cout<<"ground_deleted_cloud->width:"<<ground_deleted_cloud->width<<"\n";
-	ground_deleted_cloud->points.resize(ground_deleted_cloud->width*ground_deleted_cloud->height);	
-/*
-	pcl::ExtractIndices<pcl::PointXYZ> extract;
-	extract.setInputCloud (voxeled_cloud);
-	extract.setIndices (inliers);
-	extract.setNegative (true);//true:平面を削除、false:平面以外削除
-	extract.filter (*ground_deleted_cloud);
+//	pcl::ExtractIndices<pcl::PointXYZ> extract;
+//	extract.setInputCloud (voxeled_cloud);
+//	extract.setIndices (inliers);
+//	extract.setNegative (true);//true:平面を削除、false:平面以外削除
+//	extract.filter (*ground_deleted_cloud);
   std::cout << "Model coefficients: " << coefficients->values[0] << " " 
                                       << coefficients->values[1] << " "
                                       << coefficients->values[2] << " " 
                                       << coefficients->values[3] << std::endl;
-*/
+
+	
+	ground_deleted_cloud->points.clear();
+	ground_deleted_cloud->points.reserve(ground_deleted_cloud->width);
+	
+	float floor_th=0.05;
+	float camera_height=0.4125;
+	float camera_bias=0.2;
+	if(std::abs(coefficients->values[3]-(camera_height+camera_bias))>=0.15){
+		coefficients->values[0]=-0.08;
+		coefficients->values[1]=0;
+		coefficients->values[2]=1;
+		coefficients->values[3]=(camera_height+camera_bias)-floor_th;
+	}
+	else{
+		coefficients->values[3]-=floor_th;
+	}
+ std::cout << "Model coefficients: " << coefficients->values[0] << " " 
+                                      << coefficients->values[1] << " "
+                                      << coefficients->values[2] << " " 
+                                      << coefficients->values[3] << std::endl;
+
+	
+	for(int k=0;k<voxeled_cloud->points.size();k++){
+//			y_temp=(0.08*voxeled_cloud->points[k].x-0.388)/0.95;
+//		y_temp=(0.08*voxeled_cloud->points[k].x-0.388-0.1775)/0.95;
+		y_temp=(-coefficients->values[0]*voxeled_cloud->points[k].x-coefficients->values[1]*voxeled_cloud->points[k].y-coefficients->values[3])/coefficients->values[2];
+		if(y_temp<voxeled_cloud->points[k].z){
+	//			ground_deleted_cloud->points[k]=voxeled_cloud->points[k];
+			ground_deleted_cloud->points.push_back(voxeled_cloud->points[k]);
+		}
+	}
+	
+	ground_deleted_cloud->width=ground_deleted_cloud->points.size();
+  ground_deleted_cloud->height = 1;
+	std::cout<<"ground_deleted_cloud->width:"<<ground_deleted_cloud->width<<"\n";
+	
+
 	sensor_msgs::PointCloud2 edit_cloud4;
   pcl::toROSMsg (*ground_deleted_cloud, edit_cloud4);
 	edit_cloud4.header.frame_id="/zed_current_frame";
@@ -185,9 +204,10 @@ void detect_objects::convet_image_to_pcl(void){
 	tree->setInputCloud (ground_deleted_cloud);
 	std::vector<pcl::PointIndices> cluster_indices;
 	pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-	ec.setClusterTolerance (0.02);//同じクラスタとみなす距離
-	ec.setMinClusterSize (100);//クラスタを構成する最小の点数
-	ec.setMaxClusterSize (15000);//クラスタを構成する最大の点数
+	ec.setClusterTolerance (voxel_size*1.5);//同じクラスタとみなす距離
+//	ec.setClusterTolerance (0.075);//同じクラスタとみなす距離
+	ec.setMinClusterSize (0.02/voxel_size*100);//クラスタを構成する最小の点数
+	ec.setMaxClusterSize (/*15000*/25000);//クラスタを構成する最大の点数
 	ec.setSearchMethod (tree);
 	ec.setInputCloud (ground_deleted_cloud);
 	ec.extract (cluster_indices);
@@ -426,6 +446,8 @@ int main(int argc,char **argv){
 	ros::init(argc,argv,"detect_objects_class_test");
 	detect_objects dtct_obj;
   time_class time_cls;
+	image_class img_cls;
+	img_cls.define_variable();
 	std::cout<<"defined class\n";
 	float x,z;
 	int nx,nz;
@@ -445,16 +467,19 @@ int main(int argc,char **argv){
 		std::cout<<"trans is failed\n";
 	}
 	*/
-
-	
+		std::cout<<"1:"<<time_cls.get_time_now()<<"\n";
+    img_cls.set_image();
+		std::cout<<"2:"<<time_cls.get_time_now()<<"\n";
 		dtct_obj.subscribe_depth_image();
-		if(!dtct_obj.is_cvbridge_image())
+		if(!dtct_obj.is_cvbridge_image()||!img_cls.is_cur_image())
 			continue;
+		std::cout<<"3:"<<time_cls.get_time_now()<<"\n";
 //		std::cout<<"subsctibed cvbridgeimage\n";
 		dtct_obj.set_depth_image();
+		std::cout<<"4:"<<time_cls.get_time_now()<<"\n";
 //		std::cout<<"set matimage\n";
 //		dtct_obj.set_DEM_map();
-		dtct_obj.convet_image_to_pcl();
+		dtct_obj.convet_image_to_pcl(img_cls.get_cur_image_by_ref());
 //		std::cout<<"set demmap\n";
 //		dtct_obj.clustering_DEM_elements();
 //		std::cout<<"now processing!\n";

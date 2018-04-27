@@ -9,6 +9,7 @@ class time_class{
 		ros::Time start_time;
 		bool first_process_flag;
 		ros::NodeHandle nh;
+		double nowtime;
 	public:
 		time_class();
 		~time_class();
@@ -17,6 +18,7 @@ class time_class{
 		void set_delta_time(void);
 		// void get_delta_time(double& dt);
 		double& get_delta_time(void);
+		double& get_time_now(void);
 		void set_time(void);
 
 };
