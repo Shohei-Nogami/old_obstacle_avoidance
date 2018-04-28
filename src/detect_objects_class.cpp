@@ -452,8 +452,8 @@ void detect_objects::clustering_DEM_elements(void){
 			for(int k=0;k<dem_cluster[nz][nx].size();k++){
 				for(int k1=0;k1<index_img[nz][nx].size();k1++){
 					if(dem_cluster[nz][nx][k].x<=index_img[nz][nx][k1].y&&dem_cluster[nz][nx][k].y>=index_img[nz][nx][k1].y){
-						std::cout<<"nz,nx,k,k1,h,w:"<<nz<<","<<nx<<","<<k<<","<<k1<<","<<index_img[nz][nx][k].h<<","<<index_img[nz][nx][k].w<<"\n";
-						index_schm[index_img[nz][nx][k].h][index_img[nz][nx][k].w].ny=k;
+//						std::cout<<"nz,nx,k,k1,h,w:"<<nz<<","<<nx<<","<<k<<","<<k1<<","<<index_img[nz][nx][k].h<<","<<index_img[nz][nx][k].w<<"\n";
+						index_schm[index_img[nz][nx][k1].h][index_img[nz][nx][k1].w].ny=k;
 					}
 					else{
 						break;
@@ -614,7 +614,8 @@ int main(int argc,char **argv){
 		std::cout<<"5:"<<time_cls.get_time_now()<<"\n";
 //		dtct_obj.convet_image_to_pcl(img_cls.get_cur_image_by_ref());
 //		std::cout<<"6:"<<time_cls.get_time_now()<<"\n";
-		dtct_obj.clustering_DEM_elements();
+		dtct_obj.clustering_DEM_elements();//<-
+
 		std::cout<<"7:"<<time_cls.get_time_now()<<"\n";
 		std::cout<<"now processing!\n";
 //		dtct_obj.clustering_slice();
