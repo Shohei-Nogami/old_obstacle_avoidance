@@ -15,6 +15,7 @@ detect_objects::detect_objects()
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
 			dem_element[nz][nx].reserve(width);
+			index_img[nz][nx].reserve(height);
 		}
 	}
   pc_pub = nh_pubpcl.advertise<sensor_msgs::PointCloud2>("dem_cloud", 1);
@@ -25,6 +26,17 @@ detect_objects::detect_objects()
 //  cloud->width  = width;
 //  cloud->height = height;
 //  cloud->points.resize (cloud->width * cloud->height);
+
+//床面抽出
+	seg.setOptimizeCoefficients (true);
+	//seg.setModelType (pcl::SACMODEL_PLANE);//全平面抽出
+
+	seg.setModelType (pcl::SACMODEL_PERPENDICULAR_PLANE);//ある軸に垂直な平面を抽出
+	seg.setMethodType (pcl::SAC_RANSAC);
+	seg.setMaxIterations (500);//RANSACの繰り返し回数
+	seg.setDistanceThreshold (0.1);//モデルとどのくらい離れていてもいいか???謎
+	seg.setAxis(Eigen::Vector3f (0.0,0.0,1.0));//法線ベクトル
+	seg.setEpsAngle(10.0f * (M_PI/180.0f));//許容出来る平面
 
 }
 detect_objects::~detect_objects(){
@@ -126,7 +138,7 @@ void detect_objects::convet_image_to_pcl(cv::Mat& image){
 	edit_cloud3.header.frame_id="/zed_current_frame";
   pc_pub3.publish(edit_cloud3);
 
-	
+	/*
 	pcl::SACSegmentation<pcl::PointXYZ> seg;
 	seg.setOptimizeCoefficients (true);
 	//seg.setModelType (pcl::SACMODEL_PLANE);//全平面抽出
@@ -137,7 +149,7 @@ void detect_objects::convet_image_to_pcl(cv::Mat& image){
 	seg.setDistanceThreshold (0.1);//モデルとどのくらい離れていてもいいか???謎
 	seg.setAxis(Eigen::Vector3f (0.0,0.0,1.0));//法線ベクトル
 	seg.setEpsAngle(10.0f * (M_PI/180.0f));//許容出来る平面の傾きラジアン
-
+*/
 	seg.setInputCloud (voxeled_cloud);
 
 /*	coefficients->values[0]=-0.25;
@@ -240,34 +252,142 @@ void detect_objects::convet_image_to_pcl(cv::Mat& image){
 
 
 }
+void detect_objects::ground_estimation_from_image(const float& y_th,const float& cam_y,float& a,float& b,float& c,float& d){
+  	pcl::PointCloud<pcl::PointXYZ>::Ptr ground_points(new pcl::PointCloud<pcl::PointXYZ>);
+  float x_temp;
+  float y_temp;
+  float z_temp;
+  pcl::PointXYZ p_temp;
+  //ground_points->points.clear();
+  ground_points->points.reserve(height/2*width);
+  for(int h=height/2+1;h<height;h++){
+    for(int w=0;w<width;w++){
+      z_temp=depth_image.at<float>(h,w);
+      if(z_temp>0.5&&!std::isinf(z_temp)){
+        y_temp=(height/2-h)*z_temp/f;
+        if(std::abs(y_temp+cam_y)<y_th){
+          x_temp=-( ((float)w-(float)width/2)*z_temp/f-cam_y );
+          
+          p_temp.x=x_temp;
+          p_temp.y=y_temp;
+          p_temp.z=z_temp;
+          ground_points->points.push_back(p_temp);
+        }
+      }
+    }
+  }
+  ground_points->width=ground_points->points.size();
+  ground_points->height=1;
+  
+  	seg.setInputCloud (ground_points);
+
+	seg.segment (*inliers, *coefficients);
+	std::cout << "Model coefficients: " << coefficients->values[0] << " " 
+                                      << coefficients->values[1] << " "
+                                      << coefficients->values[2] << " " 
+                                      << coefficients->values[3] << std::endl;
+   a=coefficients->values[0];
+   b=coefficients->values[1];
+	c=coefficients->values[2];
+	d=coefficients->values[3];  
+}
+void detect_objects::ground_estimation_from_pc(const float& y_th,const float& cam_y,float& a,float& b,float& c,float& d){
+  	pcl::PointCloud<pcl::PointXYZ>::Ptr ground_points(new pcl::PointCloud<pcl::PointXYZ>);
+
+  //ground_points->points.clear();
+  ground_points->points.reserve(voxeled_cloud->points.size());
+  for(int k=0;k<voxeled_cloud->points.size();k++){
+    if(std::abs(voxeled_cloud->points[k].z+cam_y)<y_th){
+
+      ground_points->points.push_back(voxeled_cloud->points[k]);
+    }
+  }
+  ground_points->width=ground_points->points.size();
+  ground_points->height=1;
+  
+  	seg.setInputCloud (ground_points);
+
+	seg.segment (*inliers, *coefficients);
+	std::cout << "Model coefficients: " << coefficients->values[0] << " " 
+                                      << coefficients->values[1] << " "
+                                      << coefficients->values[2] << " " 
+                                      << coefficients->values[3] << std::endl;
+   a=coefficients->values[0];
+   b=coefficients->values[1];
+	c=coefficients->values[2];
+	d=coefficients->values[3];  
+}
+
+
 void detect_objects::set_DEM_map(void){
 
-	const float ground_threshold=0.10;
+	//const float ground_threshold=0.10;
+	const float y_th=0.20;
+	const float cam_y=0.415;
 
 	float z_temp,x_temp,y_temp;
 	int cam_nx=map_size_nx/2;
 	int cam_nz=map_size_nz-1;
 	int nx,nz;
+	float a,b,c,d;
+	
+	/*struct index_schema{
+	  int nx;//index to number of x in dem-map
+	  int nz;//index to number of z in dem-map
+	  float y;
+	  int ny;//index to shema cluster
+	  index_schema() : nz(-1),nx(-1),y(-1),ny(-1){}
+	}*/
+
+	//index_schema index_schm[height][width];
+	
+	/*
+	struct index_image{
+	  int h;//height of image
+	  int w;//width of image
+	  float y;
+	}*/
+	//index_image index_img[nz][nx];
+	index_image index_img_temp;
+	ground_estimation_from_image(y_th,cam_y,a,b,c,d);
+	float y_ground;
+	
 	for(int h=0;h<height;h++){
 		for(int w=0;w<width;w++){
 			z_temp=depth_image.at<float>(h,w);
 			if(z_temp>0.5&&!std::isinf(z_temp)){//
 				y_temp=(height/2-h)*z_temp/f;
-				if(y_temp+0.23>ground_threshold){
+				y_ground=(-a*x_temp-b*y_temp-d)/c;
+				  if(y_temp>y_ground){
 					x_temp=(w-width/2)*z_temp/f;
 					if(convert_coordinate_xz_nxz(x_temp,z_temp,nx,nz)){
-						dem_element[nz][nx].push_back(y_temp);
+						//dem_element[nz][nx].push_back(y_temp);
+						index_schm[h][w].nz=nz;
+						index_schm[h][w].nx=nx;
+						index_schm[h][w].y=y_temp;
+						index_img_temp.h=h;
+						index_img_temp.w=w;
+						index_img_temp.y=y_temp;
+						index_img[nz][nx].push_back(index_img_temp);
+						continue;
 					}
 				}
 			}
+			//index_dem[h][w].nz=-1;
+			//index_dem[h][w].nx=-1;
 		}
 	}
 }
 void detect_objects::clustering_DEM_elements(void){
 
+	
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
-//			dem_element[nz][nx].sort(dem_element[nz][nx].begin(),dem_element[nz][nx].end());
+		  //copy y of index_image to dem_element
+		  dem_element[nz][nx].resize(index_img[nz][nx].size() );
+		  for(int k=0;k<index_img[nz][nx].size();k++){
+		    dem_element[nz][nx][k]=index_img[nz][nx][k].y;
+		  }
 			std::sort(dem_element[nz][nx].begin(),dem_element[nz][nx].end());
 		}
 	}
@@ -304,6 +424,14 @@ void detect_objects::clustering_DEM_elements(void){
 			}
 		}
 	}
+	//write index of schema cluster
+	for(int nz=0;nz<map_size_nz;nz++){
+		for(int nx=0;nx<map_size_nx;nx++){
+		  
+		  
+		}
+	}
+	
 }
 
 void detect_objects::clustering_slice(void){
@@ -492,5 +620,4 @@ int main(int argc,char **argv){
 
 	return 0;
 }
-
 
