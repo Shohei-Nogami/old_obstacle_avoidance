@@ -13,6 +13,8 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 
+#include"struct_index.h"
+
 //#include <pcl/visualization/cloud_viewer.h>
 //#include <pcl/io/pcd_io.h>  
 //#include <pcl/point_types.h> 
@@ -20,7 +22,7 @@
 class detect_objects{
 	private:
 		ros::NodeHandle nh_pub1,nh_pub2,nh_sub;
-		ros::NodeHandle nh_pubpcl,nh_pubpcl2,nh_pubpcl3,nh_pubpcl4,nh_pubpcl5;
+		ros::NodeHandle nh_pubpcl,nh_pubpcl2,nh_pubpcl3,nh_pubpcl4,nh_pubpcl5,nh_pubpcl6;
 		ros::Subscriber sub;
 		ros::CallbackQueue queue;
 		image_transport::ImageTransport it_pub1,it_pub2;
@@ -42,9 +44,9 @@ class detect_objects{
 		static const int map_size_nx=201;  //map width  [pixcel]
 		const double cell_size=0.04;//[cm]
 		const double h_th=0.08;
-		std::vector<double> dem_element[map_size_nz][map_size_nx];
-		std::vector<cv::Point2f> dem_cluster[map_size_nz][map_size_nx];//x:low,y:high
-		
+		std::vector<double> dem_element[map_size_nz][map_size_nx];//401*201
+		std::vector<cv::Point2f> dem_cluster[map_size_nz][map_size_nx];//x:low,y:high//401*201
+		/*
 		struct index_schema{
 			int nx;//index to number of x in dem-map
 			int nz;//index to number of z in dem-map
@@ -57,8 +59,9 @@ class detect_objects{
 			int w;//width of image
 			float y;
 		};
-		index_schema index_schm[height][width];
-		std::vector< index_image > index_img[map_size_nz][map_size_nx];
+		*/
+		index_schema index_schm[height][width];//673*376
+		std::vector<index_image> **index_img;//[map_size_nz][map_size_nx];//401*201
 
 		//PCL
 		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
@@ -66,12 +69,13 @@ class detect_objects{
 		pcl::PointCloud<pcl::PointXYZ>::Ptr voxeled_cloud;
 		pcl::PointCloud<pcl::PointXYZ>::Ptr ground_deleted_cloud;
 		//		pcl::PointCloud<pcl::PointXYZRGB>::Ptr Eclusted_cloud;
-  	ros::Publisher pc_pub,pc_pub2,pc_pub3,pc_pub4,pc_pub5;
+  	ros::Publisher pc_pub,pc_pub2,pc_pub3,pc_pub4,pc_pub5,pc_pub6;
 		
 		pcl::SACSegmentation<pcl::PointXYZ> seg;//の傾きラジアン
 		pcl::PointIndices::Ptr inliers;// (new pcl::PointIndices);
 		pcl::ModelCoefficients::Ptr coefficients;// (new pcl::ModelCoefficients);
-	
+		//ground estimate
+		
 		public:
 			detect_objects();
 			~detect_objects();
