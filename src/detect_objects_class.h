@@ -22,7 +22,7 @@
 class detect_objects{
 	private:
 		ros::NodeHandle nh_pub1,nh_pub2,nh_sub;
-		ros::NodeHandle nh_pubpcl,nh_pubpcl2,nh_pubpcl3,nh_pubpcl4,nh_pubpcl5,nh_pubpcl6;
+		ros::NodeHandle nh_pubpcl,nh_pubpcl2,nh_pubpcl3,nh_pubpcl4,nh_pubpcl5,nh_pubpcl6,nh_pubpcl7;
 		ros::Subscriber sub;
 		ros::CallbackQueue queue;
 		image_transport::ImageTransport it_pub1,it_pub2;
@@ -43,9 +43,13 @@ class detect_objects{
 		static const int map_size_nz=401;  //map height [pixcel]
 		static const int map_size_nx=201;  //map width  [pixcel]
 		const double cell_size=0.04;//[cm]
-		const double h_th=0.08;
-		std::vector<double> dem_element[map_size_nz][map_size_nx];//401*201
+		const double h_th=0.02;//0.08
+		//std::vector<double> dem_element[map_size_nz][map_size_nx];//401*201
+		std::vector<double> **dem_element;//[map_size_nz][map_size_nx];//401*201
 		std::vector<cv::Point2f> dem_cluster[map_size_nz][map_size_nx];//x:low,y:high//401*201
+		std::vector< std::vector<cv::Point2i> > *slice_cluster;
+		std::vector<int> **clusted_flag;//[map_size_nz][map_size_nx];
+
 		/*
 		struct index_schema{
 			int nx;//index to number of x in dem-map
@@ -60,7 +64,8 @@ class detect_objects{
 			float y;
 		};
 		*/
-		index_schema index_schm[height][width];//673*376
+		//index_schema index_schm[height][width];//673*376
+		index_schema **index_schm;//673*376
 		std::vector<index_image> **index_img;//[map_size_nz][map_size_nx];//401*201
 
 		//PCL
@@ -69,7 +74,7 @@ class detect_objects{
 		pcl::PointCloud<pcl::PointXYZ>::Ptr voxeled_cloud;
 		pcl::PointCloud<pcl::PointXYZ>::Ptr ground_deleted_cloud;
 		//		pcl::PointCloud<pcl::PointXYZRGB>::Ptr Eclusted_cloud;
-  	ros::Publisher pc_pub,pc_pub2,pc_pub3,pc_pub4,pc_pub5,pc_pub6;
+  	ros::Publisher pc_pub,pc_pub2,pc_pub3,pc_pub4,pc_pub5,pc_pub6,pc_pub7;
 		
 		pcl::SACSegmentation<pcl::PointXYZ> seg;//の傾きラジアン
 		pcl::PointIndices::Ptr inliers;// (new pcl::PointIndices);
@@ -90,11 +95,12 @@ class detect_objects{
 			void ground_estimation_from_pc(const float& y_th,const float& cam_y,float& a,float& b,float& c,float& d);
 			void ground_estimation_from_image(const float& y_th,const float& cam_y,float& a,float& b,float& c,float& d);
 
-			void set_DEM_map(void);	
+			void set_DEM_map(cv::Mat& image);	
 			void clustering_DEM_elements(void);
 			void clustering_schema(void);
 			void clustering_slice(void);
-		
+			
 			void convert_dem_to_pcl(void);
+			void publish_slice_cluster(void);
 			void clear_dem_element(void);
 };

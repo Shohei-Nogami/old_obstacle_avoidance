@@ -254,8 +254,8 @@ target_link_libraries(grid_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 add_executable(point_cloud_test src/point_cloud_test.cpp src/time_class.cpp)
 target_link_libraries(point_cloud_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(culculating_opticalflow_class_test src/culculating_opticalflow_class.cpp src/image_class.cpp src/depth_image_class.cpp src/odometry_class.cpp src/wheel_odometry_class.cpp src/time_class.cpp)
-target_link_libraries(culculating_opticalflow_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#add_executable(culculating_opticalflow_class_test src/culculating_opticalflow_class.cpp src/image_class.cpp src/depth_image_class.cpp src/odometry_class.cpp src/wheel_odometry_class.cpp src/time_class.cpp)
+#target_link_libraries(culculating_opticalflow_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(detect_objects_class_test src/detect_objects_class.cpp src/time_class.cpp src/image_class.cpp)
 target_link_libraries(detect_objects_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
