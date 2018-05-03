@@ -14,6 +14,7 @@
 #include <pcl/segmentation/extract_clusters.h>
 
 #include"struct_index.h"
+#include"opticalflow_data.h"
 
 //#include <pcl/visualization/cloud_viewer.h>
 //#include <pcl/io/pcd_io.h>  
@@ -43,13 +44,14 @@ class detect_objects{
 		static const int map_size_nz=401;  //map height [pixcel]
 		static const int map_size_nx=201;  //map width  [pixcel]
 		const double cell_size=0.04;//[cm]
-		const double h_th=0.02;//0.08
+		const double h_th=0.04;//0.08
 		//std::vector<double> dem_element[map_size_nz][map_size_nx];//401*201
 		std::vector<double> **dem_element;//[map_size_nz][map_size_nx];//401*201
 		std::vector<cv::Point2f> dem_cluster[map_size_nz][map_size_nx];//x:low,y:high//401*201
 		std::vector< std::vector<cv::Point2i> > *slice_cluster;
-		std::vector<int> **clusted_flag;//[map_size_nz][map_size_nx];
-
+		std::vector<int> **slice_cluster_index;//[map_size_nz][map_size_nx];
+		std::vector< std::vector<pcl::PointXYZ> > *slice_cluster_velocity_element;
+		std::vector<pcl::PointXYZ> *slice_cluster_velocity;
 		/*
 		struct index_schema{
 			int nx;//index to number of x in dem-map
@@ -99,6 +101,7 @@ class detect_objects{
 			void clustering_DEM_elements(void);
 			void clustering_schema(void);
 			void clustering_slice(void);
+			void tracking_cluster(const std::vector<optical_flow_data>& opf_data,const float v,const float omg,const double& dt);
 			
 			void convert_dem_to_pcl(void);
 			void publish_slice_cluster(void);

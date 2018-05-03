@@ -25,10 +25,13 @@ detect_objects::detect_objects()
 		dem_element[i]=new std::vector<double>[map_size_nx];
 	}
 	slice_cluster=new std::vector< std::vector<cv::Point2i> >[map_size_nz];
-	clusted_flag=new std::vector<int>*[map_size_nz];
+	slice_cluster_index=new std::vector<int>*[map_size_nz];
 	for(int i=0;i<map_size_nz;i++){
-		clusted_flag[i]=new std::vector<int>[map_size_nx];
+		slice_cluster_index[i]=new std::vector<int>[map_size_nx];
 	}
+	slice_cluster_velocity_element=new std::vector< std::vector<pcl::PointXYZ> >[map_size_nz];
+	slice_cluster_velocity=new std::vector<pcl::PointXYZ>[map_size_nz];
+
 	index_schm=new index_schema*[height];
 	for(int i=0;i<height;i++){
 		index_schm[i]=new index_schema[width];
@@ -84,9 +87,9 @@ detect_objects::~detect_objects(){
 	
 	delete[] slice_cluster;
 	for(int i = 0; i < map_size_nz; ++i ) {
-		delete[] clusted_flag[i];
+		delete[] slice_cluster_index[i];
 	}
-	delete[] clusted_flag;
+	delete[] slice_cluster_index;
 	
 	for(int i = 0; i < height; ++i ) {
 		delete[] index_schm[i];
@@ -410,7 +413,7 @@ void detect_objects::set_DEM_map(cv::Mat& image){
 				y_temp=(height/2-h)*z_temp/f;
 				y_ground=(-a*x_temp-b*y_temp-d)/c;
 //				std::cout<<"y_t,y_g:"<<y_temp<<","<<y_ground<<"\n";
-			  if(y_temp>y_ground&&!std::isinf(y_temp)&&y_temp<1.5
+			  if(y_temp>y_ground&&!std::isinf(y_temp)&&y_temp+camera_height<1.5
 					&&(image.at<cv::Vec3b>(h,w)[0]<=255-color_th
 					||image.at<cv::Vec3b>(h,w)[1]<=255-color_th
 					||image.at<cv::Vec3b>(h,w)[2]<=255-color_th)){//){
@@ -439,63 +442,133 @@ void detect_objects::set_DEM_map(cv::Mat& image){
 
 void detect_objects::clustering_DEM_elements(void){
 
-
+	int dem_elements_size=0;
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
 			//dem_cluster[nz][nx].clear();
 		  //copy y of index_image to dem_element
-		  dem_element[nz][nx].resize(index_img[nz][nx].size() );
+		  dem_elements_size+=(int)index_img[nz][nx].size();
+		  dem_element[nz][nx].resize((int)index_img[nz][nx].size() );
 		  for(int k=0;k<index_img[nz][nx].size();k++){
 		    dem_element[nz][nx][k]=index_img[nz][nx][k].y;
 		  }
-			std::sort(dem_element[nz][nx].begin(),dem_element[nz][nx].end());
+		  /*
+		  if(index_img[nz][nx].size()){
+				std::cout<<"before:dem_element[nz][nx]:(";
+				for(int k=0;k<index_img[nz][nx].size();k++){
+				std::cout<<dem_element[nz][nx][k]<<",";
+				}
+				std::cout<<"\n";
+			}
+			*/
+			std::sort(dem_element[nz][nx].begin(),dem_element[nz][nx].end());	
+		  /*
+		  if(index_img[nz][nx].size()){
+				std::cout<<"after:dem_element[nz][nx]:(";
+				for(int k=0;k<index_img[nz][nx].size();k++){
+				std::cout<<dem_element[nz][nx][k]<<",";
+				}
+				std::cout<<"\n";
+			}
+			*/
 		}
 	}
+	std::cout<<"dem_elements_size(before):"<<dem_elements_size<<"\n";
 //	std::cout<<"did sort\n";
+	dem_elements_size=0;
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
 			int iy_low=0;
 			int iy_high=0;
+			/*
 			if(dem_element[nz][nx].size()){
+				std::cout<<"dem_element["<<nz<<"]["<<nx<<"].size():"<<dem_element[nz][nx].size()<<"\n";
+				//std::cout<<"iy:(low,high):\n";
 			}
+			*/
 			for(int i=0;i<(int)dem_element[nz][nx].size()-1;i++){
+				//std::cout<<"("<<iy_low<<","<<iy_high<<")\n";
 				if(dem_element[nz][nx][i+1]-dem_element[nz][nx][i]<h_th){
 					iy_high++;
+					if(i==dem_element[nz][nx].size()-1-1){
+						cv::Point2f y_low_high;
+						y_low_high.x=dem_element[nz][nx][iy_low];//low
+						y_low_high.y=dem_element[nz][nx][iy_high];//high
+						dem_cluster[nz][nx].push_back(y_low_high);
+						
+					}
 				}
 				else{
+					//std::cout<<"dem_element(min,max):("<<dem_element[nz][nx][0]<<","<<dem_element[nz][nx][(int)dem_element[nz][nx].size()-1]<<")\n";
 					cv::Point2f y_low_high;
 					y_low_high.x=dem_element[nz][nx][iy_low];//low
 					y_low_high.y=dem_element[nz][nx][iy_high];//high
-
+					//std::cout<<dem_element[nz][nx][iy_low]<<","<<dem_element[nz][nx][iy_high]<<"\n";
 					dem_cluster[nz][nx].push_back(y_low_high);
 
 					iy_low=iy_high+1;
 					iy_high=iy_high+1;
-				}	
+				}
+				
 			}
+			/*
+			if(dem_element[nz][nx].size()){
+				std::cout<<"iy_high:"<<iy_high<<"\n";
+				for(int i=0;i<(int)dem_cluster[nz][nx].size()-1;i++){
+					std::cout<<"["<<i<<"]:(low,high),("<<dem_cluster[nz][nx][i].x<<","<<dem_cluster[nz][nx][i].y<<")\n";
+				}
+			}
+			*/
 		}
 	}
+	
+	dem_elements_size=0;
 	std::cout<<"/write index of schema cluster\n";
 	//write index of schema cluster
+	float y_low,y_high;
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
+			//if(dem_cluster[nz][nx].size()){
+			//	std::cout<<"dem_cluster["<<nz<<"]["<<nx<<"].size():"<<dem_cluster[nz][nx].size()<<"\n";
+			//}
 			for(int k=0;k<dem_cluster[nz][nx].size();k++){
+				y_low=dem_cluster[nz][nx][k].x;//dem_element[nz][nx][dem_cluster[nz][nx][k].x];
+				y_high=dem_cluster[nz][nx][k].y;//dem_element[nz][nx][dem_cluster[nz][nx][k].y];
+				/*
+				if(index_img[nz][nx].size()){
+					std::cout<<"index_img.size:"<<index_img[nz][nx].size()<<"\n";
+					std::cout<<"(low,high):("<<y_low<<","<<y_high<<")\n";
+				}
+				*/
 				for(int k1=0;k1<index_img[nz][nx].size();k1++){
-					if(dem_cluster[nz][nx][k].x<=index_img[nz][nx][k1].y&&dem_cluster[nz][nx][k].y>=index_img[nz][nx][k1].y){
-					//	std::cout<<"nz,nx,k,k1,h,w:"<<nz<<","<<nx<<","<<k<<","<<k1<<","<<index_img[nz][nx][k].h<<","<<index_img[nz][nx][k].w<<"\n";
-						index_schm[index_img[nz][nx][k].h][index_img[nz][nx][k].w].ny=k;
-//						std::cout<<"nz,nx,k,k1,h,w:"<<nz<<","<<nx<<","<<k<<","<<k1<<","<<index_img[nz][nx][k].h<<","<<index_img[nz][nx][k].w<<"\n";
-						index_schm[index_img[nz][nx][k1].h][index_img[nz][nx][k1].w].ny=k;
+					//std::cout<<"dem_cluster[nz][nx][k]:("<<dem_cluster[nz][nx][k].x<<","<<dem_cluster[nz][nx][k].y<<")\n";
+					/*
+					std::cout<<k1<<":"<<index_img[nz][nx][k1].y<<":(";
+					if(y_low<=index_img[nz][nx][k1].y){
+						std::cout<<"○,";
 					}
 					else{
-						break;
+						std::cout<<"✕,";
+					}
+					if(y_high>=index_img[nz][nx][k1].y){
+						std::cout<<"○)\n";
+					}
+					else{
+						std::cout<<"✕)\n";
+					}
+					*/
+					if(y_low<=index_img[nz][nx][k1].y&&y_high>=index_img[nz][nx][k1].y){
+						dem_elements_size+=1;
+						//std::cout<<"nz,nx,k,k1,h,w:"<<nz<<","<<nx<<","<<k<<","<<k1<<","<<index_img[nz][nx][k].h<<","<<index_img[nz][nx][k].w<<"\n";
+//						std::cout<<"nz,nx,k,k1,h,w:"<<nz<<","<<nx<<","<<k<<","<<k1<<","<<index_img[nz][nx][k].h<<","<<index_img[nz][nx][k].w<<"\n";
+						index_schm[index_img[nz][nx][k1].h][index_img[nz][nx][k1].w].ny=k;
 					}
 				}
 		  }
 		}
 	}
 	std::cout<<"end/write index of schema cluster\n";
-	
+	std::cout<<"dem_elements_size(after):"<<dem_elements_size<<"\n";
 }
 
 void detect_objects::clustering_slice(void){
@@ -509,11 +582,11 @@ void detect_objects::clustering_slice(void){
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
 			//std::cout<<"nz,nx,k:"<<nz<<","<<nx<<"\n";
-			clusted_flag[nz][nx].reserve((int)dem_cluster[nz][nx].size());		
+			slice_cluster_index[nz][nx].reserve((int)dem_cluster[nz][nx].size());		
 			max_slic_clst+=(int)dem_cluster[nz][nx].size();
 			max_slic_elm+=(int)dem_cluster[nz][nx].size();
 			for(int k=0;k<(int)dem_cluster[nz][nx].size();k++){
-				clusted_flag[nz][nx].push_back(-1);
+				slice_cluster_index[nz][nx].push_back(-1);
 				
 			}
 		}
@@ -524,14 +597,14 @@ void detect_objects::clustering_slice(void){
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
 			for(int k=0;k<(int)dem_cluster[nz][nx].size();k++){
-				if(clusted_flag[nz][nx][k]!=-1){
+				if(slice_cluster_index[nz][nx][k]!=-1){
 					continue;
 				}
 				//std::cout<<"nz,nx,k:"<<nz<<","<<nx<<","<<k<<"\n";
 				tp.x=nx;
 				tp.y=k;
 				slice_cluster_element.push_back(tp);
-				clusted_flag[nz][nx][k]=(int)slice_cluster[nz].size();//be careful to transform the struct
+				slice_cluster_index[nz][nx][k]=(int)slice_cluster[nz].size();//be careful to transform the struct
 				
 				for(int k0=0;nx<map_size_nx-1&&k0<(int)slice_cluster_element.size();k0++){
 					if(!ros::ok())
@@ -541,31 +614,33 @@ void detect_objects::clustering_slice(void){
 					for(int k1=0;k1<(int)dem_cluster[nz][x0+1].size();k1++){
 						if(dem_cluster[nz][x0][kk].x<=dem_cluster[nz][x0+1][k1].y
 							&&dem_cluster[nz][x0][kk].y>=dem_cluster[nz][x0+1][k1].x){
-							//std::cout<<"if touched:clusted_flag["<<nz<<"]["<<x0+1<<"]["<<k1<<"]-("<<clusted_flag[nz][x0+1][k1]<<")\n";
-							if(clusted_flag[nz][x0+1][k1]==-1){//isn't clusted
+							//std::cout<<"if touched:slice_cluster_index["<<nz<<"]["<<x0+1<<"]["<<k1<<"]-("<<slice_cluster_index[nz][x0+1][k1]<<")\n";
+							if(slice_cluster_index[nz][x0+1][k1]==-1){//isn't clusted
 								tp.x=x0+1;
 								tp.y=k1;
 								slice_cluster_element.push_back(tp);
-								clusted_flag[nz][x0+1][k1]=(int)slice_cluster[nz].size();
+								slice_cluster_index[nz][x0+1][k1]=(int)slice_cluster[nz].size();
 							}
 							else{//is clusted
-								//std::cout<<"is clusted:("<<clusted_flag[nz][x0+1][k1]<<","<<(int)slice_cluster[nz].size()<<"\n";
-								if(clusted_flag[nz][x0+1][k1]!=(int)slice_cluster[nz].size()){
+								//std::cout<<"is clusted:("<<slice_cluster_index[nz][x0+1][k1]<<","<<(int)slice_cluster[nz].size()<<"\n"; 
+								if(slice_cluster_index[nz][x0+1][k1]!=(int)slice_cluster[nz].size()){
 									//tp.x=x0+1;
 									//tp.y=k1;
-									//slice_cluster[nz][ clusted_flag[nz][x0+1][k1] ].push_back(tp);
+									//slice_cluster[nz][ slice_cluster_index[nz][x0+1][k1] ].push_back(tp);
 									//
 									//std::cout<<"aa\n";
 									cv::Point2i marge_index_temp;
 									bool already_marge=false;
 									for(int mcn=0;mcn<marge_index.size();mcn++){
-										if(marge_index[mcn].y==clusted_flag[nz][x0+1][k1]){
+										if(marge_index[mcn].x==(int)slice_cluster[nz].size()
+											&& marge_index[mcn].y==slice_cluster_index[nz][x0+1][k1] )
+										{
 											already_marge=true;
 										}
 									}
 									if(!already_marge){
 										marge_index_temp.x=(int)slice_cluster[nz].size();
-										marge_index_temp.y=clusted_flag[nz][x0+1][k1];
+										marge_index_temp.y=slice_cluster_index[nz][x0+1][k1];
 										marge_index.push_back(marge_index_temp);
 									}
 								}
@@ -597,13 +672,70 @@ void detect_objects::clustering_slice(void){
 		for(int in=0;in<marge_index.size();in++){
 			slice_cluster[nz].erase(slice_cluster[nz].begin()+marge_index[in].x);
 		}
-		
+		//adjust slice cluster index
+		for(int nx=0;nx<map_size_nx;nx++){
+			for(int k=0;k<slice_cluster_index[nz][nx].size();k++){
+				for(int in=0;in<marge_index.size();in++){
+					if(marge_index[in].x==slice_cluster_index[nz][nx][k]){
+						slice_cluster_index[nz][nx][k]=marge_index[in].y;
+						break;
+					}
+				}
+			}
+		}
 		//reset marge_index
 		marge_index.clear();
 		
 	}//end for nz
 
 }
+
+void detect_objects::tracking_cluster(const std::vector<optical_flow_data>& opf_data,const float v,const float omg,const double& dt){//w：反時計周り
+	int h,w;
+	int nx,nz,ny;
+	int scn;
+	pcl::PointXYZ vX_opf;
+	pcl::PointXYZ sum_vX_opf;
+	pcl::PointXYZ ave_vX_opf;
+	pcl::PointXYZ vX_odm;
+	
+	vX_odm.x=v*sin(-omg);
+	vX_odm.y=0;
+	vX_odm.z=v*cos(omg);
+	
+	for(int nz=0;nz<map_size_nz;nz++){
+		slice_cluster_velocity_element[nz].resize( (int)slice_cluster[nz].size() );
+		slice_cluster_velocity[nz].resize( (int)slice_cluster[nz].size() );
+	}
+	for(int n=0;n<opf_data.size();n++){
+		h=opf_data[n].h;
+		w=opf_data[n].w;
+		nx=index_schm[h][w].nx;
+		nz=index_schm[h][w].nz;
+		ny=index_schm[h][w].ny;
+		scn=slice_cluster_index[nz][nx][ny];
+		vX_opf.x=opf_data[n].vx;
+		vX_opf.y=opf_data[n].vy;
+		vX_opf.z=opf_data[n].vz;
+		slice_cluster_velocity_element[nz][scn].push_back(vX_opf);
+	}
+	for(int nz=0;nz<map_size_nz;nz++){
+		for(int k=0;k<slice_cluster_velocity[nz].size();k++){
+			for(int n=0;n<slice_cluster_velocity_element[nz][k].size();n++){
+				sum_vX_opf.x=sum_vX_opf.x+slice_cluster_velocity_element[nz][k][n].x;
+				sum_vX_opf.y=sum_vX_opf.y+slice_cluster_velocity_element[nz][k][n].y;
+				sum_vX_opf.z=sum_vX_opf.z+slice_cluster_velocity_element[nz][k][n].z;
+			}
+			ave_vX_opf.x=sum_vX_opf.x/(int)slice_cluster_velocity_element[nz][k].size();
+			ave_vX_opf.y=sum_vX_opf.y/(int)slice_cluster_velocity_element[nz][k].size();
+			ave_vX_opf.z=sum_vX_opf.z/(int)slice_cluster_velocity_element[nz][k].size();
+			slice_cluster_velocity[nz][k].x=ave_vX_opf.x+vX_odm.x;
+			slice_cluster_velocity[nz][k].y=ave_vX_opf.y+vX_odm.y;
+			slice_cluster_velocity[nz][k].z=ave_vX_opf.z+vX_odm.z;
+		}
+	}
+}
+
 void detect_objects::publish_slice_cluster(void){
 	
 	int j = 0;
@@ -640,14 +772,18 @@ void detect_objects::publish_slice_cluster(void){
 				float h_high=dem_cluster[nz][nx][dem_clst_k].y;
 				//std::cout<<"h_low,h_high:"<<h_low<<","<<h_high<<"\n";
 				//search z
-				int hn_low=0;
-				int hn_high=0;
 				//if((int)dem_element[nz][nx].size()<=1){
-				if((int)slice_cluster[nz][k].size()<=1){
+				/*
+				if((int)slice_cluster[nz][k].size()<=1){//cluster num filtering
+					continue;
+				}
+				*/
+				float cluster_size=cell_size*(h_high-h_low);
+				const float cluster_size_threshold=0.04*0.04;
+				if(cluster_size<cluster_size_threshold){
 					continue;
 				}
 				for(int k1=0;k1<dem_element[nz][nx].size();k1++){
-					
 					if(h_low<=dem_element[nz][nx][k1]&&h_high>=dem_element[nz][nx][k1]){
 						cloud_element.z=dem_element[nz][nx][k1];
 						Eclusted_cloud->points.push_back(cloud_element);
@@ -709,7 +845,7 @@ void detect_objects::clear_dem_element(void){
 		for(int nx=0;nx<map_size_nx;nx++){
 			dem_element[nz][nx].clear();
 			index_img[nz][nx].clear();
-			clusted_flag[nz][nx].clear();
+			slice_cluster_index[nz][nx].clear();
 			dem_cluster[nz][nx].clear();
 		}
 		for(int k=0;k<slice_cluster[nz].size();k++){
@@ -758,7 +894,7 @@ int main(int argc,char **argv){
 //		std::cout<<"set matimage\n";
 		dtct_obj.set_DEM_map(img_cls.get_cur_image_by_ref());
 //		std::cout<<"5:"<<time_cls.get_time_now()<<"\n";
-//		dtct_obj.convet_image_to_pcl(img_cls.get_cur_image_by_ref());
+		dtct_obj.convet_image_to_pcl(img_cls.get_cur_image_by_ref());
 //		std::cout<<"6:"<<time_cls.get_time_now()<<"\n";
 		dtct_obj.clustering_DEM_elements();//<-
 
@@ -766,7 +902,8 @@ int main(int argc,char **argv){
 //		std::cout<<"now processing!\n";
 		dtct_obj.clustering_slice();
 		std::cout<<"8:"<<time_cls.get_time_now()<<"\n";
-//		dtct_obj.convert_dem_to_pcl(); 
+		//dtct_obj.tracking_cluster(/*hogehoge*/);
+		dtct_obj.convert_dem_to_pcl(); 
 		dtct_obj.publish_slice_cluster();
 		dtct_obj.clear_dem_element();
 		time_cls.set_time();
