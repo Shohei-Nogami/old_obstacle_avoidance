@@ -1,6 +1,6 @@
 
-#ifndef INCLUDE_IMAGE_PROCESS
-#define INCLUDE_IMAGE_PROCESS
+#ifndef INCLUDE_IMAGE_CLASS
+#define INCLUDE_IMAGE_CLASS
 
 #include"ros/ros.h"
 #include <ros/callback_queue.h>

@@ -16,6 +16,10 @@
 #include"struct_index.h"
 #include"opticalflow_data.h"
 
+#include"obst_avoid/point3d.h"
+#include"obst_avoid/vel3d.h"
+#include"obst_avoid/img_point.h"
+
 //#include <pcl/visualization/cloud_viewer.h>
 //#include <pcl/io/pcd_io.h>  
 //#include <pcl/point_types.h> 
@@ -23,9 +27,10 @@
 class detect_objects{
 	private:
 		ros::NodeHandle nh_pub1,nh_pub2,nh_sub;
-		ros::NodeHandle nh_pubpcl,nh_pubpcl2,nh_pubpcl3,nh_pubpcl4,nh_pubpcl5,nh_pubpcl6,nh_pubpcl7;
-		ros::Subscriber sub;
-		ros::CallbackQueue queue;
+		ros::NodeHandle nh_pubpcl,nh_pubpcl2,nh_pubpcl3,nh_pubpcl4,nh_pubpcl5,nh_pubpcl6,nh_pubpcl7,nh_pubpcl8,nh_pubpcl9;
+		ros::NodeHandle nh_optflw;
+		ros::Subscriber sub,sub_optflw;
+		ros::CallbackQueue queue,queue_optflw;
 		image_transport::ImageTransport it_pub1,it_pub2;
 		image_transport::Publisher pub1,pub2;
 
@@ -41,9 +46,11 @@ class detect_objects{
 		//DEM
 		const double map_size_z=16.04; //[m]
 		const double map_size_x=8.04;  //[m]
-		static const int map_size_nz=401;  //map height [pixcel]
+		const double map_size_y=1.5;   //[m]
+		static const int map_size_nz=201;  //map height [pixcel]
 		static const int map_size_nx=201;  //map width  [pixcel]
-		const double cell_size=0.04;//[cm]
+		static const int map_size_ny=38;  //map width  [pixcel]
+		const double cell_size=0.05;//[cm]
 		const double h_th=0.04;//0.08
 		//std::vector<double> dem_element[map_size_nz][map_size_nx];//401*201
 		std::vector<double> **dem_element;//[map_size_nz][map_size_nx];//401*201
@@ -52,37 +59,33 @@ class detect_objects{
 		std::vector<int> **slice_cluster_index;//[map_size_nz][map_size_nx];
 		std::vector< std::vector<pcl::PointXYZ> > *slice_cluster_velocity_element;
 		std::vector<pcl::PointXYZ> *slice_cluster_velocity;
-		/*
-		struct index_schema{
-			int nx;//index to number of x in dem-map
-			int nz;//index to number of z in dem-map
-			float y;
-			int ny;//index to shema cluster
-			index_schema() : nz(-1),nx(-1),y(-1),ny(-1){}
-		};
-		struct index_image{
-			int h;//height of image
-			int w;//width of image
-			float y;
-		};
-		*/
-		//index_schema index_schm[height][width];//673*376
 		index_schema **index_schm;//673*376
 		std::vector<index_image> **index_img;//[map_size_nz][map_size_nx];//401*201
 
-		//PCL
+	//-----PCL
 		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
 		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud2;
 		pcl::PointCloud<pcl::PointXYZ>::Ptr voxeled_cloud;
 		pcl::PointCloud<pcl::PointXYZ>::Ptr ground_deleted_cloud;
 		//		pcl::PointCloud<pcl::PointXYZRGB>::Ptr Eclusted_cloud;
-  	ros::Publisher pc_pub,pc_pub2,pc_pub3,pc_pub4,pc_pub5,pc_pub6,pc_pub7;
+  	ros::Publisher pc_pub,pc_pub2,pc_pub3,pc_pub4,pc_pub5,pc_pub6,pc_pub7,pc_pub8,pc_pub9;
 		
 		pcl::SACSegmentation<pcl::PointXYZ> seg;//の傾きラジアン
 		pcl::PointIndices::Ptr inliers;// (new pcl::PointIndices);
 		pcl::ModelCoefficients::Ptr coefficients;// (new pcl::ModelCoefficients);
-		//ground estimate
+	//-----voxel grid
+		index_voxel **index_vxl;//[height][width]
+		std::vector<pcl::PointXYZ> ***voxel_element;
+		pcl::PointXYZ ***voxel_point;
+		int ***index_points;
+		pcl::PointCloud<pcl::PointXYZ>::Ptr selfvoxel_cloud;
+	//---clustering 
+		int ***clusted_index;
+		std::vector< std::vector<pcl::PointXYZ> > cluster;
 		
+	//---opticalflow
+		::obst_avoid::vel3d vX;
+	
 		public:
 			detect_objects();
 			~detect_objects();
@@ -91,18 +94,28 @@ class detect_objects{
 			bool is_cvbridge_image(void);
 			void set_depth_image(void);
 			bool convert_coordinate_xz_nxz(const float x,const float z,int& nx,int& nz);
+			
 			void invert_coordinate_xz_nxz(const int& nx,const int& nz,float& x,float& z);
+		//---SELF VOXEL CLUSTER
+			void create_voxel_grid(cv::Mat& image);
+			bool culc_voxel_nxzy(const float voxel_size_x,const float voxel_size_y,const float voxel_size_z,const float x,const float z,const float y,int& nx,int& nz,int& ny);
+			float culclate_euclid_distance(pcl::PointXYZ& p1,pcl::PointXYZ& p2);
+			float culclate_chebyshev_distance(pcl::PointXYZ& p1,pcl::PointXYZ& p2);
+		//---OPTICALFLOW	
+			void subscribe_opticalflow(void);
+			void opticalflow_callback(const obst_avoid::vel3d::ConstPtr& msg);
+			void add_velocity_to_cluster(void);
+			
 			void convet_image_to_pcl(cv::Mat& image);
-
+		//---GROUND ESTIMATE
 			void ground_estimation_from_pc(const float& y_th,const float& cam_y,float& a,float& b,float& c,float& d);
 			void ground_estimation_from_image(const float& y_th,const float& cam_y,float& a,float& b,float& c,float& d);
-
+		//---DEM
 			void set_DEM_map(cv::Mat& image);	
 			void clustering_DEM_elements(void);
 			void clustering_schema(void);
 			void clustering_slice(void);
 			void tracking_cluster(const std::vector<optical_flow_data>& opf_data,const float v,const float omg,const double& dt);
-			
 			void convert_dem_to_pcl(void);
 			void publish_slice_cluster(void);
 			void clear_dem_element(void);

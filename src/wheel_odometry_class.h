@@ -1,11 +1,18 @@
+
+#ifndef INCLUDE_WHEEL_ODOMETRY_CLASS
+#define INCLUDE_WHEEL_ODOMETRY_CLASS
+
 #include"ros/ros.h"
 #include <ros/callback_queue.h>
 #include"obst_avoid/wheel_msg.h"
 
+#include"time_class.h"
 
 class wheel_odometry_class{
 	private:
-		int vr,vl;
+		int vr_i,vl_i;
+		double vr_ord,vl_ord,vr,vl;
+		double vx,vy,vz;
 		double v,w;
 		double position_x,position_z;
 		double pre_position_x,pre_position_z;
@@ -16,6 +23,7 @@ class wheel_odometry_class{
 		bool first_process_flag;
 		bool first_delta_process_flag;
 		const double d=0.276;//車輪幅
+		time_class tm_wlodm;
 	public:
 		wheel_odometry_class();
 		bool is_cur_odometry(void);
@@ -31,7 +39,13 @@ class wheel_odometry_class{
 		virtual ~wheel_odometry_class();
 		void set_delta_odometry(double& dt);//<-use
 		virtual void define_variable(void);
-
+		void set_current_velocity(void);
+		double& get_velocity(void);
+		double& get_angular_velocity(void);
+		void set_velocity_X(void);
+		double& get_velocity_x(void);
+		double& get_velocity_y(void);
+		double& get_velocity_z(void);
 	protected:
 		ros::NodeHandle nh_pub,nh_sub;
 		ros::Publisher pub;
@@ -48,5 +62,7 @@ class wheel_odometry_class{
 
 
 };
+
+#endif 
 
 

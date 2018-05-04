@@ -2,7 +2,7 @@
 
 wheel_odometry_class::wheel_odometry_class()
 	:first_process_flag(true),first_delta_process_flag(true)
-	,position_x(0),position_z(0),vr(0),vl(0)
+	,position_x(0),position_z(0),vr_i(0),vl_i(0),vr_ord(0),vl_ord(0),vr(0),vl(0),vx(0),vy(0),vz(0)
 {
 }
 bool wheel_odometry_class::is_cur_odometry(void){
@@ -47,8 +47,8 @@ wheel_odometry_class::~wheel_odometry_class(){
 }
 
 void wheel_odometry_class::set_velocity_and_angular_velocity(void){
-	v=(double)(vr+vl)/2/1000;
-	w=(double)(vr-vl)/d/1000;
+	v=(double)(vr_i+vl_i)/2/1000;
+	w=(double)(vr_i-vl_i)/d/1000;
 }
 
 void wheel_odometry_class::set_cur_odometry(void){
@@ -71,8 +71,12 @@ void wheel_odometry_class::define_variable(void){
 	sub=nh_sub.subscribe("/wheel_data",1,&wheel_odometry_class::wheel_odometry_callback,this);
 }
 void wheel_odometry_class::wheel_odometry_callback(const obst_avoid::wheel_msg::ConstPtr& msg){
-	vr=msg->vel_r;
-	vl=msg->vel_l;
+	tm_wlodm.set_time();
+	vr_i=msg->vel_r;
+	vl_i=msg->vel_l;
+	vr_ord=(double)vr_i/1000;
+	vl_ord=(double)vl_i/1000;
+	
 }
 void wheel_odometry_class::set_pre_delta_odometry(void){
 	pre_dx=dx;
@@ -87,6 +91,34 @@ void wheel_odometry_class::set_delta_odometry(double& dt){//<-use
 	set_delta_orientetion(dt);
 	set_delta_position(dt);
 }
+void wheel_odometry_class::set_current_velocity(void){
+	float T=0.01;
+	vr=(tm_wlodm.get_delta_time()*vr_ord+T*vr)/(T+tm_wlodm.get_delta_time());
+	vl=(tm_wlodm.get_delta_time()*vl_ord+T*vl)/(T+tm_wlodm.get_delta_time());
+	v=(vl+vr)/2;
+	w=(vr-vl)/d;
+}
+double& wheel_odometry_class::get_velocity(void){
+	return v;
+}
+double& wheel_odometry_class::get_angular_velocity(void){
+	return w;
+}
+void wheel_odometry_class::set_velocity_X(void){
+	vx=v*sin(-w*tm_wlodm.get_delta_time());
+	vy=0;
+	vz=v*cos(-w*tm_wlodm.get_delta_time());
+}
+double& wheel_odometry_class::get_velocity_x(void){
+	return vx;
+}
+double& wheel_odometry_class::get_velocity_y(void){
+	return vy;
+}
+double& wheel_odometry_class::get_velocity_z(void){
+	return vz;
+}
+
 /*
 int main(int argc,char **argv){
 	ros::init(argc,argv,"wheel_odometry_class_test");

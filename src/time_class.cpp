@@ -8,6 +8,7 @@ time_class::time_class()
 time_class::~time_class()
 {
 }
+
 void time_class::set_cur_time(void){
 	temp_time = ros::Time::now()-start_time;
 	cur_time=temp_time.toSec();
@@ -32,10 +33,21 @@ void time_class::set_time(void){
 	if(!first_process_flag){
 		set_pre_time();
 	}
+	else{
+		set_cur_time();
+		set_pre_time();
+	}
 	set_cur_time();
 	set_delta_time();
 }
-
+bool time_class::is_delta_time(void){
+	if(delta_time){
+		return true;
+	}
+	else{
+		return false;
+	}
+}
 /*
 int main(int argc,char **argv){
 	ros::init(argc,argv,"time_class_test");

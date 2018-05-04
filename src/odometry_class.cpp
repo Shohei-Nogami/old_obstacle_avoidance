@@ -1,203 +1,120 @@
 #include"odometry_class.h"
 
 odometry_class::odometry_class()
-	:first_process_flag(true),first_delta_process_flag(true)
-	,dx(0),dy(0),dz(0),droll(0),dpitch(0),dyaw(0)
+	:x(0),y(0),z(0),r(0),p(0),yw(0),wv(0),ww(0),vv(0),vw(0),th_angle(M_PI/18)
 {
-
-}
-bool odometry_class::is_cur_odometry(void){
-	if(first_process_flag)
-		return false;
-	else
-		return true;
-}
-bool odometry_class::is_delta_odometry(void){
-	if(first_delta_process_flag)
-		return false;
-	else
-		return true;
-}
-void odometry_class::turn_first_process_flag(void){
-	first_process_flag=false;
-}
-void odometry_class::turn_first_delta_process_flag(void){
-	first_delta_process_flag=false;
-}
-
-void odometry_class::subscribe_odometry(void){
-	queue.callOne(ros::WallDuration(1));
-}
-//		void set_cur_image(void);
-void odometry_class::set_odometry(void){
-	if(is_cur_odometry()){
-		set_pre_odometry();	
-	}
-	subscribe_odometry();
-	turn_first_process_flag();
-}
-void odometry_class::get_cur_odometry(double& x,double& y,double& z,double& r,double& p,double& yw){
-	x=position_x;
-	y=position_y;
-	z=position_z;
-	r=roll;
-	p=pitch;
-	yw=yaw;
-
-}
-void odometry_class::get_pre_odometry(double& x,double& y,double& z,double& r,double& p,double& yw){
-	x=pre_position_x;
-	y=pre_position_y;
-	z=pre_position_z;
-	r=pre_roll;
-	p=pre_pitch;
-	yw=pre_yaw;
-}
-
-void odometry_class::get_delta_odometry(double& return_dx,double& return_dz,double& return_dyaw){
-	return_dx=dx;
-	return_dz=dz;
-	return_dyaw=dyaw;
+	wocls.define_variable();
+	vocls.define_variable();
+	
 }
 odometry_class::~odometry_class(){
 }
-double& odometry_class::get_delta_yaw(void){
-	return dyaw;
+void odometry_class::subscribe_msgs(void){
+	wocls.subscribe_odometry();
+	vocls.set_odometry();
 }
-void odometry_class::set_pre_odometry(void){
-	pre_position_x=position_x;
-	pre_position_y=position_y;
-	pre_position_z=position_z;
-	pre_roll=roll;
-	pre_pitch=pitch;
-	pre_yaw=yaw;
+void odometry_class::set_data(void){
+	wocls.set_current_velocity();
+	wocls.set_velocity_X();
+	vocls.set_delta_odometry();
+	vocls.set_velocity();
 }
-void odometry_class::set_delta_orientetion(void){
-	if(pre_yaw>0&&yaw<0&&pre_yaw>PI/2)
-		dyaw=(yaw+2*PI)-pre_yaw;
-	else if(pre_yaw<0&&yaw>0&&yaw>PI/2)
-		dyaw=(yaw-2*PI)-pre_yaw;
-	else
-		dyaw=yaw-pre_yaw;
-	droll=roll-pre_roll;
-	dpitch=pitch-pre_pitch;
-}
-void odometry_class::define_variable(void){
-	pub=nh_pub.advertise<nav_msgs::Odometry>("odometry",1);
-	nh_sub.setCallbackQueue(&queue);
-	sub=nh_sub.subscribe("/zed/odom",1,&odometry_class::odometry_callback,this);
-}
-void odometry_class::odometry_callback(const nav_msgs::Odometry::ConstPtr& msg){
-	//現在のodometryを取得
-	double r,p,y;//一時的に格納するための変数
-	tf::Quaternion quat(
-		msg->pose.pose.orientation.x,
-		msg->pose.pose.orientation.y,
-		msg->pose.pose.orientation.z,
-		msg->pose.pose.orientation.w);
-	tf::Matrix3x3(quat).getRPY(r,p,y);
-	//set
-	position_x=msg->pose.pose.position.x;
-	position_y=msg->pose.pose.position.y;
-	position_z=msg->pose.pose.position.z;
-	roll=r;
-	pitch=p;
-	yaw=y;
+void odometry_class::set_velocity(void){
+	//set velocity X
+	vv_x=vocls.get_velocity_x();
+	vv_y=vocls.get_velocity_y();
+	vv_z=vocls.get_velocity_z();
+	wv_x=wocls.get_velocity_x();
+	wv_y=wocls.get_velocity_y();
+	wv_z=wocls.get_velocity_z();
 
-	position_x = ( cos(pitch)*cos(yaw) )*msg->pose.pose.position.x
-	- ( cos(pitch)*sin(yaw) )*msg->pose.pose.position.y
-	+ ( sin(pitch) )*msg->pose.pose.position.z;
-
-	position_y = ( cos(roll)*sin(yaw) + sin(roll)*sin(pitch)*cos(yaw) )*msg->pose.pose.position.x
-	+ ( cos(roll)*cos(yaw) - sin(roll)*sin(pitch)*sin(yaw) )*msg->pose.pose.position.y
-	- ( sin(roll)*cos(pitch) )*msg->pose.pose.position.z;
-
-	position_z = ( sin(roll)*sin(yaw) - cos(roll)*sin(pitch)*cos(yaw) )*msg->pose.pose.position.x
-	+ ( sin(roll)*cos(yaw) + cos(roll)*sin(pitch)*sin(yaw) )*msg->pose.pose.position.y;
-	+ ( cos(roll)*cos(pitch) )*msg->pose.pose.position.z;
+	//inner product
+	ip=vv_x*wv_x+vv_y*wv_y+vv_z*wv_z;
+	
+	//length of vector
+	vv_size=std::sqrt(vv_x*vv_x+vv_y*vv_y+vv_z*vv_z);
+	wv_size=std::sqrt(wv_x*wv_x+wv_y*wv_y+wv_z*wv_z);
+	
+	//difference angle of vectors
+	dif_angle=ip/(vv_size*wv_size);
+	
+	//angle => th_angle -> v=wv
+	//angle = 0 -> v=vv no-use
+	//eq:y=e^(-X^2)
+	//y=0.5 -> angle==th_angle/2
+	double P=exp(0.8326*( dif_angle/(th_angle/2) ) );			
+	
+	vv=vocls.get_velocity();
+	vw=vocls.get_velocity_wy();
+	
+	wv=wocls.get_velocity();
+	ww=wocls.get_angular_velocity();
+	
+	v=vv*P+wv*(1-P);
+	w=vw*P+ww*(1-P);
+	
 }
-void odometry_class::set_pre_delta_odometry(void){
-	pre_dx=dx;
-	pre_dz=dz;
-	pre_droll=droll;
-	pre_dpitch=dpitch;
-	pre_dyaw=dyaw;
+void odometry_class::set_odometry(void){
+	tm_odm.set_time();
+	x+=v*sin(-w*tm_odm.get_delta_time());
+	y+=0;
+	z+=v*cos(-w*tm_odm.get_delta_time());
+	r+=0;
+	p+=0;
+	yw+=w*tm_odm.get_delta_time();
 }
-void odometry_class::set_delta_position(void){
-	dr=sqrt((position_x*position_x
-		-2*position_x*pre_position_x
-		+pre_position_x*pre_position_x)
-		+(position_y*position_y
-		-2*position_y*pre_position_y
-		+pre_position_y*pre_position_y)
-		+(position_z*position_z
-		-2*position_z*pre_position_z
-		+pre_position_z*pre_position_z));
-	dz=-dr*cos(-dyaw);
-	dx=dr*sin(-dyaw);
-/*
-	double T=dt*5;
-	dz=(T*pre_dz+dt*dz)/(T+dt);
-	dx=(T*pre_dx+dt*dx)/(T+dt);
-*/
-	if(!pose_detection())
-		dz=-dz;
+double& odometry_class::get_dif_angle(void){
+	return dif_angle;
 }
-//進行の向きを取得
-bool odometry_class::pose_detection()
-{
-	bool status=true;
-	if(-pre_yaw<(PI/2.0)&&-pre_yaw>0&&
-		(-(position_y-pre_position_y)>0||(position_x-pre_position_x)>0)){
-		if((-pre_yaw)-atan(
-			(position_x-pre_position_x)/(-(position_y-pre_position_y)))<PI/2.0)
-			status=false;
-	}
-	if(-pre_yaw>-(PI/2.0)&&-pre_yaw<0&&
-		(-(position_y-pre_position_y)<0||(position_x-pre_position_x)>0)){
-		if(-(-pre_yaw)+atan(
-			(position_x-pre_position_x)/(-(position_y-pre_position_y)))<PI/2.0)
-			status=false;
-	}
-	if(-pre_yaw>-(PI)&&-pre_yaw<-(PI/2.0)&&
-		(-(position_y-pre_position_y)<0||(position_x-pre_position_x)<0)){
-		if(PI+(-pre_yaw)-atan(
-			(position_x-pre_position_x)/(-(position_y-pre_position_y)))<PI/2.0)
-			status=false;
-	}
-	if(-pre_yaw<(PI)&&-pre_yaw>(PI/2.0)&&
-	(-(position_y-pre_position_y)>0||(position_x-pre_position_x)<0)){
-		if(PI-(-pre_yaw)+atan(
-			(position_x-pre_position_x)/(-(position_y-pre_position_y)))<PI/2.0)
-			status=false;
-	}
-	if(-pre_yaw==0&&(position_x-pre_position_x)>0)
-		status=false;
+double& odometry_class::get_angular_velocity(void){
+	return w;
+}
+double& odometry_class::get_velocity(void){
+	return v;
+}
+double& odometry_class::get_odometry_x(void){
+	return x;
+}
+double& odometry_class::get_odometry_y(void){
+	return y;
+}
+double& odometry_class::get_odometry_z(void){
+	return z;
+}
+double& odometry_class::get_odometry_r(void){
+	return r;
+}
+double& odometry_class::get_odometry_p(void){
+	return p;
+}
+double& odometry_class::get_odometry_yw(void){
+	return yw;
+}
 
-	if(-pre_yaw==PI/2.0&&-(position_y-pre_position_y)>0)
-		status=false;
 
-	if(-pre_yaw==-PI/2.0&&-(position_y-pre_position_y)<0)
-		status=false;
-
-	if((-pre_yaw==-PI||-pre_yaw==PI)&&(position_x-pre_position_x)<0)
-		status=false;
-	return status;
-}
-void odometry_class::set_delta_odometry(void){
-	if(is_delta_odometry()){
-		set_pre_delta_odometry();		
-	}
-	set_delta_orientetion();
-	set_delta_position();
-	turn_first_delta_process_flag();
-}
-/*
 int main(int argc,char **argv){
 	ros::init(argc,argv,"odometry_class_test");
-	odometry_class odometry;
+	odometry_class odom_cls;
+	time_class t;
+	double t_now=t.get_time_now();
+	while(ros::ok()){
+		odom_cls.subscribe_msgs();
+		std::cout<<"subscribed:"<<t.get_time_now()-t_now<<"\n";
+		t_now=t.get_time_now();
+		odom_cls.set_data();
+		std::cout<<"set_data:"<<t.get_time_now()-t_now<<"\n";
+		t_now=t.get_time_now();
+		odom_cls.set_velocity();
+		std::cout<<"set_velocity:"<<t.get_time_now()-t_now<<"\n";
+		t_now=t.get_time_now();
+		odom_cls.set_odometry();
+		std::cout<<"set_odometry:"<<t.get_time_now()-t_now<<"\n";
+		t_now=t.get_time_now();
+		
+		t.set_time();
+		std::cout<<"dt:"<<t.get_delta_time()<<"\n";
+	}
+	
 	std::cout<<"finish\n";
 	return 0;
 }
-*/
-

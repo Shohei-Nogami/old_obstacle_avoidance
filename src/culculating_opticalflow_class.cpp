@@ -1,6 +1,6 @@
 #include"culculating_opticalflow_class.h"
 #include"depth_image_class.h"
-#include"odometry_class.h"
+#include"visual_odometry_class.h"
 #include"wheel_odometry_class.h"
 #include"time_class.h"
 
@@ -9,6 +9,9 @@ culculate_optical_flow::culculate_optical_flow()
 //  ,clp_point_size((int)(clp_max_points*10)),threshold_fp((int)(max_points*0.8))
 //  ,th_clpimg((int)(clp_max_points*0.8))
   {
+  pub_vel=nh.advertise<obst_avoid::vel3d>("objects_velocity",1);
+  
+  
   pts.reserve(point_size);   //特徴点
   npts.reserve(point_size);  //移動後の特徴点
   sts.reserve(point_size);
@@ -25,7 +28,10 @@ culculate_optical_flow::culculate_optical_flow()
   jnewpoints.reserve(point_size);
   tracking_count_p.reserve(point_size);
   tracking_count.reserve(point_size);
-
+	
+	vX.vel.reserve(point_size);
+	vX.pt.reserve(point_size);
+	
 }
 
 culculate_optical_flow::~culculate_optical_flow(){
@@ -142,9 +148,10 @@ void culculate_optical_flow::culculating_observed_opticalflow(void){
 
 }
 void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Mat& cur_depth_image,const double& w_v,const double& dyaw,const double& dt){//+V,Ω
-  float pcur_z;
+  float pcur_z,ppre_z;
   cv::Point2i ppt;
-  cv::Point3f dX_element;
+  ::obst_avoid::Point3d vX_element;
+  ::obst_avoid::img_point pt;
 	float X,Y;
 //	std::cout<<"w_v,dyaw,dt):("<<w_v<<","<<dyaw<<","<<dt<<")\n";
 
@@ -158,10 +165,10 @@ void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Ma
         X=(float)(pts[i].x-width/2.0);//-width;
     		Y=(float)(pts[i].y-height/2.0);//-height;
         //画像ヤコビアンではなく並進と回転行列で計算
-        ppt.x=pts[i].x- (float)(//wheel only
-          w_v*sin(-dyaw)*dt/pre_z[i]-X/pre_z[i]*w_v*cos(-dyaw)*dt
-          -(f+pow(X,2.0)/f)*dyaw
-          );
+      ppt.x=pts[i].x- (float)(//wheel only
+        w_v*sin(-dyaw)*dt/pre_z[i]-X/pre_z[i]*w_v*cos(-dyaw)*dt
+        -(f+pow(X,2.0)/f)*dyaw
+        );
 
       ppt.y=pts[i].y-(float)(
           -(Y/pre_z[i]*w_v*cos(-dyaw)*dt)
@@ -170,23 +177,34 @@ void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Ma
 //	std::cout<<"pts[i],ppt,npts[i]:"<<pts[i]<<","<<ppt<<","<<npts[i]<<"\n";
       points.push_back(pts[i]);
 			cv::Point2i newpoints_temp;
-			newpoints_temp.x=(int)(npts[i].x-ppt.x)+pts[i].x;
-			newpoints_temp.y=(int)(npts[i].y-ppt.y)+pts[i].y;
+			//newpoints_temp.x=(int)(npts[i].x-ppt.x)+pts[i].x;
+			//newpoints_temp.y=(int)(npts[i].y-ppt.y)+pts[i].y;
+			newpoints_temp.x=(int)npts[i].x;
+			newpoints_temp.y=(int)npts[i].y;
       newpoints.push_back(newpoints_temp);
 			z.push_back(pre_z[i]);
 			nz.push_back(cur_z[i]);
-
-/*			
-      dX_element.x=dx;
-      dX_element.y=dy;
-      dX_element.z=dz;
-      dX.push_back(dX_element);
+			
+			
+      vX_element.x=(npts[i].x*pcur_z/f - ppt.x*pre_z[i]/f)/dt;
+      vX_element.y=(npts[i].y*pcur_z/f - ppt.y*pre_z[i]/f)/dt;;
+      vX_element.z=(pcur_z-pre_z[i])/dt;
+      vX.vel.push_back(vX_element);
+      
+      pt.h=npts[i].y;
+      pt.w=npts[i].x;
+      vX.pt.push_back(pt);
       //				newpoints.push_back(npts[i]);
 */
       }
     }
   }
 }
+
+void culculate_optical_flow::publish_objects_velocity(void){
+	pub_vel.publich(vX);
+}
+
 void culculate_optical_flow::publish_flow_image(const cv::Mat& cur_image){
   view_image=cur_image.clone();
   for(int i=0;i<points.size();i++){
@@ -217,6 +235,8 @@ void culculate_optical_flow::clear_vector(void){
   jnewpoints.clear();
   tracking_count_p.clear();
   tracking_count.clear();
+  vX.vel.clear();
+  vX.pt.clear();
 }
 cv::Mat& culculate_optical_flow::get_view_image(void){
   return view_image;
@@ -253,7 +273,7 @@ int main(int argc,char **argv){
 
   image_class img_cls;
 	depth_image_class depth_img_cls;
-  odometry_class odm_cls;
+  visual_odometry_class odm_cls;
   wheel_odometry_class wodm_cls;
   time_class time_cls;
   culculate_optical_flow cul_optflw;
@@ -293,6 +313,7 @@ int main(int argc,char **argv){
 				img_cls.publish_debug_image(cul_optflw.get_view_image());
 				std::cout<<"14\n";
 				std::cout<<"dt:"<<time_cls.get_delta_time()<<"\n";
+		    cul_optflw.publish_objects_velocity();
 			}
 		}
     cul_optflw.clear_vector();

@@ -1,3 +1,7 @@
+
+#ifndef INCLUDE_TIME_CLASS
+#define INCLUDE_TIME_CLASS
+
 #include"ros/ros.h"
 #include <ros/callback_queue.h>
 
@@ -12,7 +16,7 @@ class time_class{
 		double nowtime;
 	public:
 		time_class();
-		~time_class();
+		virtual ~time_class();
 		void set_cur_time(void);
 		void set_pre_time(void);
 		void set_delta_time(void);
@@ -20,5 +24,7 @@ class time_class{
 		double& get_delta_time(void);
 		double& get_time_now(void);
 		void set_time(void);
-
+		bool is_delta_time(void);
 };
+
+#endif 

@@ -12,7 +12,12 @@ struct index_image{
 	int w;//width of image
 	float y;
 };
-
+struct index_voxel{//[height][width]
+	int nx;//index to number of x in voxel-map
+	int nz;//index to number of z in voxel-map
+	int ny;//index to number of y in voxel-map
+	index_voxel() : nz(-1),nx(-1),ny(-1){}
+};
 /*
 struct image_point{
 	int h;//height of image
