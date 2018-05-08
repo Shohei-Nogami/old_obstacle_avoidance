@@ -18,6 +18,13 @@ struct index_voxel{//[height][width]
 	int ny;//index to number of y in voxel-map
 	index_voxel() : nz(-1),nx(-1),ny(-1){}
 };
+struct Point3f1i{//[height][width]
+	float x;//index to number of x in voxel-map
+	float z;//index to number of z in voxel-map
+	float y;//index to number of y in voxel-map
+	int s;
+	Point3f1i() : s(0){}
+};
 /*
 struct image_point{
 	int h;//height of image

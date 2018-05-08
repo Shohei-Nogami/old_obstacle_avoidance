@@ -36,7 +36,7 @@ detect_objects::detect_objects()
 	for(int i=0;i<height;i++){
 		index_schm[i]=new index_schema[width];
 	}
-	
+
 	index_vxl=new index_voxel*[height];
 	for(int i=0;i<height;i++){
 		index_vxl[i]=new index_voxel[width];
@@ -48,11 +48,21 @@ detect_objects::detect_objects()
 			voxel_element[j][i]=new std::vector<pcl::PointXYZ>[map_size_ny];
 		}
 	}
+	/*
 	voxel_point=new pcl::PointXYZ**[map_size_nz];
 	for(int j=0;j<map_size_nz;j++){
 		voxel_point[j]=new pcl::PointXYZ*[map_size_nx];
 		for(int i=0;i<map_size_nx;i++){
 			voxel_point[j][i]=new pcl::PointXYZ[map_size_ny];
+		}
+	}
+	*/
+
+	voxel_point=new Point3f1i**[map_size_nz];
+	for(int j=0;j<map_size_nz;j++){
+		voxel_point[j]=new Point3f1i*[map_size_nx];
+		for(int i=0;i<map_size_nx;i++){
+			voxel_point[j][i]=new Point3f1i[map_size_ny];
 		}
 	}
 	index_points=new int**[map_size_nz];
@@ -107,18 +117,18 @@ detect_objects::~detect_objects(){
 		delete[] index_img[i];
 	}
 	delete[] index_img;
-	
+
 	for(int i = 0; i < map_size_nz; ++i ) {
 		delete[] dem_element[i];
 	}
 	delete[] dem_element;
-	
+
 	delete[] slice_cluster;
 	for(int i = 0; i < map_size_nz; ++i ) {
 		delete[] slice_cluster_index[i];
 	}
 	delete[] slice_cluster_index;
-	
+
 	for(int i = 0; i < height; ++i ) {
 		delete[] index_schm[i];
 	}
@@ -127,7 +137,7 @@ detect_objects::~detect_objects(){
 		delete[] index_vxl[i];
 	}
 	delete[] index_vxl;
-	
+
 	for(int j=0;j<map_size_nz;j++){
 		for(int i=0;i<map_size_nx;i++){
 			delete[] voxel_element[j][i];
@@ -135,7 +145,7 @@ detect_objects::~detect_objects(){
 		delete[] voxel_element[j];
 	}
 	delete[] voxel_element;
-	
+
 	for(int j=0;j<map_size_nz;j++){
 		for(int i=0;i<map_size_nx;i++){
 			delete[] voxel_point[j][i];
@@ -225,13 +235,13 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 	float a,b,c,d;
 	std::cout<<"map_size_nz,nx,ny:("<<map_size_nz<<","<<map_size_nx<<","<<map_size_ny<<")\n";
 	pcl::PointXYZ voxel_element_temp;
-	
+
 	//ground estimate
 	ground_estimation_from_image(y_th,cam_y,a,b,c,d);
 	float y_ground;
 
 	uint8_t color_th=3;
-	
+
 	if(std::abs(d-(camera_height+camera_bias))>=0.15){
 		a=-0.08;
 		b=0;
@@ -245,18 +255,21 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 //	std::cout<<"411\n";
 	//set voxel elements
 	int original_size=0;
-	
+
 	//clear voxel_element
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
 			for(int ny=0;ny<map_size_ny;ny++){
-				voxel_element[nz][nx][ny].clear();
+				//voxel_element[nz][nx][ny].clear();
+				voxel_point[nz][nx][ny].s=0;
 			}
 		}
 	}
-	float voxel_size_x=0.04;
-	float voxel_size_z=0.08;
-	float voxel_size_y=0.04;
+	
+		std::cout<<"00:"<<tm_cls.get_time_now()<<"\n";
+//	float voxel_size_x=0.04;
+//	float voxel_size_z=0.08;
+//	float voxel_size_y=0.04;
 	for(int h=0;h<height;h++){
 		for(int w=0;w<width;w++){
 			z_temp=depth_image.at<float>(h,w);
@@ -270,16 +283,26 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 					&&(image.at<cv::Vec3b>(h,w)[0]<=255-color_th
 					||image.at<cv::Vec3b>(h,w)[1]<=255-color_th
 					||image.at<cv::Vec3b>(h,w)[2]<=255-color_th)){//){
-					
+
 					if(culc_voxel_nxzy(voxel_size_x,voxel_size_z,voxel_size_y,x_temp,z_temp,y_temp+camera_height,nx,nz,ny)){
 						index_vxl[h][w].nz=nz;
 						index_vxl[h][w].nx=nx;
 						index_vxl[h][w].ny=ny;
-						voxel_element_temp.x=x_temp;
-						voxel_element_temp.y=y_temp;
-						voxel_element_temp.z=z_temp;
+						//into add process
+						//voxel_element_temp.x=x_temp;
+						//voxel_element_temp.y=y_temp;
+						//voxel_element_temp.z=z_temp;
+						voxel_point[nz][nx][ny].x+=x_temp;
+						voxel_point[nz][nx][ny].y+=y_temp;
+						voxel_point[nz][nx][ny].z+=z_temp;
+						voxel_point[nz][nx][ny].s++;
+						
+						
+						
+						
 						//std::cout<<"voxel_element_temp.y:"<<voxel_element_temp.y<<"\n";
-						voxel_element[nz][nx][ny].push_back(voxel_element_temp);
+						//voxel_element[nz][nx][ny].push_back(voxel_element_temp);
+						
 						original_size++;
 						//std::cout<<"index_img["<<nz<<"]["<<nx<<"].size:"<<index_img[nz][nx].size()<<"\n";
 						continue;
@@ -287,46 +310,14 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 				}
 			}
 			index_vxl[h][w].nz=-1;
-			index_vxl[h][w].nx=-1;
-			index_vxl[h][w].ny=-1;
+			//index_vxl[h][w].nx=-1;
+			//index_vxl[h][w].ny=-1;
 		}
 	}
 	std::cout<<"selfvoxel: original_size:"<<original_size<<"\n";
-	//
-	/*
-	//show voxel area program 
-		int j = 0;
-	float colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr test_points(new pcl::PointCloud<pcl::PointXYZRGB>);
-	
-	test_points->points.clear();
-	test_points->height=1;
-	test_points->width=original_size;
-	test_points->points.reserve(original_size);
-	pcl::PointXYZRGB temp;
-	for(int nz=0;nz<map_size_nz;nz++){
-		for(int nx=0;nx<map_size_nx;nx++){
-			for(int ny=0;ny<map_size_ny;ny++){
-				temp.r=colors[j%12][0];
-				temp.g=colors[j%12][1];
-				temp.b=colors[j%12][2];
-				for(int k=0;k<voxel_element[nz][nx][ny].size();k++){
-					temp.x=voxel_element[nz][nx][ny][k].z;
-					temp.y=-voxel_element[nz][nx][ny][k].x;
-					temp.z=voxel_element[nz][nx][ny][k].y;
-					test_points->points.push_back(temp);
-					
-				}
-				j++;
-			}
-		}
-	}
-	sensor_msgs::PointCloud2 edit_cloud6;
-  pcl::toROSMsg (*test_points, edit_cloud6);
-	edit_cloud6.header.frame_id="/zed_current_frame";
-  pc_pub6.publish(edit_cloud6);
-	*/
-	
+
+		std::cout<<"selfvoxel:"<<tm_cls.get_time_now()<<"\n";
+
 	//voxel process
 	pcl::PointXYZ cog;//Center of gravity
 	//float densy=0;
@@ -337,27 +328,12 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 	std::vector<index_voxel> clst_tsk;
 	index_voxel clst_tsk_element;
 	clst_tsk.reserve(original_size);
-	/*
+
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
 			for(int ny=0;ny<map_size_ny;ny++){
-				voxel_element[nz][nx][ny]=-1;
-			}
-		}
-	}
-	*/
-	//int count_if=0;
-	//int count_else=0;
-	//int count_all=0;
-	for(int nz=0;nz<map_size_nz;nz++){
-		for(int nx=0;nx<map_size_nx;nx++){
-			for(int ny=0;ny<map_size_ny;ny++){
-				//init Center of gravity
-				cog.x=-1;
-				cog.y=-1;
-				cog.z=-1;
-				//sum process
-				dist=((float)map_size_nz-(float)nz)*voxel_size_z;
+
+					dist=((float)map_size_nz-(float)nz)*voxel_size_z;
 				if(dist>=2){
 					voxel_size_threshold=dist*(-0.5)+5;
 				}
@@ -368,34 +344,25 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 					voxel_size_threshold=0;
 				}
 				//voxel_size_threshold=3;
-				if((int)voxel_element[nz][nx][ny].size()>voxel_size_threshold){
+				if((int)voxel_point[nz][nx][ny].s>voxel_size_threshold){
 					//count_if++;
-					cog.x=0;
-					cog.y=0;
-					cog.z=0;
-					for(int k=0;k<voxel_element[nz][nx][ny].size();k++){
-						//cog.x+=voxel_element[nz][nx][ny][k].x;
-						//cog.y+=voxel_element[nz][nx][ny][k].y;
-						//cog.z+=voxel_element[nz][nx][ny][k].z;
-						cog.x+=voxel_element[nz][nx][ny][k].z;
-						cog.y+=-voxel_element[nz][nx][ny][k].x;
-						cog.z+=voxel_element[nz][nx][ny][k].y;
-					}          
-					cog.x/=(int)voxel_element[nz][nx][ny].size();
-					cog.y/=(int)voxel_element[nz][nx][ny].size();
-					cog.z/=(int)voxel_element[nz][nx][ny].size();
-					voxel_point[nz][nx][ny]=cog;
+					//ave process
+			
+					voxel_point[nz][nx][ny].x/=(int)voxel_point[nz][nx][ny].s;
+					voxel_point[nz][nx][ny].y/=(int)voxel_point[nz][nx][ny].s;
+					voxel_point[nz][nx][ny].z/=(int)voxel_point[nz][nx][ny].s;
+					
 					voxel_size++;
-					
-					clst_tsk_element.nx=nx;
-					clst_tsk_element.nz=nz;
-					clst_tsk_element.ny=ny;
-					clst_tsk.push_back(clst_tsk_element);
-					
+
+					//clst_tsk_element.nx=nx;
+					//clst_tsk_element.nz=nz;
+					//clst_tsk_element.ny=ny;
+					//clst_tsk.push_back(clst_tsk_element);
+
 				}
 				else{
 					//count_else++;
-					voxel_point[nz][nx][ny]=cog;
+					voxel_point[nz][nx][ny].s=0;
 				}
 				//count_all++;
 			}
@@ -403,22 +370,27 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 	}
 	//std::cout<<"count;(if,else,all):("<<count_if<<","<<count_else<<","<<count_all<<")\n";
 	std::cout<<"voxel_size:"<<voxel_size<<"\n";
+		std::cout<<"voxel_size:"<<tm_cls.get_time_now()<<"\n";
 	//convert voxel[][][] to pointcloud and write index
 	selfvoxel_cloud->points.clear();
 	selfvoxel_cloud->height=1;
 	selfvoxel_cloud->width=voxel_size;
-	selfvoxel_cloud->points.reserve(voxel_size);
+	selfvoxel_cloud->points.resize(voxel_size);
+	int vn=0;
 	std::cout<<"reserved\n";
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
 			for(int ny=0;ny<map_size_ny;ny++){
-				if(voxel_point[nz][nx][ny].x!=-1){
-					/*std::cout<<voxel_point[nz][nx][ny].x<<","
+				if(voxel_point[nz][nx][ny].s!=0){
+					/*
+					std::cout<<voxel_point[nz][nx][ny].x<<","
 										<<voxel_point[nz][nx][ny].y<<","
 										<<voxel_point[nz][nx][ny].z<<"\n";
 					*/
-					index_points[nz][nx][ny]=(int)selfvoxel_cloud->points.size();
-					selfvoxel_cloud->points.push_back(voxel_point[nz][nx][ny]);
+					//index_points[nz][nx][ny]=(int)selfvoxel_cloud->points.size();
+					selfvoxel_cloud->points[vn].x=voxel_point[nz][nx][ny].x;
+					selfvoxel_cloud->points[vn].y=voxel_point[nz][nx][ny].y;
+					selfvoxel_cloud->points[vn++].z=voxel_point[nz][nx][ny].z;
 				}
 			}
 		}
@@ -429,50 +401,13 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 	edit_cloud.header.frame_id="/zed_current_frame";
 	pc_pub8.publish(edit_cloud);
 	std::cout<<"finish_func\n";
-	
-	//euclid clustering
-	//なぜかEuclidClusteringが使えない
-	/*
-	float clust_size=0.050f;
-	pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);//何か探索用にツリーを作る
-	tree->setInputCloud (selfvoxel_cloud);
-	std::cout<<"1\n";
-	std::vector<pcl::PointIndices> cluster_indices;
-	std::cout<<"1\n";
-	pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-	std::cout<<"1\n";
-	ec.setClusterTolerance (0.048);//同じクラスタとみなす距離
-	std::cout<<"1\n";
-	ec.setMinClusterSize (50);//クラスタを構成する最小の点数
-	std::cout<<"2\n";
-	ec.setMaxClusterSize (25000);//クラスタを構成する最大の点数
-	std::cout<<"2\n";
-	ec.setSearchMethod (tree);
-	std::cout<<"2\n";
-	ec.setInputCloud (selfvoxel_cloud);
-	std::cout<<"2\n";
-	ec.extract (cluster_indices);
-	std::cout<<"3\n";
-	std::cout<<"EuclideanClusterExtraction_by_selfvoxel\n";
-	int j = 0;
-	float colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr Eclusted_cloud(new  pcl::PointCloud<pcl::PointXYZRGB>);
-	pcl::copyPointCloud(*selfvoxel_cloud, *Eclusted_cloud);
 
-	for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
-  {
-      for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); pit++)
-			{
-					Eclusted_cloud->points[*pit].r = colors[j%12][0];
-					Eclusted_cloud->points[*pit].g = colors[j%12][1];
-					Eclusted_cloud->points[*pit].b = colors[j%12][2];
-      }
-      j++;
-	}
-	*/
+
+		std::cout<<"finish_func:"<<tm_cls.get_time_now()<<"\n";
 	//clustering 
 
-	std::vector<pcl::PointXYZ> cluster_elements;
+	//std::vector<pcl::PointXYZ> cluster_elements;
+	std::vector<Point3f1i> cluster_elements;
 	std::vector<cv::Point3i> cluster_elements_num;
 	cv::Point3i cen_temp;
 	//reserve memory 
@@ -486,7 +421,7 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 	cluster.reserve(voxel_size);
 	cluster_elements.reserve(voxel_size);
 	cluster_elements_num.reserve(voxel_size);
-	
+
 	//init clusted_index
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
@@ -495,9 +430,9 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 			}
 		}
 	}
-	
+
 	cluster.clear();
-	
+
 	//clustering process
 	float clustering_distance=0.04*1.2;
 	int serch_range_x=(int)(clustering_distance/voxel_size_x)+1;
@@ -506,38 +441,42 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 	float edis;
 	int cluster_size=0;
 	std::cout<<"clustering process\n";
-	
-/*
+
+
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
 			for(int ny=0;ny<map_size_ny;ny++){
-*/
-	for(int tsk_n=0;tsk_n<clst_tsk.size();tsk_n++){
-		nz=clst_tsk[tsk_n].nz;
-		nx=clst_tsk[tsk_n].nx;
-		ny=clst_tsk[tsk_n].ny;
-				if(voxel_point[nz][nx][ny].x==-1||clusted_index[nz][nx][ny]!=-1){//already clusted or point nothing
+
+//	for(int tsk_n=0;tsk_n<clst_tsk.size();tsk_n++){
+		//nz=clst_tsk[tsk_n].nz;
+		//nx=clst_tsk[tsk_n].nx;
+		//ny=clst_tsk[tsk_n].ny;
+				if(voxel_point[nz][nx][ny].s==0||clusted_index[nz][nx][ny]!=-1){//already clusted or point nothing
 					//std::cout<<"("<<nz<<","<<nx<<","<<ny<<")\n";
 					continue;//skip
 				}
-				
+
 				/*
 				std::cout<<voxel_point[nz][nx][ny].x<<","
 									<<voxel_point[nz][nx][ny].y<<","
 									<<voxel_point[nz][nx][ny].z<<"\n";
 				*/
 				cluster_elements.push_back(voxel_point[nz][nx][ny]);
-				cen_temp.z=nz;
-				cen_temp.x=nx;
-				cen_temp.y=ny;
-				cluster_elements_num.push_back(cen_temp);
+				//cen_temp.z=nz;
+				//cen_temp.x=nx;
+				//cen_temp.y=ny;
+				//cluster_elements_num.push_back(cen_temp);
 				clusted_index[nz][nx][ny]=(int)cluster.size();
 				//std::cout<<"nz,nx,ny):("<<nz<<","<<nx<<","<<ny<<")\n";
 				for(int k=0;k<cluster_elements.size();k++){
-					int cen_nz=cluster_elements_num[k].z;
-					int cen_nx=cluster_elements_num[k].x;
-					int cen_ny=cluster_elements_num[k].y;
-					
+				  int cen_nz,cen_nx,cen_ny;
+					convert_xzy_nxzy(cluster_elements_num[k].z,cluster_elements_num[k].x,cluster_elements_num[k].y,cen_nz,cen_nx,cen_ny);
+				  //culc_voxel_nxzy(cluster_elements_num[k].z,cluster_elements_num[k].x,cluster_elements_num[k].y,cen_nz,cen_nx,cen_ny);
+				  
+					//int cen_nz=cluster_elements_num[k].z;
+					//int cen_nx=cluster_elements_num[k].x;
+					//int cen_ny=cluster_elements_num[k].y;
+
 					//std::cout<<"1\n";
 					for(int srz=-serch_range_z+cen_nz;srz<serch_range_x+cen_nz;srz++){
 						//std::cout<<"1\n";
@@ -568,10 +507,10 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 								//std::cout<<"edis:"<<edis<<"\n";
 								if(edis<=clustering_distance){//clusted
 									cluster_elements.push_back(voxel_point[srz][srx][sry]);
-									cen_temp.z=srz;
-									cen_temp.x=srx;
-									cen_temp.y=sry;
-									cluster_elements_num.push_back(cen_temp);
+									//cen_temp.z=srz;
+									//cen_temp.x=srx;
+									//cen_temp.y=sry;
+									//cluster_elements_num.push_back(cen_temp);
 									clusted_index[srz][srx][sry]=(int)cluster.size();
 									cluster_size++;
 								}
@@ -581,73 +520,121 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 				}//end for k
 				cluster.push_back(cluster_elements);
 				cluster_elements.clear();
-				cluster_elements_num.clear();
-	}
-	/*
+				//cluster_elements_num.clear();
+	//}
+	
 			}//end for ny
 		}//end for nx
 	}//end for nz
-	*/
+	
 	std::cout<<"cluster_size:"<<cluster_size<<"\n";
+		std::cout<<"cluster_size:"<<tm_cls.get_time_now()<<"\n";
 	//draw clusters
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr clusted_cloud(new  pcl::PointCloud<pcl::PointXYZRGB>);
 	pcl::PointXYZRGB temp_point;
 	int j = 0;
 	float colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト	
-	
+
 	//reserve clusted_cloud
-	clusted_cloud->points.reserve(voxel_size);//cluster_size);
+	clusted_cloud->points.resize(voxel_size);//cluster_size);
 	clusted_cloud->height=1;
-	clusted_cloud->width=voxel_size;	
-	
+	clusted_cloud->width=voxel_size;
+	int ccn=0;	
+
 	float volume_threshold=0.1*0.1*0.1;
 	float one_point_volume=voxel_size_x*voxel_size_z*voxel_size_y;
 	for(int cn=0;cn<cluster.size();cn++){
 		if(one_point_volume*(int)cluster[cn].size()>volume_threshold){
 			for(int cen=0;cen<cluster[cn].size();cen++){
+				/*
 				temp_point.x=cluster[cn][cen].x;
 				temp_point.y=cluster[cn][cen].y;
 				temp_point.z=cluster[cn][cen].z;
 				temp_point.r=colors[j%12][0];
 				temp_point.g=colors[j%12][1];
 				temp_point.b=colors[j%12][2];
-			
+
 				clusted_cloud->points.push_back(temp_point);
+				*/
+				
+				clusted_cloud->points[ccn].x=cluster[cn][cen].x;
+				clusted_cloud->points[ccn].y=cluster[cn][cen].y;
+				clusted_cloud->points[ccn].z=cluster[cn][cen].z;
+				clusted_cloud->points[ccn].r=colors[j%12][0];
+				clusted_cloud->points[ccn].g=colors[j%12][1];
+				clusted_cloud->points[ccn].b=colors[j%12][2];
+				
+				
 			}
 			j++;
 		}
 		else{
 			for(int cen=0;cen<cluster[cn].size();cen++){
+				/*
 				temp_point.x=cluster[cn][cen].x;
 				temp_point.y=cluster[cn][cen].y;
 				temp_point.z=cluster[cn][cen].z;
 				temp_point.r=0;
 				temp_point.g=0;
 				temp_point.b=0;
-		
-				clusted_cloud->points.push_back(temp_point);			
+
+				clusted_cloud->points.push_back(temp_point);	
+				*/
+				clusted_cloud->points[ccn].x=cluster[cn][cen].x;
+				clusted_cloud->points[ccn].y=cluster[cn][cen].y;
+				clusted_cloud->points[ccn].z=cluster[cn][cen].z;
+				clusted_cloud->points[ccn].r=0;
+				clusted_cloud->points[ccn].g=0;
+				clusted_cloud->points[ccn].b=0;
+				ccn++;
+						
 			}		
 		}
 	}
 	std::cout<<"clusted_cloud->points:"<<clusted_cloud->points.size()<<"\n";
 	std::cout<<"clusted_cloud->width:"<<clusted_cloud->width<<"\n";
-	
-	
 
-	
+
+
+
 	//publish point cloud
 	sensor_msgs::PointCloud2 edit_cloud2;
   pcl::toROSMsg (*clusted_cloud, edit_cloud2);
 	edit_cloud2.header.frame_id="/zed_current_frame";
   pc_pub9.publish(edit_cloud2);
+
+}
+bool detect_objects::convert_xzy_nxzy(const float& x,const float& z,const float& y,int& nx,int& nz,int& ny){
+	nx = (int)(2*x/voxel_size_x/2) + (int)(2*x/voxel_size_x) % 2;
+	nz = (int)(2*z/voxel_size_z/2) + (int)(2*z/voxel_size_z) % 2;
+	ny = (int)(y/voxel_size_y);	
+	if(map_size_nx/2<std::abs(nx)||map_size_nz<nz||map_size_ny<ny){
+		return false;
+	}
+	else{
+		nx+=map_size_nx/2;
+		nz=map_size_nz-nz;
+		return true;
+	}
+	
 	
 }
+
 float detect_objects::culclate_euclid_distance(pcl::PointXYZ& p1,pcl::PointXYZ& p2){
 		return(std::sqrt( (p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y) + (p1.z-p2.z)*(p1.z-p2.z) ) ) ;
 }
 
 float detect_objects::culclate_chebyshev_distance(pcl::PointXYZ& p1,pcl::PointXYZ& p2){
-	
+
+	if((p1.x-p2.x)>(p1.y-p2.y)){
+		return ( (p1.x-p2.x) > (p1.z-p2.z) ? (p1.x-p2.x) : (p1.z-p2.z) );
+	}
+	else{	
+		return( (p1.y-p2.y) > (p1.z-p2.z) ? (p1.y-p2.y) : (p1.z-p2.z) );
+	}
+}
+float detect_objects::culclate_chebyshev_distance(Point3f1i& p1,Point3f1i& p2){
+
 	if((p1.x-p2.x)>(p1.y-p2.y)){
 		return ( (p1.x-p2.x) > (p1.z-p2.z) ? (p1.x-p2.x) : (p1.z-p2.z) );
 	}
@@ -681,10 +668,10 @@ void detect_objects::add_velocity_to_cluster(void){
 			vel_element.x=vX.vel[k].x;
 			vel_element.y=vX.vel[k].y;
 			vel_element.z=vX.vel[k].z;
-			
+
 			cluster_vel[cn].push_back(vel_element);
 		}
-		
+
 	}
 }
 
@@ -693,7 +680,7 @@ void detect_objects::convet_image_to_pcl(cv::Mat& image){
 //	std::cout<<"1\n";
 	cloud2->width  = width;
   cloud2->height = height;
-	
+
   cloud2->points.resize (cloud2->width * cloud2->height);
 	const float ground_threshold=0;	
 	float z_temp,x_temp,y_temp;
@@ -759,7 +746,6 @@ void detect_objects::convet_image_to_pcl(cv::Mat& image){
 	float floor_th=0.05;
 	float camera_height=0.4125;
 	float camera_bias=0;
-
 	if(std::abs(coefficients->values[3]-(camera_height+camera_bias))>=0.15){
 		coefficients->values[0]=-0.08;
 		coefficients->values[1]=0;
@@ -781,7 +767,7 @@ void detect_objects::convet_image_to_pcl(cv::Mat& image){
 	const float cam_y=0.4125;
 	float a,b,c,d;
 	ground_estimation_from_pc(y_th,cam_y,a,b,c,d);
-	
+
 	if(std::abs(d-(camera_height+camera_bias))>=0.15){
 		a=-0.08;
 		b=0;
@@ -803,11 +789,11 @@ void detect_objects::convet_image_to_pcl(cv::Mat& image){
 			ground_deleted_cloud->points.push_back(voxeled_cloud->points[k]);
 		}
 	}
-	
+
 	ground_deleted_cloud->width=ground_deleted_cloud->points.size();
   ground_deleted_cloud->height = 1;
 	std::cout<<"ground_deleted_cloud->width:"<<ground_deleted_cloud->width<<"\n";
-	
+
 
 	sensor_msgs::PointCloud2 edit_cloud4;
   pcl::toROSMsg (*ground_deleted_cloud, edit_cloud4);
@@ -946,7 +932,7 @@ void detect_objects::set_DEM_map(cv::Mat& image){
 	float y_ground;
 
 	uint8_t color_th=3;
-	
+
 	if(std::abs(d-(camera_height+camera_bias))>=0.15){
 		a=-0.08;
 		b=0;
@@ -970,8 +956,8 @@ void detect_objects::set_DEM_map(cv::Mat& image){
 					&&(image.at<cv::Vec3b>(h,w)[0]<=255-color_th
 					||image.at<cv::Vec3b>(h,w)[1]<=255-color_th
 					||image.at<cv::Vec3b>(h,w)[2]<=255-color_th)){//){
-					
-					
+
+
 					if(convert_coordinate_xz_nxz(x_temp,z_temp,nx,nz)){
 						//dem_element[nz][nx].push_back(y_temp);
 						index_schm[h][w].nz=nz;
@@ -1048,7 +1034,7 @@ void detect_objects::clustering_DEM_elements(void){
 						y_low_high.x=dem_element[nz][nx][iy_low];//low
 						y_low_high.y=dem_element[nz][nx][iy_high];//high
 						dem_cluster[nz][nx].push_back(y_low_high);
-						
+
 					}
 				}
 				else{
@@ -1062,7 +1048,7 @@ void detect_objects::clustering_DEM_elements(void){
 					iy_low=iy_high+1;
 					iy_high=iy_high+1;
 				}
-				
+
 			}
 			/*
 			if(dem_element[nz][nx].size()){
@@ -1074,7 +1060,7 @@ void detect_objects::clustering_DEM_elements(void){
 			*/
 		}
 	}
-	
+
 	dem_elements_size=0;
 	std::cout<<"/write index of schema cluster\n";
 	//write index of schema cluster
@@ -1140,7 +1126,7 @@ void detect_objects::clustering_slice(void){
 			max_slic_elm+=(int)dem_cluster[nz][nx].size();
 			for(int k=0;k<(int)dem_cluster[nz][nx].size();k++){
 				slice_cluster_index[nz][nx].push_back(-1);
-				
+
 			}
 		}
 		slice_cluster[nz].reserve(max_slic_clst);
@@ -1158,7 +1144,7 @@ void detect_objects::clustering_slice(void){
 				tp.y=k;
 				slice_cluster_element.push_back(tp);
 				slice_cluster_index[nz][nx][k]=(int)slice_cluster[nz].size();//be careful to transform the struct
-				
+
 				for(int k0=0;nx<map_size_nx-1&&k0<(int)slice_cluster_element.size();k0++){
 					if(!ros::ok())
 						break;
@@ -1238,7 +1224,7 @@ void detect_objects::clustering_slice(void){
 		}
 		//reset marge_index
 		marge_index.clear();
-		
+
 	}//end for nz
 
 }
@@ -1251,11 +1237,11 @@ void detect_objects::tracking_cluster(const std::vector<optical_flow_data>& opf_
 	pcl::PointXYZ sum_vX_opf;
 	pcl::PointXYZ ave_vX_opf;
 	pcl::PointXYZ vX_odm;
-	
+
 	vX_odm.x=v*sin(-omg);
 	vX_odm.y=0;
 	vX_odm.z=v*cos(omg);
-	
+
 	for(int nz=0;nz<map_size_nz;nz++){
 		slice_cluster_velocity_element[nz].resize( (int)slice_cluster[nz].size() );
 		slice_cluster_velocity[nz].resize( (int)slice_cluster[nz].size() );
@@ -1290,10 +1276,10 @@ void detect_objects::tracking_cluster(const std::vector<optical_flow_data>& opf_
 }
 
 void detect_objects::publish_slice_cluster(void){
-	
+
 	int j = 0;
 	float colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト
-	
+
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr Eclusted_cloud(new  pcl::PointCloud<pcl::PointXYZRGB>);
 //	pcl::copyPointCloud(*ground_deleted_cloud, *Eclusted_cloud);
 	pcl::PointXYZRGB cloud_element;
@@ -1307,7 +1293,7 @@ void detect_objects::publish_slice_cluster(void){
 	Eclusted_cloud->points.reserve(cloud_size);
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int k=0;k<slice_cluster[nz].size();k++){
-			
+
 			//if((int)slice_cluster[nz][k].size()<=1){
 			//	continue;
 			//}
@@ -1366,7 +1352,7 @@ void detect_objects::convert_dem_to_pcl(void){
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
 			points_size+=(int)dem_element[nz][nx].size();
-			
+
     }
   }
 	cloud->width=points_size;//points_size;
@@ -1391,7 +1377,7 @@ void detect_objects::convert_dem_to_pcl(void){
   pc_pub.publish(edit_cloud);
 
 	std::cout<<"published\n";
-	
+
 }
 void detect_objects::clear_dem_element(void){
 	for(int nz=0;nz<map_size_nz;nz++){
@@ -1445,28 +1431,28 @@ int main(int argc,char **argv){
 		dtct_obj.set_depth_image();
 		std::cout<<"4:"<<time_cls.get_time_now()<<"\n";
 //		std::cout<<"set matimage\n";
-		dtct_obj.set_DEM_map(img_cls.get_cur_image_by_ref());
+//		dtct_obj.set_DEM_map(img_cls.get_cur_image_by_ref());
 //		std::cout<<"5:"<<time_cls.get_time_now()<<"\n";
-		dtct_obj.convet_image_to_pcl(img_cls.get_cur_image_by_ref());
+//		dtct_obj.convet_image_to_pcl(img_cls.get_cur_image_by_ref());
 //		std::cout<<"6:"<<time_cls.get_time_now()<<"\n";
-		dtct_obj.clustering_DEM_elements();//<-
+//		dtct_obj.clustering_DEM_elements();//<-
 
 		std::cout<<"7:"<<time_cls.get_time_now()<<"\n";
 //		std::cout<<"now processing!\n";
-		dtct_obj.clustering_slice();
+//		dtct_obj.clustering_slice();
 		std::cout<<"8:"<<time_cls.get_time_now()<<"\n";
 		//dtct_obj.tracking_cluster(/*hogehoge*/);
 		dtct_obj.create_voxel_grid(img_cls.get_cur_image_by_ref());
-		
-		
-		dtct_obj.convert_dem_to_pcl(); 
-		dtct_obj.publish_slice_cluster();
-		dtct_obj.clear_dem_element();
+		std::cout<<"9:"<<time_cls.get_time_now()<<"\n";
+
+
+//		dtct_obj.convert_dem_to_pcl(); 
+//		dtct_obj.publish_slice_cluster();
+//		dtct_obj.clear_dem_element();
 		time_cls.set_time();
 		std::cout<<"dt:"<<time_cls.get_delta_time()<<"\n";
-	
+
 	}
 
 	return 0;
 }
-
