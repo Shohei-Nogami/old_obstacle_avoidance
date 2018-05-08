@@ -332,8 +332,8 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
 			for(int ny=0;ny<map_size_ny;ny++){
-
-					dist=((float)map_size_nz-(float)nz)*voxel_size_z;
+				//
+				dist=((float)map_size_nz-(float)nz)*voxel_size_z;
 				if(dist>=2){
 					voxel_size_threshold=dist*(-0.5)+5;
 				}
@@ -348,9 +348,9 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 					//count_if++;
 					//ave process
 			
-					voxel_point[nz][nx][ny].x/=(int)voxel_point[nz][nx][ny].s;
-					voxel_point[nz][nx][ny].y/=(int)voxel_point[nz][nx][ny].s;
-					voxel_point[nz][nx][ny].z/=(int)voxel_point[nz][nx][ny].s;
+					voxel_point[nz][nx][ny].x=voxel_point[nz][nx][ny].x/voxel_point[nz][nx][ny].s;
+					voxel_point[nz][nx][ny].y=voxel_point[nz][nx][ny].y/voxel_point[nz][nx][ny].s;
+					voxel_point[nz][nx][ny].z=voxel_point[nz][nx][ny].z/voxel_point[nz][nx][ny].s;
 					
 					voxel_size++;
 
@@ -372,6 +372,7 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 	std::cout<<"voxel_size:"<<voxel_size<<"\n";
 		std::cout<<"voxel_size:"<<tm_cls.get_time_now()<<"\n";
 	//convert voxel[][][] to pointcloud and write index
+/*
 	selfvoxel_cloud->points.clear();
 	selfvoxel_cloud->height=1;
 	selfvoxel_cloud->width=voxel_size;
@@ -382,11 +383,6 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 		for(int nx=0;nx<map_size_nx;nx++){
 			for(int ny=0;ny<map_size_ny;ny++){
 				if(voxel_point[nz][nx][ny].s!=0){
-					/*
-					std::cout<<voxel_point[nz][nx][ny].x<<","
-										<<voxel_point[nz][nx][ny].y<<","
-										<<voxel_point[nz][nx][ny].z<<"\n";
-					*/
 					//index_points[nz][nx][ny]=(int)selfvoxel_cloud->points.size();
 					selfvoxel_cloud->points[vn].x=voxel_point[nz][nx][ny].x;
 					selfvoxel_cloud->points[vn].y=voxel_point[nz][nx][ny].y;
@@ -401,9 +397,8 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 	edit_cloud.header.frame_id="/zed_current_frame";
 	pc_pub8.publish(edit_cloud);
 	std::cout<<"finish_func\n";
-
-
-		std::cout<<"finish_func:"<<tm_cls.get_time_now()<<"\n";
+	std::cout<<"finish_func:"<<tm_cls.get_time_now()<<"\n";
+*/
 	//clustering 
 
 	//std::vector<pcl::PointXYZ> cluster_elements;
