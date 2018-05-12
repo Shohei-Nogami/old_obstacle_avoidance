@@ -10,6 +10,7 @@
 //ros msgファイル
 #include<nav_msgs/Odometry.h>
 
+//#include<obst_avoid/src/tm_cls/time_class.h>
 #include"time_class.h"
 //円周率
 #define PI 3.141593

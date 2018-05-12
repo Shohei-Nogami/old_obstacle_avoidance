@@ -20,6 +20,8 @@
 #include"obst_avoid/vel3d.h"
 #include"obst_avoid/img_point.h"
 #include"time_class.h"
+#include"image_class.h"
+
 //#include <pcl/visualization/cloud_viewer.h>
 //#include <pcl/io/pcd_io.h>  
 //#include <pcl/point_types.h> 
@@ -83,7 +85,7 @@ class detect_objects{
 		float voxel_size_x=0.04;
 		float voxel_size_z=0.08;
 		float voxel_size_y=0.04;
-
+		int voxel_size;
 	//---clustering 
 		int ***clusted_index;
 		//std::vector< std::vector<pcl::PointXYZ> > cluster;
@@ -111,11 +113,17 @@ class detect_objects{
 			void invert_coordinate_xz_nxz(const int& nx,const int& nz,float& x,float& z);
 		//---SELF VOXEL CLUSTER
 			void create_voxel_grid(cv::Mat& image);
+			void voxel_filter(void);
+			void publish_voxel_pcl(int& voxel_size);
+			void clusterig_selfvoxel(void);
+
 			bool culc_voxel_nxzy(const float voxel_size_x,const float voxel_size_y,const float voxel_size_z,const float x,const float z,const float y,int& nx,int& nz,int& ny);
 			bool convert_xzy_nxzy(const float& x,const float& z,const float& y,int& nx,int& nz,int& ny);
 			float culclate_euclid_distance(pcl::PointXYZ& p1,pcl::PointXYZ& p2);
 			float culclate_chebyshev_distance(pcl::PointXYZ& p1,pcl::PointXYZ& p2);
 			float culclate_chebyshev_distance(Point3f1i& p1,Point3f1i& p2);
+
+
 		//---OPTICALFLOW	
 			void subscribe_opticalflow(void);
 			void opticalflow_callback(const obst_avoid::vel3d::ConstPtr& msg);
