@@ -47,7 +47,10 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 			for(int ny=0;ny<map_size_ny;ny++){
 				//voxel_element[nz][nx][ny].clear();
 				voxel_point[nz][nx][ny].s=0;
-				
+				voxel_point[nz][nx][ny].x=0;
+				voxel_point[nz][nx][ny].y=0;
+				voxel_point[nz][nx][ny].z=0;
+
 			}
 		}
 	}

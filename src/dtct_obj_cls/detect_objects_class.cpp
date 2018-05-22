@@ -602,7 +602,7 @@ int main(int argc,char **argv){
 		std::cout<<"4:set_depth_image:"<<time_cls.get_time_now()<<"\n";
 
 		std::cout<<"5:clustering_start:"<<time_cls.get_time_now()<<"\n";
-
+/*
 		dtct_obj.create_voxel_grid(img_cls.get_cur_image_by_ref());
 
 		std::cout<<"6:create_voxel_grid:"<<time_cls.get_time_now()<<"\n";
@@ -614,6 +614,12 @@ int main(int argc,char **argv){
 		dtct_obj.clusterig_selfvoxel();
 
 		std::cout<<"8:clusterig_selfvoxel:"<<time_cls.get_time_now()<<"\n";
+*/
+	dtct_obj.density_based_clustering(img_cls.get_cur_image_by_ref());
+
+	std::cout<<"9:clusterig_by_density_based:"<<time_cls.get_time_now()<<"\n";
+
+	img_cls.publish_debug_image( dtct_obj.draw_cluster(img_cls.get_cur_image_by_ref() ) );
 
 
 		//dtct_obj.tracking_cluster(/*hogehoge*/);
