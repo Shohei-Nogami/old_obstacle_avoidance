@@ -589,8 +589,16 @@ int main(int argc,char **argv){
 
 		dtct_obj.add_velocity_to_cluster();
 		
-		std::cout<<"8:clusterig_selfvoxel:"<<time_cls.get_time_now()<<"\n";
+		std::cout<<"9:add_velocity_to_cluster:"<<time_cls.get_time_now()<<"\n";
 		
+		dtct_obj.estimate_velocity_of_cluster();
+
+		std::cout<<"10:estimate_velocity_of_cluster:"<<time_cls.get_time_now()<<"\n";
+
+		dtct_obj.draw_velocity(img_cls.get_cur_image_by_ref());
+
+		std::cout<<"10:draw_velocity:"<<time_cls.get_time_now()<<"\n";
+
 /*
 	dtct_obj.density_based_clustering(img_cls.get_cur_image_by_ref());
 

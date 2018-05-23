@@ -97,6 +97,9 @@ class detect_objects{
 
 	//---opticalflow
 		::obst_avoid::vel3d vX;
+		std::vector< std::vector<pcl::PointXYZ> > cluster_vel_elm;
+		std::vector<pcl::PointXYZ> cluster_vel;
+		cv::Mat view_vel_image;
 	//--density clustering
 	std::vector< std::vector<cv::Point2i> > Q;
 	cv::Mat temp_image;
@@ -131,7 +134,10 @@ class detect_objects{
 			void subscribe_opticalflow(void);
 			void opticalflow_callback(const obst_avoid::vel3d::ConstPtr& msg);
 			void add_velocity_to_cluster(void);
-			
+			void estimate_velocity_of_cluster(void);
+			void clear_velocity(void);
+			void draw_velocity(cv::Mat& image);
+
 			void convet_image_to_pcl(cv::Mat& image);
 		//---GROUND ESTIMATE
 			void ground_estimation_from_pc(const float& y_th,const float& cam_y,float& a,float& b,float& c,float& d);

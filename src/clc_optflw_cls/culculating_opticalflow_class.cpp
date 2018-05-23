@@ -156,15 +156,29 @@ void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Ma
 //	std::cout<<"w_v,dyaw,dt):("<<w_v<<","<<dyaw<<","<<dt<<")\n";
 
   for(int i=0;i<pts.size();i++){
-    if(sts[i]){
+    if(sts[i]&&npts[i].x>=0&&npts[i].y>=0){
       pcur_z=cur_depth_image.at<float>(
           (int)npts[i].y,
           (int)npts[i].x
           );
+			/*
+			if(npts[i].y<0||npts[i].x<0)
+			{
+				while(ros::ok()){
+					std::cout<<"npts["<<i<<"]:"<<npts[i]<<"\n";
+					std::cout<<"pcur_z:"<<pcur_z<<"\n";
+					std::cout<<"(int)npts[i]:"<<(int)npts[i].y<<","<<(int)npts[i].x<<"\n";
+					std::cout<<"sts[i]:"<<sts[i]<<"\n";
+					
+				}
+				
+			}
+			*/
       if(!std::isinf(pcur_z)&&pcur_z>=0.5){
         X=(float)(pts[i].x-width/2.0);//-width;
-    		Y=(float)(pts[i].y-height/2.0);//-height;
-        //画像ヤコビアンではなく並進と回転行列で計算
+    	//	Y=(float)(pts[i].y-height/2.0);//-height;
+       	Y=(float)(height/2.0-pts[i].y);//-height;
+         //画像ヤコビアンではなく並進と回転行列で計算
       ppt.x=pts[i].x- (float)(//wheel only
         w_v*sin(-dyaw)*dt/pre_z[i]-X/pre_z[i]*w_v*cos(-dyaw)*dt
         -(f+pow(X,2.0)/f)*dyaw
@@ -193,8 +207,17 @@ void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Ma
       vX_element.z=(pcur_z-pre_z[i])/dt-w_v*cos(-dyaw);
       vX.vel.push_back(vX_element);
       
-      pt.h=npts[i].y;
-      pt.w=npts[i].x;
+      pt.h=(int)npts[i].y;
+      pt.w=(int)npts[i].x;
+			/*
+			if(pt.h<0||pt.w<0)
+			{
+				while(ros::ok()){
+					std::cout<<"npts["<<i<<"]:"<<npts[i]<<"\n";
+				}
+				
+			}
+			*/
       vX.pt.push_back(pt);
       //				newpoints.push_back(npts[i]);
 
