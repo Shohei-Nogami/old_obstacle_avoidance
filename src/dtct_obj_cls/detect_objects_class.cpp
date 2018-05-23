@@ -254,38 +254,6 @@ float detect_objects::culclate_chebyshev_distance(Point3f1i& p1,Point3f1i& p2){
 		return( (p1.y-p2.y) > (p1.z-p2.z) ? (p1.y-p2.y) : (p1.z-p2.z) );
 	}
 }
-void detect_objects::subscribe_opticalflow(void){
-	queue_optflw.callOne(ros::WallDuration(1));
-}
-void detect_objects::opticalflow_callback(const obst_avoid::vel3d::ConstPtr& msg){
-	vX.pt=msg->pt;
-	vX.vel=msg->vel;
-}
-void detect_objects::add_velocity_to_cluster(void){
-	std::vector< std::vector<pcl::PointXYZ> > cluster_vel;
-	std::vector<pcl::PointXYZ> cluster_vel_element;
-	pcl::PointXYZ vel_element;
-	cluster_vel.resize(cluster.size());
-	int h,w;
-	int nx,nz,ny;
-	int cn;
-	for(int k=0;k<vX.pt.size();k++){
-		h=vX.pt[k].h;
-		w=vX.pt[k].w;
-		nx=index_vxl[h][w].nx;
-		ny=index_vxl[h][w].ny;
-		nz=index_vxl[h][w].nz;
-		cn=clusted_index[nx][nz][nz];
-		if(cn){//cn!=-1
-			vel_element.x=vX.vel[k].x;
-			vel_element.y=vX.vel[k].y;
-			vel_element.z=vX.vel[k].z;
-
-			cluster_vel[cn].push_back(vel_element);
-		}
-
-	}
-}
 
 
 void detect_objects::convet_image_to_pcl(cv::Mat& image){
@@ -597,12 +565,16 @@ int main(int argc,char **argv){
 
 		std::cout<<"3:subscribe_depth_image:"<<time_cls.get_time_now()<<"\n";
 
+		dtct_obj.subscribe_opticalflow();
+
+		std::cout<<"3.5:subscribe_opticalflow:"<<time_cls.get_time_now()<<"\n";
+
 		dtct_obj.set_depth_image();
 
 		std::cout<<"4:set_depth_image:"<<time_cls.get_time_now()<<"\n";
 
 		std::cout<<"5:clustering_start:"<<time_cls.get_time_now()<<"\n";
-/*
+
 		dtct_obj.create_voxel_grid(img_cls.get_cur_image_by_ref());
 
 		std::cout<<"6:create_voxel_grid:"<<time_cls.get_time_now()<<"\n";
@@ -614,13 +586,18 @@ int main(int argc,char **argv){
 		dtct_obj.clusterig_selfvoxel();
 
 		std::cout<<"8:clusterig_selfvoxel:"<<time_cls.get_time_now()<<"\n";
-*/
+
+		dtct_obj.add_velocity_to_cluster();
+		
+		std::cout<<"8:clusterig_selfvoxel:"<<time_cls.get_time_now()<<"\n";
+		
+/*
 	dtct_obj.density_based_clustering(img_cls.get_cur_image_by_ref());
 
 	std::cout<<"9:clusterig_by_density_based:"<<time_cls.get_time_now()<<"\n";
 
 	img_cls.publish_debug_image( dtct_obj.draw_cluster(img_cls.get_cur_image_by_ref() ) );
-
+*/
 
 		//dtct_obj.tracking_cluster(/*hogehoge*/);
 

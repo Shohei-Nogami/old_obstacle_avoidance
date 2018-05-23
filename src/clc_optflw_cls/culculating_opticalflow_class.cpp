@@ -150,7 +150,7 @@ void culculate_optical_flow::culculating_observed_opticalflow(void){
 void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Mat& cur_depth_image,const double& w_v,const double& dyaw,const double& dt){//+V,Ω
   float pcur_z,ppre_z;
   cv::Point2i ppt;
-  ::obst_avoid::Point3d vX_element;
+  ::obst_avoid::point3d vX_element;
   ::obst_avoid::img_point pt;
 	float X,Y;
 //	std::cout<<"w_v,dyaw,dt):("<<w_v<<","<<dyaw<<","<<dt<<")\n";
@@ -186,23 +186,25 @@ void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Ma
 			nz.push_back(cur_z[i]);
 			
 			
-      vX_element.x=(npts[i].x*pcur_z/f - ppt.x*pre_z[i]/f)/dt;
-      vX_element.y=(npts[i].y*pcur_z/f - ppt.y*pre_z[i]/f)/dt;;
-      vX_element.z=(pcur_z-pre_z[i])/dt;
+      //vX_element.x=(npts[i].x*pcur_z/f - ppt.x*pre_z[i]/f)/dt;
+      //vX_element.y=(npts[i].y*pcur_z/f - ppt.y*pre_z[i]/f)/dt;
+      vX_element.x=(npts[i].x*pcur_z/f - pts[i].x*pre_z[i]/f - w_v*sin(-dyaw))/dt;
+      vX_element.y=(npts[i].y*pcur_z/f - pts[i].y*pre_z[i]/f)/dt;
+      vX_element.z=(pcur_z-pre_z[i])/dt-w_v*cos(-dyaw);
       vX.vel.push_back(vX_element);
       
       pt.h=npts[i].y;
       pt.w=npts[i].x;
       vX.pt.push_back(pt);
       //				newpoints.push_back(npts[i]);
-*/
+
       }
     }
   }
 }
 
 void culculate_optical_flow::publish_objects_velocity(void){
-	pub_vel.publich(vX);
+	pub_vel.publish(vX);
 }
 
 void culculate_optical_flow::publish_flow_image(const cv::Mat& cur_image){

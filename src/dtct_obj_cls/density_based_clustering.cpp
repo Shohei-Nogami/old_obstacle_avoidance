@@ -38,7 +38,7 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 	Q.clear();
 	std::vector<cv::Point2i> Q_p;
 	int **cluster_index;
-	
+
 	float sr=0.05;
 	int min_pn=3;
 	//reserve memory
@@ -80,7 +80,8 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 						pt.y=h;
 						Q_p.push_back(pt);
 						cluster_index[h][w]=(int)Q.size();
-						int sr_i=(int)(f*sr/z_temp)+1;//search range (int)
+						//int sr_i=(int)(f*sr/z_temp)+1;//search range (int)
+						int sr_i=1;
 						//std::vector<int> 
 						//std::cout<<"Q_p.size():"<<Q_p.size()<<"\n";
 						for(int k=0;k<Q_p.size();k++)
@@ -90,9 +91,14 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 							std::vector<cv::Point2i> spt;
 							spt.resize(sr_i*2*sr_i*2);
 
-							for(int j=Q_p[k].y-sr_i;j<Q_p[k].y+sr_i;j++)
+							z_temp=depth_image.at<float>(Q_p[k].y,Q_p[k].x);
+							x_temp=(Q_p[k].x-width/2)*z_temp/f;
+							y_temp=(height/2-Q_p[k].y)*z_temp/f;
+							
+
+							for(int j=Q_p[k].y-sr_i;j<=Q_p[k].y+sr_i;j++)
 							{
-								for(int i=Q_p[k].x-sr_i;i<Q_p[k].x+sr;i++)
+								for(int i=Q_p[k].x-sr_i;i<=Q_p[k].x+sr;i++)
 								{
 									if(i<0||i>width||j<height/6||j>height*5/6)
 									{
@@ -100,21 +106,26 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 									}
 									else
 									{
-										
+
 										float z_s=depth_image.at<float>(j,i);
 										if(z_s>0.5&&!std::isinf(z_s))
 										{
 											float x_s=(i-width/2)*z_s/f;
 											float y_s=(height/2-j)*z_s/f;
 											float ys_ground=(-a*x_s-b*y_s-d)/c;
-											if(y_s-ys_ground>0&&!std::isinf(y_s)
+											if(y_s-ys_ground>0&&!std::isinf(y_s)&&y_temp+camera_height<1.5
 												&&(image.at<cv::Vec3b>(j,i)[0]<=255-color_th
 												||image.at<cv::Vec3b>(j,i)[1]<=255-color_th
 												||image.at<cv::Vec3b>(j,i)[2]<=255-color_th))
 											{			
-												float dist=std::sqrt( std::pow( (z_s-z_temp)*Q_p[k].x+(i-Q_p[k].x)*z_s ,2.0)
-													+std::pow( (z_s-z_temp)*Q_p[k].y+(j-Q_p[k].y)*z_s ,2.0) )/f;
-												std::cout<<"x,y,i,j,dist:"<<Q_p[k].x<<","<<Q_p[k].y<<","<<i<<","<<j<<","<<dist<<"\n";
+												//float dist=std::sqrt( std::pow( (z_s-z_temp)*Q_p[k].x+(i-Q_p[k].x)*z_s ,2.0)
+											//		+std::pow( (z_s-z_temp)*Q_p[k].y+(j-Q_p[k].y)*z_s ,2.0) )/f;
+											//float dist=std::sqrt( std::pow( (z_s-z_temp)*Q_p[k].x+(i-Q_p[k].x)*z_s ,2.0)
+											//		+std::pow( (z_s-z_temp)*Q_p[k].y+(j-Q_p[k].y)*z_s ,2.0) + std::pow( (z_s-z_temp) ,2.0) )/f;
+												float dist=std::sqrt( std::pow( x_s-x_temp ,2.0)
+													+std::pow( y_s-y_temp ,2.0) + std::pow( (z_s-z_temp) ,2.0) );		
+												//std::cout<<"x,y,i,j,dist:"<<Q_p[k].x<<","<<Q_p[k].y<<","<<i<<","<<j<<","<<dist<<"\n";
+												std::cout<<"dist:"<<dist<<"\n";
 												if(dist<sr)
 												{
 													if(cluster_index[j][i]==-1)
@@ -137,7 +148,7 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 														}
 														else
 														{
-															
+
 														}
 													}
 												}
@@ -145,6 +156,7 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 										}						
 									}
 								}
+								//std::cout<<"pn,cpn,min_pn:"<<pn<<","<<cpn<<","<<min_pn<<"\n";
 								//density > threshold
 								if(cpn>min_pn)
 								{
@@ -157,8 +169,9 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 								}
 								else
 								{
-									
+
 								}
+
 							}//end for k
 							Q.push_back(Q_p);
 							Q_p.clear();
@@ -195,8 +208,3 @@ cv::Mat& detect_objects::draw_cluster(cv::Mat& image){
 	std::cout<<"return temp_image\n";
 	return temp_image;
 }
-
-
-
-
-

@@ -97,8 +97,9 @@ class detect_objects{
 
 	//---opticalflow
 		::obst_avoid::vel3d vX;
-	
-
+	//--density clustering
+	std::vector< std::vector<cv::Point2i> > Q;
+	cv::Mat temp_image;
 	//--time_cls
 		time_class tm_cls;
 		public:
@@ -123,7 +124,9 @@ class detect_objects{
 			float culclate_chebyshev_distance(pcl::PointXYZ& p1,pcl::PointXYZ& p2);
 			float culclate_chebyshev_distance(Point3f1i& p1,Point3f1i& p2);
 
-
+		//---DENSITY BASED COLUSTERING
+			void density_based_clustering(cv::Mat& image);
+			cv::Mat& draw_cluster(cv::Mat& image);
 		//---OPTICALFLOW	
 			void subscribe_opticalflow(void);
 			void opticalflow_callback(const obst_avoid::vel3d::ConstPtr& msg);
