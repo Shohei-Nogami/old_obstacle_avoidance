@@ -7,10 +7,10 @@ void detect_objects::opticalflow_callback(const obst_avoid::vel3d::ConstPtr& msg
 	vX.pt=msg->pt;
 	vX.vel=msg->vel;
 }
-void detect_objects::add_velocity_to_cluster(void){
+bool detect_objects::add_velocity_to_cluster(void){
 	if(!vX.pt.size())
 	{
-		return ;
+		return false;
 	}
 	std::cout<<"vX.pt,vel:"<<vX.pt.size()<<","<<vX.vel.size()<<"\n";
 	//std::vector< std::vector<pcl::PointXYZ> > cluster_vel_elm;
@@ -19,7 +19,7 @@ void detect_objects::add_velocity_to_cluster(void){
 	int h,w;
 	int nx,nz,ny;
 	int cn;
-	//std::cout<<"vX.pt[0],vel[0]:"<<vX.pt[0]<<","<<vX.vel[0]<<"\n";
+	std::cout<<"vX.pt[0],vel[0]:"<<vX.pt[0]<<","<<vX.vel[0]<<"\n";
 	for(int k=0;k<vX.pt.size();k++){
 		//std::cout<<"for \n";
 		h=vX.pt[k].h;
@@ -55,6 +55,7 @@ void detect_objects::add_velocity_to_cluster(void){
 		
 	}
 	*/
+	return true;
 }
 
 void detect_objects::estimate_velocity_of_cluster(void)

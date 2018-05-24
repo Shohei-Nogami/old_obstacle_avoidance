@@ -53,6 +53,8 @@ class culculate_optical_flow
 		::obst_avoid::vel3d vX;
 		cv::Mat view_image;
 
+		//add 0524
+		cv::Point3f clp_vel_ave_pre[18][28];
 	public:
 		culculate_optical_flow();
 		virtual ~culculate_optical_flow();
@@ -69,5 +71,6 @@ class culculate_optical_flow
 		void clear_vector(void);
 		cv::Mat& get_view_image(void);
 		void cvArrow(cv::Mat* img, cv::Point2i pt1, cv::Point2i pt2, cv::Scalar color);
-
+		//add function0524
+		void cul_clip_vel(const double& dt);
 };

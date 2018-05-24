@@ -133,7 +133,7 @@ class detect_objects{
 		//---OPTICALFLOW	
 			void subscribe_opticalflow(void);
 			void opticalflow_callback(const obst_avoid::vel3d::ConstPtr& msg);
-			void add_velocity_to_cluster(void);
+			bool add_velocity_to_cluster(void);
 			void estimate_velocity_of_cluster(void);
 			void clear_velocity(void);
 			void draw_velocity(cv::Mat& image);
