@@ -345,14 +345,14 @@ void culculate_optical_flow::cul_clip_vel(const double& dt) {
 				clp_vel_ave_pre[i][j] = clp_vel_ave[i][j];
 
 				if ( clp_vel_dsp[i][j].x<=th_dsp
-					&& clp_vel_dsp[i][j].z<=0.15//0.10)
-					&&std::sqrt(std::pow(clp_vel_dsp[i][j].x,2.0) 
+					&& clp_vel_dsp[i][j].z<=th_dsp//0.15)
+					&&std::sqrt(std::pow(clp_vel_ave[i][j].x,2.0) 
 					//+ std::pow(clp_vel_dsp[i][j].y,2.0)
-						+ std::pow(clp_vel_dsp[i][j].z,2.0))>th_mv )
+						+ std::pow(clp_vel_ave[i][j].z,2.0))>th_mv )
 				{
-				  vX_element.x= clp_vel_dsp[i][j].x;
-				  vX_element.y= clp_vel_dsp[i][j].y;
-				  vX_element.z= clp_vel_dsp[i][j].z;
+				  vX_element.x= clp_vel_ave[i][j].x;
+				  vX_element.y= clp_vel_ave[i][j].y;
+				  vX_element.z= clp_vel_ave[i][j].z;
 				  vX.vel.push_back(vX_element);
 				  pt.h=(int)gp[i][j].y;
 				  pt.w=(int)gp[i][j].x;
