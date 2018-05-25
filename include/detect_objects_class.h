@@ -19,6 +19,8 @@
 #include"obst_avoid/point3d.h"
 #include"obst_avoid/vel3d.h"
 #include"obst_avoid/img_point.h"
+#include"obst_avoid/points.h"
+#include"obst_avoid/matching.h"
 #include"time_class.h"
 #include"image_class.h"
 
@@ -31,8 +33,11 @@ class detect_objects{
 		ros::NodeHandle nh_pub1,nh_pub2,nh_sub;
 		ros::NodeHandle nh_pubpcl,nh_pubpcl2,nh_pubpcl3,nh_pubpcl4,nh_pubpcl5,nh_pubpcl6,nh_pubpcl7,nh_pubpcl8,nh_pubpcl9;
 		ros::NodeHandle nh_optflw;
+		ros::NodeHandle nh_matching;
 		ros::Subscriber sub,sub_optflw;
+		ros::Subscriber sub_matching;
 		ros::CallbackQueue queue,queue_optflw;
+		ros::CallbackQueue queue_matching;
 		image_transport::ImageTransport it_pub1,it_pub2;
 		image_transport::Publisher pub1,pub2;
 
@@ -76,7 +81,9 @@ class detect_objects{
 		pcl::PointIndices::Ptr inliers;// (new pcl::PointIndices);
 		pcl::ModelCoefficients::Ptr coefficients;// (new pcl::ModelCoefficients);
 	//-----voxel grid
-		index_voxel **index_vxl;//[height][width]
+		index_voxel **cur_index_vxl;//[height][width]
+		index_voxel **pre_index_vxl;//[height][width]
+		
 		std::vector<pcl::PointXYZ> ***voxel_element;
 		//pcl::PointXYZ ***voxel_point;
 		Point3f1i ***voxel_point;
@@ -87,9 +94,11 @@ class detect_objects{
 		float voxel_size_y=0.04;
 		int voxel_size;
 	//---clustering 
-		int ***clusted_index;
-		//std::vector< std::vector<pcl::PointXYZ> > cluster;
-		std::vector< std::vector<Point3f1i> > cluster;
+		int ***cur_clusted_index;
+		int ***pre_clusted_index;
+		std::vector< std::vector<pcl::PointXYZ> > cur_cluster;
+		std::vector< std::vector<pcl::PointXYZ> > pre_cluster;
+		//std::vector< std::vector<Point3f1i> > cluster;
 		std::vector<index_voxel> clst_tsk;
 		
 		//std::vector<pcl::PointXYZ> cluster_elements;
@@ -100,6 +109,10 @@ class detect_objects{
 		std::vector< std::vector<pcl::PointXYZ> > cluster_vel_elm;
 		std::vector<pcl::PointXYZ> cluster_vel;
 		cv::Mat view_vel_image;
+	//--matching
+		::obst_avoid::matching match_msg;
+		std::vector<int> cmatch;
+	
 	//--density clustering
 	std::vector< std::vector<cv::Point2i> > Q;
 	cv::Mat temp_image;
@@ -126,6 +139,7 @@ class detect_objects{
 			float culclate_euclid_distance(pcl::PointXYZ& p1,pcl::PointXYZ& p2);
 			float culclate_chebyshev_distance(pcl::PointXYZ& p1,pcl::PointXYZ& p2);
 			float culclate_chebyshev_distance(Point3f1i& p1,Point3f1i& p2);
+			float culclate_chebyshev_distance(pcl::PointXYZ& p1,Point3f1i& p2);
 
 		//---DENSITY BASED COLUSTERING
 			void density_based_clustering(cv::Mat& image);
@@ -135,8 +149,12 @@ class detect_objects{
 			void opticalflow_callback(const obst_avoid::vel3d::ConstPtr& msg);
 			bool add_velocity_to_cluster(void);
 			void estimate_velocity_of_cluster(void);
+			void estimate_velocity_of_cluster_by_gp(float& dt);
 			void clear_velocity(void);
 			void draw_velocity(cv::Mat& image);
+			void subsuctibe_matching(void);
+			void matching_callback(const obst_avoid::matching::ConstPtr& msg);
+			void matching_cluster(void);
 
 			void convet_image_to_pcl(cv::Mat& image);
 		//---GROUND ESTIMATE
@@ -152,3 +170,4 @@ class detect_objects{
 			void publish_slice_cluster(void);
 			void clear_dem_element(void);
 };
+

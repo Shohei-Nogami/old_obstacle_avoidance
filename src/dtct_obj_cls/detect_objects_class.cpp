@@ -27,9 +27,13 @@ detect_objects::detect_objects()
 		index_schm[i]=new index_schema[width];
 	}
 
-	index_vxl=new index_voxel*[height];
+	cur_index_vxl=new index_voxel*[height];
 	for(int i=0;i<height;i++){
-		index_vxl[i]=new index_voxel[width];
+		cur_index_vxl[i]=new index_voxel[width];
+	}
+	pre_index_vxl=new index_voxel*[height];
+	for(int i=0;i<height;i++){
+		pre_index_vxl[i]=new index_voxel[width];
 	}
 	voxel_element=new std::vector<pcl::PointXYZ>**[map_size_nz];
 	for(int j=0;j<map_size_nz;j++){
@@ -63,21 +67,33 @@ detect_objects::detect_objects()
 		}
 	}
 	//reserve memory 
-	clusted_index=new int**[map_size_nz];
+	cur_clusted_index=new int**[map_size_nz];
 	for(int j=0;j<map_size_nz;j++){
-		clusted_index[j]=new int*[map_size_nx];
+		cur_clusted_index[j]=new int*[map_size_nx];
 		for(int i=0;i<map_size_nx;i++){
-			clusted_index[j][i]=new int[map_size_ny];
+			cur_clusted_index[j][i]=new int[map_size_ny];
+		}
+	}
+	pre_clusted_index=new int**[map_size_nz];
+	for(int j=0;j<map_size_nz;j++){
+		pre_clusted_index[j]=new int*[map_size_nx];
+		for(int i=0;i<map_size_nx;i++){
+			pre_clusted_index[j][i]=new int[map_size_ny];
 		}
 	}
 
 	//publisher and subscriber
 	pub1=it_pub1.advertise("detected_objects_image",1);//test string
 	pub2=it_pub2.advertise("detected_objects_image2",1);//test string
+	
 	nh_sub.setCallbackQueue(&queue);
 	sub=nh_sub.subscribe("/zed/depth/depth_registered",1,&detect_objects::image_callback,this);
 	nh_optflw.setCallbackQueue(&queue_optflw);
 	sub_optflw=nh_optflw.subscribe("objects_velocity",1,&detect_objects::opticalflow_callback,this);
+	
+	nh_matching.setCallbackQueue(&queue_matching);
+	sub_matching=nh_matching.subscribe("cluster_matching_index",1,&detect_objects::matching_callback,this);
+	
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
 			dem_element[nz][nx].reserve(height);
@@ -94,6 +110,8 @@ detect_objects::detect_objects()
   pc_pub7 = nh_pubpcl7.advertise<sensor_msgs::PointCloud2>("clusted_cloud_by_dem", 1);
   pc_pub8 = nh_pubpcl8.advertise<sensor_msgs::PointCloud2>("selfvoxcel_cloud", 1);
   pc_pub9 = nh_pubpcl9.advertise<sensor_msgs::PointCloud2>("Eclusted_cloud_by_selfvoxel", 1); 
+  
+  
 //  cloud->width  = width;
 //  cloud->height = height;
 //  cloud->points.resize (cloud->width * cloud->height);
@@ -133,9 +151,13 @@ detect_objects::~detect_objects(){
 	}
 	delete[] index_schm;
 	for(int i = 0; i < height; ++i ) {
-		delete[] index_vxl[i];
+		delete[] cur_index_vxl[i];
 	}
-	delete[] index_vxl;
+	delete[] cur_index_vxl;
+	for(int i = 0; i < height; ++i ) {
+		delete[] pre_index_vxl[i];
+	}
+	delete[] pre_index_vxl;
 
 	for(int j=0;j<map_size_nz;j++){
 		for(int i=0;i<map_size_nx;i++){
@@ -155,11 +177,11 @@ detect_objects::~detect_objects(){
 	//memory release
 	for(int j=0;j<map_size_nz;j++){
 		for(int i=0;i<map_size_nx;i++){
-			delete[] clusted_index[j][i];
+			delete[] cur_clusted_index[j][i];
 		}
-		delete[] clusted_index[j];
+		delete[] cur_clusted_index[j];
 	}
-	delete[] clusted_index;	
+	delete[] cur_clusted_index;	
 }
 
 void detect_objects::subscribe_depth_image(void){
@@ -254,7 +276,15 @@ float detect_objects::culclate_chebyshev_distance(Point3f1i& p1,Point3f1i& p2){
 		return( (p1.y-p2.y) > (p1.z-p2.z) ? (p1.y-p2.y) : (p1.z-p2.z) );
 	}
 }
+float detect_objects::culclate_chebyshev_distance(pcl::PointXYZ& p1,Point3f1i& p2){
 
+	if((p1.x-p2.x)>(p1.y-p2.y)){
+		return ( (p1.x-p2.x) > (p1.z-p2.z) ? (p1.x-p2.x) : (p1.z-p2.z) );
+	}
+	else{	
+		return( (p1.y-p2.y) > (p1.z-p2.z) ? (p1.y-p2.y) : (p1.z-p2.z) );
+	}
+}
 
 void detect_objects::convet_image_to_pcl(cv::Mat& image){
 //	std::cout<<"1\n";
@@ -621,3 +651,4 @@ int main(int argc,char **argv){
 
 	return 0;
 }
+

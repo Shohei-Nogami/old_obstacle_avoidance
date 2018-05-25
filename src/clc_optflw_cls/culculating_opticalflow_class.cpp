@@ -10,6 +10,7 @@ culculate_optical_flow::culculate_optical_flow()
 //  ,th_clpimg((int)(clp_max_points*0.8))
   {
   pub_vel=nh.advertise<obst_avoid::vel3d>("objects_velocity",1);
+  pub_match = nh_match.advertise<obst_avoid::matching>("cluster_matching_index", 1); 
   
   
   pts.reserve(point_size);   //特徴点
@@ -365,6 +366,36 @@ void culculate_optical_flow::cul_clip_vel(const double& dt) {
 	}
     
 }
+void culculate_optical_flow::publish_matching_msg(const cv::Mat& cur_depth_image)
+{
+	::obst_avoid::matching match_msg;
+	::obst_avoid::points pre_temp;
+	::obst_avoid::points cur_temp;
+	  float pcur_z;
+
+	match_msg.pre.reserve(pts.size());
+	match_msg.cur.reserve(pts.size());
+	
+  for(int i=0;i<pts.size();i++){
+    if(sts[i]&&npts[i].x>=0&&npts[i].y>=0){
+      pcur_z=cur_depth_image.at<float>(
+          (int)npts[i].y,
+          (int)npts[i].x
+          );
+      if(!std::isinf(pcur_z)&&pcur_z>=0.5)
+      {
+      	pre_temp.x=pts[i].x;
+      	pre_temp.y=pts[i].y;
+      	cur_temp.x=npts[i].x;
+      	cur_temp.y=npts[i].y;
+      	
+      	match_msg.pre.push_back(pre_temp);
+      	match_msg.cur.push_back(cur_temp);
+      }
+    }
+  }
+	pub_match.publish(match_msg);
+}
 void culculate_optical_flow::publish_objects_velocity(void){
     pub_vel.publish(vX);
 }
@@ -480,6 +511,7 @@ int main(int argc,char **argv){
                 std::cout<<"14:publish_debug_image\n";
                 std::cout<<"dt:"<<time_cls.get_delta_time()<<"\n";
             cul_optflw.publish_objects_velocity();
+		cul_optflw.publish_matching_msg(depth_img_cls.get_pre_image_by_ref());
             }
         }
     cul_optflw.clear_vector();

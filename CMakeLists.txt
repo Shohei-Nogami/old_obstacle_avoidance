@@ -71,6 +71,7 @@ find_package(OpenCV REQUIRED)
    detected_objects.msg
    vel3d.msg
    img_point.msg 
+   matching.msg
 #   Message1.msg
 #   Message2.msg
  )

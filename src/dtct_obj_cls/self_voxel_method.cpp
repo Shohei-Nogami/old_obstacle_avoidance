@@ -55,9 +55,12 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 		}
 	}
 	
-		std::cout<<"00:"<<tm_cls.get_time_now()<<"\n";
+	std::cout<<"00:"<<tm_cls.get_time_now()<<"\n";
 	for(int h=0;h<height;h++){
 		for(int w=0;w<width;w++){
+			
+			pre_index_vxl[h][w]=cur_index_vxl[h][w];
+			
 			z_temp=depth_image.at<float>(h,w);
 			if(z_temp>0.5&&!std::isinf(z_temp)){//
 				x_temp=(w-width/2)*z_temp/f;
@@ -71,9 +74,9 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 					||image.at<cv::Vec3b>(h,w)[2]<=255-color_th)){//){
 
 					if(culc_voxel_nxzy(voxel_size_x,voxel_size_z,voxel_size_y,x_temp,z_temp,y_temp+camera_height,nx,nz,ny)){
-						index_vxl[h][w].nz=nz;
-						index_vxl[h][w].nx=nx;
-						index_vxl[h][w].ny=ny;
+						cur_index_vxl[h][w].nz=nz;
+						cur_index_vxl[h][w].nx=nx;
+						cur_index_vxl[h][w].ny=ny;
 						//voxel_point[nz][nx][ny].x+=x_temp;
 						//voxel_point[nz][nx][ny].y+=y_temp;
 						//voxel_point[nz][nx][ny].z+=z_temp;
@@ -87,9 +90,9 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 					}
 				}
 			}
-			index_vxl[h][w].nz=-1;
-			//index_vxl[h][w].nx=-1;
-			//index_vxl[h][w].ny=-1;
+			cur_index_vxl[h][w].nz=-1;
+			//cur_index_vxl[h][w].nx=-1;
+			//cur_index_vxl[h][w].ny=-1;
 		}
 	}
 	std::cout<<"selfvoxel: original_size:"<<original_size<<"\n";
@@ -182,25 +185,28 @@ void detect_objects::publish_voxel_pcl(int& voxel_size){
 void detect_objects::clusterig_selfvoxel(void){
 	//clustering 
 
-	//std::vector<pcl::PointXYZ> cluster_elements;
-	std::vector<Point3f1i> cluster_elements;
+	std::vector<pcl::PointXYZ> cluster_elements;
+	//std::vector<Point3f1i> cluster_elements;
 	std::vector<cv::Point3i> cluster_elements_num;
+	pcl::PointXYZ cluster_elements_temp;
 	cv::Point3i cen_temp;
 
-	cluster.reserve(voxel_size);
+	cur_cluster.reserve(voxel_size);
 	cluster_elements.reserve(voxel_size);
 	cluster_elements_num.reserve(voxel_size);
 
-	//init clusted_index
+	
+	//init cur_clusted_index
 	for(int nz=0;nz<map_size_nz;nz++){
 		for(int nx=0;nx<map_size_nx;nx++){
 			for(int ny=0;ny<map_size_ny;ny++){
-				clusted_index[nz][nx][ny]=-1;
+				pre_clusted_index[nz][nx][ny]=cur_clusted_index[nz][nx][ny];
+				cur_clusted_index[nz][nx][ny]=-1;
 			}
 		}
 	}
-
-	cluster.clear();
+	pre_cluster=cur_cluster;
+	cur_cluster.clear();
 
 	//clustering process
 	float clustering_distance=0.04*1.5;
@@ -220,7 +226,7 @@ void detect_objects::clusterig_selfvoxel(void){
 		//nz=clst_tsk[tsk_n].nz;
 		//nx=clst_tsk[tsk_n].nx;
 		//ny=clst_tsk[tsk_n].ny;
-				if(voxel_point[nz][nx][ny].s==0||clusted_index[nz][nx][ny]!=-1){//already clusted or point nothing
+				if(voxel_point[nz][nx][ny].s==0||cur_clusted_index[nz][nx][ny]!=-1){//already clusted or point nothing
 					//std::cout<<"("<<nz<<","<<nx<<","<<ny<<")\n";
 					continue;//skip
 				}
@@ -230,12 +236,18 @@ void detect_objects::clusterig_selfvoxel(void){
 									<<voxel_point[nz][nx][ny].y<<","
 									<<voxel_point[nz][nx][ny].z<<"\n";
 				*/
-				cluster_elements.push_back(voxel_point[nz][nx][ny]);
+				
+				cluster_elements_temp.x=voxel_point[nz][nx][ny].x;
+				cluster_elements_temp.y=voxel_point[nz][nx][ny].y;
+				cluster_elements_temp.z=voxel_point[nz][nx][ny].z;
+				cluster_elements.push_back(cluster_elements_temp);
+				
+				//cluster_elements.push_back(voxel_point[nz][nx][ny]);
 				cen_temp.z=nz;
 				cen_temp.x=nx;
 				cen_temp.y=ny;
 				cluster_elements_num.push_back(cen_temp);
-				clusted_index[nz][nx][ny]=(int)cluster.size();
+				cur_clusted_index[nz][nx][ny]=(int)cur_cluster.size();
 				//std::cout<<"nz,nx,ny):("<<nz<<","<<nx<<","<<ny<<")\n";
 				for(int k=0;k<cluster_elements.size();k++){
 				  int cen_nz,cen_nx,cen_ny;
@@ -257,7 +269,7 @@ void detect_objects::clusterig_selfvoxel(void){
 							for(int sry=-serch_range_y+cen_ny;sry<serch_range_y+cen_ny;sry++){
 								//std::cout<<"1\n";
 								if(sry<0||sry>=map_size_ny||voxel_point[srz][srx][sry].s==0
-									||clusted_index[srz][srx][sry]!=-1){//outrange of array y or point nothing
+									||cur_clusted_index[srz][srx][sry]!=-1){//outrange of array y or point nothing
 									continue;
 								}
 								//Euclid distance
@@ -266,19 +278,24 @@ void detect_objects::clusterig_selfvoxel(void){
 								edis=culclate_chebyshev_distance(cluster_elements[k],voxel_point[srz][srx][sry]);
 								
 								if(edis<=clustering_distance){//clust
-									cluster_elements.push_back(voxel_point[srz][srx][sry]);
+									//cluster_elements.push_back(voxel_point[srz][srx][sry]);
+									cluster_elements_temp.x=voxel_point[srz][srx][sry].x;
+									cluster_elements_temp.y=voxel_point[srz][srx][sry].y;
+									cluster_elements_temp.z=voxel_point[srz][srx][sry].z;
+									cluster_elements.push_back(cluster_elements_temp);
+
 									cen_temp.z=srz;
 									cen_temp.x=srx;
 									cen_temp.y=sry;
 									cluster_elements_num.push_back(cen_temp);
-									clusted_index[srz][srx][sry]=(int)cluster.size();
+									cur_clusted_index[srz][srx][sry]=(int)cur_cluster.size();
 									cluster_size++;
 								}
 							}//end for search range y
 						}//end for search range x
 					}//end for search range z
 				}//end for k
-				cluster.push_back(cluster_elements);
+				cur_cluster.push_back(cluster_elements);
 				cluster_elements.clear();
 				cluster_elements_num.clear();
 	//}
@@ -305,9 +322,9 @@ void detect_objects::clusterig_selfvoxel(void){
 
 	float volume_threshold=0.1*0.1*0.1;
 	float one_point_volume=voxel_size_x*voxel_size_z*voxel_size_y;
-	for(int cn=0;cn<cluster.size();cn++){
-		if(one_point_volume*(int)cluster[cn].size()>volume_threshold){
-			for(int cen=0;cen<cluster[cn].size();cen++){
+	for(int cn=0;cn<cur_cluster.size();cn++){
+		if(one_point_volume*(int)cur_cluster[cn].size()>volume_threshold){
+			for(int cen=0;cen<cur_cluster[cn].size();cen++){
 				/*
 				clusted_cloud->points[ccn].x=cluster[cn][cen].x;
 				clusted_cloud->points[ccn].y=cluster[cn][cen].y;
@@ -318,9 +335,9 @@ void detect_objects::clusterig_selfvoxel(void){
 				
 				ccn++;
 				*/
-				cloud_temp.x=cluster[cn][cen].x;
-				cloud_temp.y=cluster[cn][cen].y;
-				cloud_temp.z=cluster[cn][cen].z;
+				cloud_temp.x=cur_cluster[cn][cen].x;
+				cloud_temp.y=cur_cluster[cn][cen].y;
+				cloud_temp.z=cur_cluster[cn][cen].z;
 				cloud_temp.r=colors[j%12][0];
 				cloud_temp.g=colors[j%12][1];
 				cloud_temp.b=colors[j%12][2];
@@ -331,20 +348,20 @@ void detect_objects::clusterig_selfvoxel(void){
 			j++;
 		}
 		else{
-			for(int cen=0;cen<cluster[cn].size();cen++){
+			for(int cen=0;cen<cur_cluster[cn].size();cen++){
 				/*
-				clusted_cloud->points[ccn].x=cluster[cn][cen].x;
-				clusted_cloud->points[ccn].y=cluster[cn][cen].y;
-				clusted_cloud->points[ccn].z=cluster[cn][cen].z;
+				clusted_cloud->points[ccn].x=cur_cluster[cn][cen].x;
+				clusted_cloud->points[ccn].y=cur_cluster[cn][cen].y;
+				clusted_cloud->points[ccn].z=cur_cluster[cn][cen].z;
 				clusted_cloud->points[ccn].r=0;
 				clusted_cloud->points[ccn].g=0;
 				clusted_cloud->points[ccn].b=0;
 				ccn++;
 				
 				*/
-				cloud_temp.x=cluster[cn][cen].x;
-				cloud_temp.y=cluster[cn][cen].y;
-				cloud_temp.z=cluster[cn][cen].z;
+				cloud_temp.x=cur_cluster[cn][cen].x;
+				cloud_temp.y=cur_cluster[cn][cen].y;
+				cloud_temp.z=cur_cluster[cn][cen].z;
 				cloud_temp.r=0;
 				cloud_temp.g=0;
 				cloud_temp.b=0;
@@ -369,6 +386,7 @@ void detect_objects::clusterig_selfvoxel(void){
 
 	//cluster.clear();
 }
+
 
 
 

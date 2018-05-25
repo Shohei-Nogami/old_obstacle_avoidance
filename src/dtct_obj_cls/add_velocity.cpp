@@ -15,7 +15,7 @@ bool detect_objects::add_velocity_to_cluster(void){
 	std::cout<<"vX.pt,vel:"<<vX.pt.size()<<","<<vX.vel.size()<<"\n";
 	//std::vector< std::vector<pcl::PointXYZ> > cluster_vel_elm;
 	pcl::PointXYZ vel_element;
-	cluster_vel_elm.resize(cluster.size());
+	cluster_vel_elm.resize(cur_cluster.size());
 	int h,w;
 	int nx,nz,ny;
 	int cn;
@@ -25,15 +25,15 @@ bool detect_objects::add_velocity_to_cluster(void){
 		h=vX.pt[k].h;
 		w=vX.pt[k].w;
 		//std::cout<<",h,w:"<<h<<","<<w<<"\n";
-		nx=index_vxl[h][w].nx;
-		ny=index_vxl[h][w].ny;
-		nz=index_vxl[h][w].nz;
+		nx=cur_index_vxl[h][w].nx;
+		ny=cur_index_vxl[h][w].ny;
+		nz=cur_index_vxl[h][w].nz;
 		//std::cout<<"nx,ny,nz,h,w,cn:"<<nx<<","<<ny<<","<<nz<<","<<h<<","<<w<<",";
 	
 		if(nz!=-1)
 		{
 			//std::cout<<"nx,ny,nz:"<<nx<<","<<ny<<","<<nz<<"\n";
-			cn=clusted_index[nz][nx][ny];
+			cn=cur_clusted_index[nz][nx][ny];
 			//std::cout<<cn<<"\n";
 			//std::cout<<"h,w,,cn:"<<h<<","<<w<<","<<cn<<"\n";
 			if(cn!=-1)
@@ -48,9 +48,9 @@ bool detect_objects::add_velocity_to_cluster(void){
 		//std::cout<<":for end\n";
 		//std::cout<<"k,vXsize:"<<k<<","<<vX.pt.size()<<"\n";
 	}
-	//std::cout<<"cluster.size():"<<cluster.size()<<"\n";
+	//std::cout<<"cur_cluster.size():"<<cur_cluster.size()<<"\n";
 	/*
-	for(int i=0;i<cluster.size();i++){
+	for(int i=0;i<cur_cluster.size();i++){
 		std::cout<<"cluster_vel_elm["<<i<<"]:"<<cluster_vel_elm[i].size()<<"\n";
 		
 	}
@@ -62,10 +62,10 @@ bool detect_objects::add_velocity_to_cluster(void){
 void detect_objects::estimate_velocity_of_cluster(void)
 {
 	//std::vector<pcl::PointXYZ> cluster_vel;
-	cluster_vel.resize(cluster.size());
+	cluster_vel.resize(cur_cluster.size());
 	std::vector<pcl::PointXYZ> cluster_vel_dsp;
-	cluster_vel_dsp.resize(cluster.size());
-	for(int i=0;i<cluster.size();i++)
+	cluster_vel_dsp.resize(cur_cluster.size());
+	for(int i=0;i<cur_cluster.size();i++)
 	{
 		int n=0;
 		cluster_vel[i].x=0;
@@ -128,17 +128,127 @@ void detect_objects::estimate_velocity_of_cluster(void)
 */
 }
 
+void detect_objects::subsuctibe_matching(void){
+	queue_matching.callOne(ros::WallDuration(1));
+}
+
+void detect_objects::matching_callback(const obst_avoid::matching::ConstPtr& msg)
+{
+	match_msg.pre=msg->pre;
+	match_msg.cur=msg->cur;	
+}
+void detect_objects::matching_cluster(void)
+{
+	int ccn,pcn;
+	int h,w;
+	int nx,ny,nz;
+	std::vector< std::vector<int> > cmatch_temp;
+	//std::vector<int> cmatch;
+	cmatch.clear();
+	cmatch.resize(pre_cluster.size());
+	cmatch_temp.resize(pre_cluster.size());
+	cmatch_temp.reserve(match_msg.pre.size());
+	for(int k=0;k<match_msg.cur.size();k++)
+	{
+	
+		h=match_msg.pre[k].y;
+		w=match_msg.pre[k].x;
+		//std::cout<<",h,w:"<<h<<","<<w<<"\n";
+		nx=pre_index_vxl[h][w].nx;
+		ny=pre_index_vxl[h][w].ny;
+		nz=pre_index_vxl[h][w].nz;
+		
+		if(nz!=-1)
+		{
+			pcn=pre_clusted_index[nz][nx][ny];
+			
+			if(pcn!=-1)
+			{		
+				h=match_msg.cur[k].y;
+				w=match_msg.cur[k].x;
+				//std::cout<<",h,w:"<<h<<","<<w<<"\n";
+				nx=cur_index_vxl[h][w].nx;
+				ny=cur_index_vxl[h][w].ny;
+				nz=cur_index_vxl[h][w].nz;
+				if(nz!=-1)
+				{
+					ccn=cur_clusted_index[nz][nx][ny];
+			
+					if(ccn!=-1)
+					{
+						cmatch_temp[pcn].push_back(ccn);
+					}
+				}
+			}
+		}
+		//std::cout<<":for end\n";
+		//std::cout<<"k,vXsize:"<<k<<","<<vX.pt.size()<<"\n";
+	}
+	for(int i=0;pre_cluster.size();i++)
+	{
+		std::vector<int> index_num;
+		index_num.resize(cur_cluster.size());
+		for(int k=0;k<cmatch_temp[i].size();k++)
+		{
+			index_num[ cmatch_temp[i][k] ]++;
+		}
+		int max=0;
+		//int max_n=0;
+		cmatch[i]=0;
+		for(int n=0;n<cur_cluster.size();n++)
+		{
+			if(max<index_num[n])
+			{	
+				max=index_num[n];
+				//max_n=n;
+				cmatch[i]=n;
+			}
+		}
+		std::cout<<"cmatch["<<i<<"]:"<<cmatch[i]<<"\n";
+	}	
+}
+
+void detect_objects::estimate_velocity_of_cluster_by_gp(float& dt)
+{
+	//prev_cluster,cur_cluster
+	//culculate gravity points of current cluster
+	std::vector<pcl::PointXYZ> cur_gp;
+	cur_gp.resize(cur_cluster.size());
+	for(int i=0;i<cur_cluster.size();i++)
+	{
+		cur_gp[i].x=0;
+		cur_gp[i].y=0;
+		cur_gp[i].z=0;
+		for(int k=0;k<cur_cluster[i].size();k++)
+		{
+			cur_gp[i].x+=cur_cluster[i][k].x;
+			cur_gp[i].y+=cur_cluster[i][k].y;
+			cur_gp[i].z+=cur_cluster[i][k].z;
+			
+		}
+		cur_gp[i].x=cur_gp[i].x/(int)cur_cluster[i].size();
+		cur_gp[i].y=cur_gp[i].y/(int)cur_cluster[i].size();
+		cur_gp[i].z=cur_gp[i].z/(int)cur_cluster[i].size();
+		
+	}
+	if(!pre_cluster.size())
+	{
+		return ;
+	}
+	//holding on
+	
+}
 
 void detect_objects::draw_velocity(cv::Mat& image)
 {
 	int j = 0;
 	float colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト
 	view_vel_image=image.clone();
-	for(int i=0;i<cluster.size();i++)
+	for(int i=0;i<cur_cluster.size();i++)
 	{
 		float volume_threshold=0.1*0.1*0.1;
 		float one_point_volume=voxel_size_x*voxel_size_z*voxel_size_y;
-		if(one_point_volume*(int)cluster[i].size()>volume_threshold&&!std::isnan(cluster_vel[i].x)&&
+		if(one_point_volume*(int)cur_cluster[i].size()>volume_threshold&&!std::isnan(cluster_vel[i].x)&&
 				std::sqrt(std::pow(cluster_vel[i].x,2.0)+std::pow(cluster_vel[i].z,2.0))>0.1)
 		{
 			std::string vel_string_x,vel_string_z,vel_string;
@@ -148,16 +258,16 @@ void detect_objects::draw_velocity(cv::Mat& image)
 			cv::Point2i gp;
 			gp.x=0;
 			gp.y=0;
-			for(int k=0;k<cluster[i].size();k++)
+			for(int k=0;k<cur_cluster[i].size();k++)
 			{
-				gp.x+=-cluster[i][k].y/cluster[i][k].x*f;
-				gp.y+=(cluster[i][k].z-0.23/*0.4125*/)/cluster[i][k].x*f;
+				gp.x+=-cur_cluster[i][k].y/cur_cluster[i][k].x*f;
+				gp.y+=(cur_cluster[i][k].z-0.23/*0.4125*/)/cur_cluster[i][k].x*f;
 
 				//view_vel_image.at<cv::Vec3b>(gp.y,gp.x)
 						
 			}
-			gp.x=(int)(gp.x/(int)cluster[i].size())+width/2-100;
-			gp.y=height/2-(int)(gp.y/(int)cluster[i].size());
+			gp.x=(int)(gp.x/(int)cur_cluster[i].size())+width/2-100;
+			gp.y=height/2-(int)(gp.y/(int)cur_cluster[i].size());
 			//std::cout<<"gp:"<<gp<<"\n";
 			
 			cv::putText(view_vel_image,vel_string,gp,cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(200,200,0), 2, CV_AA);
@@ -178,5 +288,6 @@ void detect_objects::clear_velocity(void)
 	vX.vel.clear();
 	cluster_vel.clear();
 }
+
 
 

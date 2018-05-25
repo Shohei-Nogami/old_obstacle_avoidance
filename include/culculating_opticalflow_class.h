@@ -8,11 +8,21 @@
 #include"obst_avoid/point3d.h"
 #include"obst_avoid/vel3d.h"
 #include"obst_avoid/img_point.h"
+
+#include"obst_avoid/points.h"
+#include"obst_avoid/matching.h"
+
 class culculate_optical_flow
 {
   private:
 	  ros::NodeHandle nh;
   	ros::Publisher pub_vel;
+  	
+//--cluster matching
+	ros::NodeHandle nh_match;
+	ros::Publisher pub_match;
+	
+		
 //  	cv::Mat pre_image;
 //  	cv::Mat cur_image;
   	cv::Mat pre_gray_image;
@@ -66,6 +76,7 @@ class culculate_optical_flow
 		void culculating_observed_opticalflow(void);
 		void culculating_moving_objects_opticalflow(const cv::Mat& cur_depth_image,const double& w_v,const double& dyaw,const double& dt);
 
+		void publish_matching_msg(const cv::Mat& cur_depth_image);
 		void publish_objects_velocity(void);
 		void publish_flow_image(const cv::Mat& cur_image);
 		void clear_vector(void);
