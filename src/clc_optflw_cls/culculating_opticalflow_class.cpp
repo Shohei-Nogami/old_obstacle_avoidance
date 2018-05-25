@@ -199,7 +199,7 @@ void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Ma
             z.push_back(pre_z[i]);
             nz.push_back(pcur_z);
             
-       /*    
+       ///*if we use cul_clip_vel, we'll need coment-out here
       //vX_element.x=(npts[i].x*pcur_z/f - ppt.x*pre_z[i]/f)/dt;
       //vX_element.y=(npts[i].y*pcur_z/f - ppt.y*pre_z[i]/f)/dt;
       vX_element.x=(npts[i].x*pcur_z/f - pts[i].x*pre_z[i]/f - w_v*sin(-dyaw))/dt;
@@ -211,7 +211,7 @@ void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Ma
       pt.w=(int)npts[i].x;
       vX.pt.push_back(pt);
       //                newpoints.push_back(npts[i]);
- 			*/
+ 			//*/
       }
     }
   }
@@ -341,14 +341,15 @@ void culculate_optical_flow::cul_clip_vel(const double& dt) {
 				//LPF
 				clp_vel_ave[i][j].x=(ppT*clp_vel_ave_pre[i][j].x+dt*clp_vel_ave[i][j].x)/(ppT+dt);
 				//clp_vel_ave[i][j].y=(ppT*clp_vel_ave_pre[i][j].y+dt*clp_vel_ave[i][j].y)/(ppT+dt);
-				clp_vel_ave[i][j].z=(ppT*clp_vel_ave_pre[i][j].z+dt*clp_vel_ave[i][j].z)/(ppT+dt);
-				clp_vel_ave_pre[i][j] = clp_vel_ave[i][j];
+				//clp_vel_ave[i][j].z=(ppT*clp_vel_ave_pre[i][j].z+dt*clp_vel_ave[i][j].z)/(ppT+dt);
+				//clp_vel_ave_pre[i][j] = clp_vel_ave[i][j];
 
 				if ( clp_vel_dsp[i][j].x<=th_dsp
 					&& clp_vel_dsp[i][j].z<=th_dsp//0.15)
 					&&std::sqrt(std::pow(clp_vel_ave[i][j].x,2.0) 
-					//+ std::pow(clp_vel_dsp[i][j].y,2.0)
-						+ std::pow(clp_vel_ave[i][j].z,2.0))>th_mv )
+						//+ std::pow(clp_vel_dsp[i][j].y,2.0)
+						//+ std::pow(clp_vel_ave[i][j].z,2.0)
+						)>th_mv )
 				{
 				  vX_element.x= clp_vel_ave[i][j].x;
 				  vX_element.y= clp_vel_ave[i][j].y;
@@ -471,7 +472,7 @@ int main(int argc,char **argv){
                 std::cout<<"11:culculating_observed_opticalflow\n";
                 cul_optflw.culculating_moving_objects_opticalflow(depth_img_cls.get_pre_image_by_ref(),wodm_cls.get_wheel_velocity(),odm_cls.get_delta_yaw(),time_cls.get_delta_time());
                 std::cout<<"12:culculating_moving_objects_opticalflow\n";
-								cul_optflw.cul_clip_vel(time_cls.get_delta_time());
+								//cul_optflw.cul_clip_vel(time_cls.get_delta_time());
 								std::cout<<"12.5:cul_clip_vel\n";
                 cul_optflw.publish_flow_image(img_cls.get_cur_image_by_ref());
                 std::cout<<"13:publish_flow_image\n";

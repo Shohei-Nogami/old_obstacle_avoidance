@@ -55,6 +55,7 @@ bool detect_objects::add_velocity_to_cluster(void){
 		
 	}
 	*/
+	std::cout<<"end\n";
 	return true;
 }
 
@@ -62,12 +63,17 @@ void detect_objects::estimate_velocity_of_cluster(void)
 {
 	//std::vector<pcl::PointXYZ> cluster_vel;
 	cluster_vel.resize(cluster.size());
+	std::vector<pcl::PointXYZ> cluster_vel_dsp;
+	cluster_vel_dsp.resize(cluster.size());
 	for(int i=0;i<cluster.size();i++)
 	{
 		int n=0;
 		cluster_vel[i].x=0;
 		cluster_vel[i].y=0;
 		cluster_vel[i].z=0;
+		cluster_vel_dsp[i].x=0;
+		cluster_vel_dsp[i].y=0;
+		cluster_vel_dsp[i].z=0;
 		for(int k=0;k<cluster_vel_elm[i].size();k++)
 		{
 			if(std::sqrt(std::pow(cluster_vel_elm[i][k].x,2.0)+std::pow(cluster_vel_elm[i][k].z,2.0))<1.1)//object speed <4.0km/h
@@ -78,11 +84,40 @@ void detect_objects::estimate_velocity_of_cluster(void)
 				n++;
 			}
 		}
+		if(n<=0)
+		{
+			//std::cout<<"if(n<=0)\n";
+			continue;
+		}
 		cluster_vel[i].x=cluster_vel[i].x/n;
 //		cluster_vel.y=cluster_vel.y/n;
 		cluster_vel[i].z=cluster_vel[i].z/n;
 		
+		for(int k=0;k<cluster_vel_elm[i].size();k++)
+		{
+			if(std::sqrt(std::pow(cluster_vel_elm[i][k].x,2.0)+std::pow(cluster_vel_elm[i][k].z,2.0))<1.1)//object speed <4.0km/h
+			{
+				cluster_vel_dsp[i].x+=std::pow( cluster_vel[i].x-cluster_vel_elm[i][k].x , 2.0);
+				//cluster_vel_dsp[i].y+=std::pow( cluster_vel[i].y-cluster_vel_elm[i][k].y , 2.0);
+				cluster_vel_dsp[i].z+=std::pow( cluster_vel[i].z-cluster_vel_elm[i][k].z , 2.0);
+			}
+		}
+		cluster_vel_dsp[i].x=std::sqrt(cluster_vel_dsp[i].x/n);
+//		cluster_vel_dsp.y=std::sqrt(cluster_vel_dsp.y/n);
+		cluster_vel_dsp[i].z=std::sqrt(cluster_vel_dsp[i].z/n);
+		if(cluster_vel_dsp[i].x<cluster_vel[i].x*0.1&&cluster_vel_dsp[i].z<cluster_vel[i].z*0.1)
+		{
+			std::cout<<"cluster["<<i<<"]:("<<cluster_vel[i].x<<","<<cluster_vel[i].z<<")\n";
+			
+		}
+		else{
+		cluster_vel[i].x=0;
+		cluster_vel[i].y=0;
+		cluster_vel[i].z=0;
+		}
 	}
+	
+/*
 	for(int i=0;i<cluster.size();i++)
 	{
 		if(!std::isnan(cluster_vel[i].x))
@@ -90,7 +125,10 @@ void detect_objects::estimate_velocity_of_cluster(void)
 			std::cout<<"cluster(num,speed(x,z)):("<<i<<",speed("<<cluster_vel[i].x<<","<<cluster_vel[i].z<<"))\n";//when speed is nan, cluster_vel[i].size() is 0
 		}
 	}
+*/
 }
+
+
 void detect_objects::draw_velocity(cv::Mat& image)
 {
 	int j = 0;
@@ -113,7 +151,7 @@ void detect_objects::draw_velocity(cv::Mat& image)
 			for(int k=0;k<cluster[i].size();k++)
 			{
 				gp.x+=-cluster[i][k].y/cluster[i][k].x*f;
-				gp.y+=(cluster[i][k].z-0.4125)/cluster[i][k].x*f;
+				gp.y+=(cluster[i][k].z-0.23/*0.4125*/)/cluster[i][k].x*f;
 
 				//view_vel_image.at<cv::Vec3b>(gp.y,gp.x)
 						
