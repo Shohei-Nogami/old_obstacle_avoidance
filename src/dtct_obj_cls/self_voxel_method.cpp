@@ -28,6 +28,7 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 	uint8_t color_th=3;
 
 	if(std::abs(d-(camera_height+camera_bias))>=0.15){
+	//if(1){
 		a=-0.08;
 		b=0;
 		c=1;

@@ -597,6 +597,10 @@ int main(int argc,char **argv){
 
 		dtct_obj.subscribe_opticalflow();
 
+		std::cout<<"3:subscribe_depth_image:"<<time_cls.get_time_now()<<"\n";
+		
+		dtct_obj.subsuctibe_matching();
+
 		std::cout<<"3.5:subscribe_opticalflow:"<<time_cls.get_time_now()<<"\n";
 
 		dtct_obj.set_depth_image();
@@ -617,18 +621,27 @@ int main(int argc,char **argv){
 
 		std::cout<<"8:clusterig_selfvoxel:"<<time_cls.get_time_now()<<"\n";
 
-		if(dtct_obj.add_velocity_to_cluster())
+		if(1)//dtct_obj.add_velocity_to_cluster())
 		{
 		
 			std::cout<<"9:add_velocity_to_cluster:"<<time_cls.get_time_now()<<"\n";
 		
-			dtct_obj.estimate_velocity_of_cluster();
+			//dtct_obj.estimate_velocity_of_cluster();
 
 			std::cout<<"10:estimate_velocity_of_cluster:"<<time_cls.get_time_now()<<"\n";
+			
+			dtct_obj.matching_cluster();
 
-			dtct_obj.draw_velocity(img_cls.get_cur_image_by_ref());
+			std::cout<<"10:matching_cluster:"<<time_cls.get_time_now()<<"\n";
 
-			std::cout<<"10:draw_velocity:"<<time_cls.get_time_now()<<"\n";
+			if(dtct_obj.estimate_velocity_of_cluster_by_gp(time_cls.get_delta_time()))
+			{
+						std::cout<<"10:estimate_velocity_of_cluster_by_gp:"<<time_cls.get_time_now()<<"\n";
+		
+				dtct_obj.draw_velocity(img_cls.get_cur_image_by_ref());
+
+				std::cout<<"10:draw_velocity:"<<time_cls.get_time_now()<<"\n";
+			}
 		}
 /*
 	dtct_obj.density_based_clustering(img_cls.get_cur_image_by_ref());

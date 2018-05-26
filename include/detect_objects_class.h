@@ -112,6 +112,10 @@ class detect_objects{
 	//--matching
 		::obst_avoid::matching match_msg;
 		std::vector<int> cmatch;
+	//--estimate velocity with gp
+		std::vector<pcl::PointXYZ> cur_gp;
+		std::vector<pcl::PointXYZ> pre_gp;
+		std::vector<pcl::PointXYZ> cluster_vel_gp;
 	
 	//--density clustering
 	std::vector< std::vector<cv::Point2i> > Q;
@@ -149,7 +153,7 @@ class detect_objects{
 			void opticalflow_callback(const obst_avoid::vel3d::ConstPtr& msg);
 			bool add_velocity_to_cluster(void);
 			void estimate_velocity_of_cluster(void);
-			void estimate_velocity_of_cluster_by_gp(float& dt);
+			bool estimate_velocity_of_cluster_by_gp(double& dt);
 			void clear_velocity(void);
 			void draw_velocity(cv::Mat& image);
 			void subsuctibe_matching(void);
