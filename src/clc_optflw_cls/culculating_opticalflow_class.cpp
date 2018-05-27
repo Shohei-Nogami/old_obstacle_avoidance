@@ -5,14 +5,16 @@
 #include"time_class.h"
  
 culculate_optical_flow::culculate_optical_flow()
-  :point_size(max_points*2)
+  :point_size(max_points*2),it_pub1(nh_pub1)
 //  ,clp_point_size((int)(clp_max_points*10)),threshold_fp((int)(max_points*0.8))
 //  ,th_clpimg((int)(clp_max_points*0.8))
   {
   pub_vel=nh.advertise<obst_avoid::vel3d>("objects_velocity",1);
   pub_match = nh_match.advertise<obst_avoid::matching>("cluster_matching_index", 1); 
+  pub1=it_pub1.advertise("depth_by_optflw_node",1);//test string
   
-  
+	nh_sub.setCallbackQueue(&queue_empty);
+	sub=nh_sub.subscribe("response",1,&culculate_optical_flow::empty_callback,this);
   pts.reserve(point_size);   //特徴点
   npts.reserve(point_size);  //移動後の特徴点
   sts.reserve(point_size);
@@ -36,8 +38,24 @@ culculate_optical_flow::culculate_optical_flow()
 }
  
 culculate_optical_flow::~culculate_optical_flow(){
- 
+
 }
+void culculate_optical_flow::publish_syncro_depth(cv::Mat& depth_image){
+	cv_bridge::CvImagePtr publish_cvimage(new cv_bridge::CvImage);
+	publish_cvimage->encoding=sensor_msgs::image_encodings::TYPE_32FC1;
+	publish_cvimage->image=depth_image.clone();
+	pub1.publish(publish_cvimage->toImageMsg());
+
+}
+void culculate_optical_flow::subscribe_response(void){
+	queue_empty.callOne(ros::WallDuration(1));
+}
+
+void culculate_optical_flow::empty_callback(const std_msgs::Empty& msg){
+	
+}
+
+
 void culculate_optical_flow::set_gray_images(const cv::Mat& pre_img,const cv::Mat& cur_img){//step1
   cv::cvtColor(pre_img,pre_gray_image,CV_BGR2GRAY);
   cv::cvtColor(cur_img,cur_gray_image,CV_BGR2GRAY);
@@ -491,6 +509,7 @@ int main(int argc,char **argv){
     odm_cls.set_delta_odometry();
         std::cout<<"6\n";
     wodm_cls.set_delta_odometry(time_cls.get_delta_time());
+		cul_optflw.publish_syncro_depth(depth_img_cls.get_cur_image_by_ref());
         std::cout<<"7\n";
         if(img_cls.is_pre_image()&&depth_img_cls.is_pre_image()){
           cul_optflw.set_gray_images(img_cls.get_pre_image_by_ref(),img_cls.get_cur_image_by_ref());
@@ -507,7 +526,7 @@ int main(int argc,char **argv){
 								std::cout<<"12.5:cul_clip_vel\n";
                 cul_optflw.publish_flow_image(img_cls.get_cur_image_by_ref());
                 std::cout<<"13:publish_flow_image\n";
-                img_cls.publish_debug_image(cul_optflw.get_view_image());
+                //img_cls.publish_debug_image(cul_optflw.get_view_image());
                 std::cout<<"14:publish_debug_image\n";
                 std::cout<<"dt:"<<time_cls.get_delta_time()<<"\n";
             cul_optflw.publish_objects_velocity();
@@ -515,6 +534,7 @@ int main(int argc,char **argv){
             }
         }
     cul_optflw.clear_vector();
+		cul_optflw.subscribe_response();
   }
   return 0;
 }

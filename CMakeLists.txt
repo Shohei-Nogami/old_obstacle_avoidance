@@ -72,6 +72,9 @@ find_package(OpenCV REQUIRED)
    vel3d.msg
    img_point.msg 
    matching.msg
+   point2i.msg
+   cluster_element.msg
+   cluster.msg
 #   Message1.msg
 #   Message2.msg
  )
@@ -243,7 +246,7 @@ target_link_libraries(grid_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 add_executable(culculating_opticalflow_class_test src/clc_optflw_cls/culculating_opticalflow_class.cpp src/img_cls/image_class.cpp src/img_cls/depth_image_class.cpp src/odm_cls/wheel_odometry_class.cpp src/odm_cls/visual_odometry_class.cpp  src/tm_cls/time_class.cpp)
 target_link_libraries(culculating_opticalflow_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(detect_objects_class_test src/dtct_obj_cls/detect_objects_class.cpp src/dtct_obj_cls/dem_method.cpp src/dtct_obj_cls/self_voxel_method.cpp src/dtct_obj_cls/density_based_clustering.cpp src/dtct_obj_cls/add_velocity.cpp src/tm_cls/time_class.cpp src/img_cls/image_class.cpp)
+add_executable(detect_objects_class_test src/dtct_obj_cls/detect_objects_class.cpp src/dtct_obj_cls/density_based_clustering.cpp src/tm_cls/time_class.cpp src/img_cls/image_class.cpp)
 target_link_libraries(detect_objects_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #add_executable(img_prc src/main.cpp src/img_prc_cls.cpp src/prcs_fnc.cpp src/image_function.cpp src/depth_function.cpp src/odom_function.cpp src/time_function.cpp src/cvArrow_function.cpp src/vector_function.cpp src/debug_function.cpp src/tracking_fp_function.cpp src/prd_prc.cpp src/wheel_control.cpp)

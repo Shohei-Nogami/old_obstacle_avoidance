@@ -4,6 +4,10 @@
 #include<opencv2/imgproc/imgproc.hpp>
 #include<opencv2/video/tracking.hpp>//オプティカルフロー用
 #include<opencv2/features2d/features2d.hpp>
+#include <std_msgs/Empty.h>
+#include<image_transport/image_transport.h>
+#include<cv_bridge/cv_bridge.h>
+#include <ros/callback_queue.h>
 
 #include"obst_avoid/point3d.h"
 #include"obst_avoid/vel3d.h"
@@ -15,13 +19,15 @@
 class culculate_optical_flow
 {
   private:
-	  ros::NodeHandle nh;
+	  ros::NodeHandle nh,nh_sub,nh_pub1;
   	ros::Publisher pub_vel;
-  	
+  	ros::Subscriber sub;
+		image_transport::ImageTransport it_pub1;	
+		image_transport::Publisher pub1;
+		ros::CallbackQueue queue_empty;
 //--cluster matching
-	ros::NodeHandle nh_match;
-	ros::Publisher pub_match;
-	
+		ros::NodeHandle nh_match;
+		ros::Publisher pub_match;
 		
 //  	cv::Mat pre_image;
 //  	cv::Mat cur_image;
@@ -84,4 +90,10 @@ class culculate_optical_flow
 		void cvArrow(cv::Mat* img, cv::Point2i pt1, cv::Point2i pt2, cv::Scalar color);
 		//add function0524
 		void cul_clip_vel(const double& dt);
+
+		//---publish syncro depth
+		void publish_syncro_depth(cv::Mat& depth_image);
+		//---subscribe response
+		void subscribe_response(void);
+		void empty_callback(const std_msgs::Empty& msg);
 };
