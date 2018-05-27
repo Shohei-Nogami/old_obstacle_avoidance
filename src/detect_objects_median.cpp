@@ -33,7 +33,7 @@ public:
 	cv_bridge::CvImagePtr depthimg;
 	cv::Mat depth_img;
 	//depth image after filter process
-	static const int ksize=7;//filter param
+	static const int ksize=1;//filter param
 	cv::Mat depth_image;
 	// rectangle and objects for publish
 	::obst_avoid::detected_objects previous_objects;
@@ -77,7 +77,11 @@ public:
 	ros::Subscriber sub_original_image;
 	ros::CallbackQueue original_image_queue;
 	ros::SubscribeOptions original_image_option;
-	
+
+///
+	int j = 0;
+	uint8_t colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト	
+///
 	image_transport::Publisher pub_detected_image;
 	detect_objects()
 		:it(nh4)	
@@ -126,7 +130,7 @@ public:
 		if(FILTER_TYPE==MEDIAN_FILTER){
 //----median filter
 			//median filter parameter
-			int median_param=7;
+			int median_param=1;
 			//use opencv function
 			if(use_cv_function){
 				cv::medianBlur(depth_img,depth_img,ksize);
@@ -326,6 +330,19 @@ public:
 								temp.x=task_objects[i].x+m;
 								temp.y=task_objects[i].y+l;
 								task_objects.push_back(temp);
+								//-----
+								for(int u=temp.x*ksize;u<temp.x*ksize+ksize;u++){
+									for(int v=temp.y*ksize;v<temp.y*ksize+ksize;v++){
+								//		int u=temp.x*ksize;
+								//		int v=temp.y*ksize;
+										int j=(int)objects.rect.size();
+										detectd_image.at<cv::Vec3b>(v,u)[0]=colors[j%12][0];
+										detectd_image.at<cv::Vec3b>(v,u)[1]=colors[j%12][1];
+										detectd_image.at<cv::Vec3b>(v,u)[2]=colors[j%12][2];
+									}
+								}
+								
+								//-----
 							}
 						}//m
 					}//l
@@ -385,8 +402,8 @@ public:
 					+ objects.rect[j].br.x - objects.rect[j].tl.x;
 				sum_height = previous_objects.rect[i].br.y - previous_objects.rect[i].tl.y 
 					+ objects.rect[j].br.y - objects.rect[j].tl.y;
-				std::cout<<"distance:x"<<distance_x<<", y"<<distance_y<<"\n";
-				std::cout<<"sum:width"<<sum_width<<", height"<<sum_height<<"\n";
+				//std::cout<<"distance:x"<<distance_x<<", y"<<distance_y<<"\n";
+				//std::cout<<"sum:width"<<sum_width<<", height"<<sum_height<<"\n";
 				
 				if(distance_x < sum_width || distance_y < sum_height){//collision
 					//Evaluation formula
@@ -422,7 +439,7 @@ public:
 
 			for(int u=tl.x;u<br.x;u++){
 				for(int v=tl.y;v<br.y;v++){
-					detectd_image.at<cv::Vec3b>(v,u)[1]+=color;//BGR:[0],[1],[2]
+					//detectd_image.at<cv::Vec3b>(v,u)[1]+=color;//BGR:[0],[1],[2]
 				}
 			}
 		}
@@ -523,7 +540,7 @@ public:
 			prc.filter_process();
 			prc.set_previous_objects();
 			prc.detect_process();
-			prc.tracking_process();
+			//prc.tracking_process();
 			prc.gettime();
 			prc.culcdt();
 			prc.print_dt();
@@ -532,7 +549,7 @@ public:
 				prc.emptycall();
 			}
 			else{
-				prc.debug_tracking_process();
+				//prc.debug_tracking_process();
 				prc.publish_detected_image();
 			}
 			prc.gettime();

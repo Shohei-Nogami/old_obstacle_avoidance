@@ -127,6 +127,7 @@ detect_objects::detect_objects()
 	seg.setAxis(Eigen::Vector3f (0.0,0.0,1.0));//法線ベクトル
 	seg.setEpsAngle(15.0f * (M_PI/180.0f));//許容出来る平面
 
+	filted_image=cv::Mat::zeros(cv::Size(width,height), CV_32FC1);
 }
 detect_objects::~detect_objects(){
 //	delete[]
@@ -592,7 +593,7 @@ int main(int argc,char **argv){
 
 		if(!dtct_obj.is_cvbridge_image()||!img_cls.is_cur_image())
 			continue;
-
+/*
 		std::cout<<"3:subscribe_depth_image:"<<time_cls.get_time_now()<<"\n";
 
 		dtct_obj.subscribe_opticalflow();
@@ -602,11 +603,11 @@ int main(int argc,char **argv){
 		dtct_obj.subsuctibe_matching();
 
 		std::cout<<"3.5:subscribe_opticalflow:"<<time_cls.get_time_now()<<"\n";
-
+*/
 		dtct_obj.set_depth_image();
 
 		std::cout<<"4:set_depth_image:"<<time_cls.get_time_now()<<"\n";
-
+/*
 		std::cout<<"5:clustering_start:"<<time_cls.get_time_now()<<"\n";
 
 		dtct_obj.create_voxel_grid(img_cls.get_cur_image_by_ref());
@@ -643,13 +644,18 @@ int main(int argc,char **argv){
 				std::cout<<"10:draw_velocity:"<<time_cls.get_time_now()<<"\n";
 			}
 		}
-/*
+*/
+	
+	dtct_obj.filter_process();
+
+	std::cout<<"9:filter_process:"<<time_cls.get_time_now()<<"\n";
+
 	dtct_obj.density_based_clustering(img_cls.get_cur_image_by_ref());
 
 	std::cout<<"9:clusterig_by_density_based:"<<time_cls.get_time_now()<<"\n";
 
 	img_cls.publish_debug_image( dtct_obj.draw_cluster(img_cls.get_cur_image_by_ref() ) );
-*/
+
 
 		//dtct_obj.tracking_cluster(/*hogehoge*/);
 

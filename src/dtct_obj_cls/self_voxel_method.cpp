@@ -66,7 +66,7 @@ void detect_objects::create_voxel_grid(cv::Mat& image){
 			if(z_temp>0.5&&!std::isinf(z_temp)){//
 				x_temp=(w-width/2)*z_temp/f;
 				y_temp=(height/2-h)*z_temp/f;
-				y_ground=(-a*x_temp-b*y_temp-d)/c;
+				y_ground=(-a*z_temp-b*(-x_temp)-d)/c;
 				//std::cout<<"y_t,y_g:"<<y_temp<<","<<y_ground<<"\n";
 				//std::cout<<"y_temp+camera_height-y_ground:"<<y_temp+camera_height<<"\n";
 			  if(y_temp-y_ground>0&&!std::isinf(y_temp)&&y_temp+camera_height<1.5
