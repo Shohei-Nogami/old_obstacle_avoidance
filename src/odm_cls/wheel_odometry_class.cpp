@@ -71,7 +71,7 @@ void wheel_odometry_class::define_variable(void){
 	sub=nh_sub.subscribe("/wheel_data",1,&wheel_odometry_class::wheel_odometry_callback,this);
 }
 void wheel_odometry_class::wheel_odometry_callback(const obst_avoid::wheel_msg::ConstPtr& msg){
-	tm_wlodm.set_time();
+	//tm_wlodm.set_time();
 	vr_i=msg->vel_r;
 	vl_i=msg->vel_l;
 	vr_ord=(double)vr_i/1000;
@@ -92,11 +92,13 @@ void wheel_odometry_class::set_delta_odometry(double& dt){//<-use
 	set_delta_position(dt);
 }
 void wheel_odometry_class::set_current_velocity(void){
+	tm_wlodm.set_time();
 	float T=0.01;
 	vr=(tm_wlodm.get_delta_time()*vr_ord+T*vr)/(T+tm_wlodm.get_delta_time());
 	vl=(tm_wlodm.get_delta_time()*vl_ord+T*vl)/(T+tm_wlodm.get_delta_time());
 	v=(vl+vr)/2;
 	w=(vr-vl)/d;
+	//std::cout<<"wo(v,w:"<<v<<","<<w<<"\n";
 }
 double& wheel_odometry_class::get_velocity(void){
 	return v;
@@ -105,9 +107,11 @@ double& wheel_odometry_class::get_angular_velocity(void){
 	return w;
 }
 void wheel_odometry_class::set_velocity_X(void){
+	//std::cout<<"v,w,t:"<<v<<","<<w<<","<<tm_wlodm.get_delta_time()<<"\n";
 	vx=v*sin(-w*tm_wlodm.get_delta_time());
 	vy=0;
 	vz=v*cos(-w*tm_wlodm.get_delta_time());
+	//std::cout<<"v:("<<vx<<","<<vy<<","<<vz<<")\n";
 }
 double& wheel_odometry_class::get_velocity_x(void){
 	return vx;

@@ -99,7 +99,7 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 	
 	std::cout<<"1\n";
 	//cv::Point2i temp;
-	obst_avoid::point2i temp;
+	obst_avoid::cluster_point temp;
 	for(int h=0+search_range;h<height/ksize-search_range;h++){
 		for(int w=0+search_range;w<width/ksize-search_range;w++){
 			double depth_0=filted_image.at<float>(h,w);
@@ -117,6 +117,7 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 			Q_p.pt.clear();
 			temp.x=w;
 			temp.y=h;
+			temp.z=depth_0;
 			task_objects.pt.push_back(temp);
 			Q_p.pt.push_back(temp);
 			searched_flag[h][w]=true;
@@ -161,12 +162,13 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 
 
 						//std::cout<<"x_i-x_0:"<<x_i-x_0<<"\n";
-						//if(std::abs(depth_i-depth_0)<depth_threshold){
-						if(std::abs(depth_i-depth_0)<eps){
+						if(std::abs(depth_i-depth_0)<depth_threshold){
+						//if(std::abs(depth_i-depth_0)<eps){
 						//if(std::sqrt(std::pow(depth_i-depth_0,2.0)+std::pow(x_i-x_0,2.0))<eps){
 						//	searched_flag[task_objects.pt[i].y+l][task_objects.pt[i].x+m]=true;
 							temp.x=task_objects.pt[i].x+m;
 							temp.y=task_objects.pt[i].y+l;
+							temp.z=depth_i;
 						//	task_objects.pt.push_back(temp);
 							task_pt.pt.push_back(temp);
 							//-----
@@ -216,7 +218,7 @@ cv::Mat& detect_objects::draw_cluster(cv::Mat& image)
 	temp_image = image.clone();//cv::Mat::zeros(cv::Size(width,height), CV_8UC3);
 	//temp_image = cv::Mat::zeros(cv::Size(width,height), CV_8UC3);
 	
-
+	
 	int j = 0;
 	uint8_t colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト	
 
@@ -242,9 +244,13 @@ cv::Mat& detect_objects::draw_cluster(cv::Mat& image)
 	std::cout<<"return temp_image\n";
 	return temp_image;
 }
-void detect_objects::publish_cluster(void)
+void detect_objects::publish_cluster(double& v,double& w,double& dt)
 {
 	obst_avoid::cluster pub_Q;
+	pub_Q.dX.z=v*cos(w*dt)*dt;
+	pub_Q.dX.x=v*sin(w*dt)*dt;
+	pub_Q.dX.y=0;
+	pub_Q.t=dt;
 	pub_Q.clst.reserve(Q.clst.size());
 	for(int i=0;i<Q.clst.size();i++)
 	{

@@ -27,6 +27,9 @@
 #include"obst_avoid/point2i.h"
 #include"obst_avoid/cluster_element.h"
 #include"obst_avoid/cluster.h"
+#include"obst_avoid/cluster_point.h"
+
+#include"odometry_class.h"
 
 //#include <pcl/visualization/cloud_viewer.h>
 //#include <pcl/io/pcd_io.h>  
@@ -95,7 +98,7 @@ class detect_objects{
 	//---RESPONSE CALLBACK
 		void empty_callback(const std_msgs::Empty& msg);
 	//---publish_cluster
-		void publish_cluster(void);
+		void publish_cluster(double& v,double& w,double& dt);
 	//---publish response
 		void publish_response(void);
 };

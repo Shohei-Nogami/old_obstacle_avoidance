@@ -27,29 +27,37 @@ void odometry_class::set_velocity(void){
 	wv_x=wocls.get_velocity_x();
 	wv_y=wocls.get_velocity_y();
 	wv_z=wocls.get_velocity_z();
-
+	std::cout<<"vv:"<<vv_x<<","<<vv_y<<","<<vv_z<<"\n";
+	std::cout<<"wv:"<<wv_x<<","<<wv_y<<","<<wv_z<<"\n";//ok
 	//inner product
 	ip=vv_x*wv_x+vv_y*wv_y+vv_z*wv_z;
 	
 	//length of vector
 	vv_size=std::sqrt(vv_x*vv_x+vv_y*vv_y+vv_z*vv_z);
 	wv_size=std::sqrt(wv_x*wv_x+wv_y*wv_y+wv_z*wv_z);
-	
-	//difference angle of vectors
-	dif_angle=ip/(vv_size*wv_size);
-	
+	if(vv_size==0||wv_size==0)
+	{
+		dif_angle=0;
+	}
+	else
+	{
+		//difference angle of vectors
+		dif_angle=std::acos(ip/(vv_size*wv_size) );
+		//std::cout<<"dif_angle:"<<dif_angle<<"\n";
+	}
 	//angle => th_angle -> v=wv
 	//angle = 0 -> v=vv no-use
 	//eq:y=e^(-X^2)
 	//y=0.5 -> angle==th_angle/2
-	double P=exp(0.8326*( dif_angle/(th_angle/2) ) );			
+	//double P=exp(-0.8326*( dif_angle/(th_angle/2) ) );			
+	double P=1/(1+ exp(-(dif_angle - th_angle) ) );			
 	
 	vv=vocls.get_velocity();
 	vw=vocls.get_velocity_wy();
 	
 	wv=wocls.get_velocity();
 	ww=wocls.get_angular_velocity();
-	
+	std::cout<<"P:"<<P<<"\n";
 	v=vv*P+wv*(1-P);
 	w=vw*P+ww*(1-P);
 	
@@ -91,7 +99,7 @@ double& odometry_class::get_odometry_yw(void){
 	return yw;
 }
 
-
+/*
 int main(int argc,char **argv){
 	ros::init(argc,argv,"odometry_class_test");
 	odometry_class odom_cls;
@@ -110,7 +118,7 @@ int main(int argc,char **argv){
 		odom_cls.set_odometry();
 		std::cout<<"set_odometry:"<<t.get_time_now()-t_now<<"\n";
 		t_now=t.get_time_now();
-		
+		std::cout<<"v,w:"<<odom_cls.get_velocity()<<","<<odom_cls.get_angular_velocity()<<"\n";
 		t.set_time();
 		std::cout<<"dt:"<<t.get_delta_time()<<"\n";
 	}
@@ -118,3 +126,4 @@ int main(int argc,char **argv){
 	std::cout<<"finish\n";
 	return 0;
 }
+*/

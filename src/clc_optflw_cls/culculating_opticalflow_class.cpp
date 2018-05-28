@@ -390,7 +390,7 @@ void culculate_optical_flow::publish_matching_msg(const cv::Mat& cur_depth_image
 	::obst_avoid::points pre_temp;
 	::obst_avoid::points cur_temp;
 	  float pcur_z;
-
+/*	
 	match_msg.pre.reserve(pts.size());
 	match_msg.cur.reserve(pts.size());
 	
@@ -412,6 +412,53 @@ void culculate_optical_flow::publish_matching_msg(const cv::Mat& cur_depth_image
       }
     }
   }
+*/
+	match_msg.pre.resize(width*height);
+	match_msg.cur.resize(width*height);
+	//init all points
+	pre_temp.x=-1;
+	pre_temp.y=-1;
+	for(int h=0;h<height;h++)
+	{
+		for(int w=0;w<width;w++)
+		{
+			match_msg.pre[h*width+w]=pre_temp;
+			match_msg.cur[h*width+w]=pre_temp;
+		}
+	}
+	//match_msg
+	//pre[h*width+w] = current point2i
+	//cur[h*width+w] = previous point2i
+  for(int i=0;i<pts.size();i++)
+	{
+    if(sts[i]&&npts[i].x>=0&&npts[i].y>=0){
+      pcur_z=cur_depth_image.at<float>(
+          (int)npts[i].y,
+          (int)npts[i].x
+          );
+      if(!std::isinf(pcur_z)&&pcur_z>=0.5)
+      {
+      	match_msg.pre[pts[i].y*width+pts[i].x].x=(int)npts[i].x;
+      	match_msg.pre[pts[i].y*width+pts[i].x].y=(int)npts[i].y;
+      	match_msg.cur[(int)npts[i].y*width+(int)npts[i].x].x=(int)pts[i].x;
+      	match_msg.cur[(int)npts[i].y*width+(int)npts[i].x].y=(int)pts[i].y;
+
+      }
+
+    }
+
+  }
+	//debug-----------
+	int n=0;
+	for(int i=0;i<match_msg.cur.size();i++)
+	{
+		if(match_msg.cur[i].x!=-1)
+		{
+			n++;
+		}
+	}
+	std::cout<<"n:"<<n<<"\n";
+	//------------------//
 	pub_match.publish(match_msg);
 }
 void culculate_optical_flow::publish_objects_velocity(void){

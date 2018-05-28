@@ -1,3 +1,3 @@
 #cluster elements
 
-point2i[] pt
+cluster_point[] pt

@@ -115,6 +115,7 @@ int main(int argc,char **argv){
 	detect_objects dtct_obj;
   time_class time_cls;
 	image_class img_cls;
+	odometry_class odm_cls;
 	img_cls.define_variable();
 	std::cout<<"defined class\n";
 	float x,z;
@@ -125,10 +126,29 @@ int main(int argc,char **argv){
 		std::cout<<"process_start:"<<time_cls.get_time_now()<<"\n";
 
     img_cls.set_image();
-
+		
 		std::cout<<"2:set_image:"<<time_cls.get_time_now()<<"\n";
 
+
 		dtct_obj.subscribe_depth_image();
+
+		std::cout<<"2:subscribe_depth_image:"<<time_cls.get_time_now()<<"\n";
+
+		time_cls.set_time();
+
+		std::cout<<"2:set_time:"<<time_cls.get_time_now()<<"\n";
+
+		odm_cls.subscribe_msgs();
+
+		std::cout<<"2:subscribe_msgs:"<<time_cls.get_time_now()<<"\n";
+
+		odm_cls.set_data();
+
+		std::cout<<"2:set_data:"<<time_cls.get_time_now()<<"\n";
+
+		odm_cls.set_velocity();
+
+		std::cout<<"2:set_velocity:"<<time_cls.get_time_now()<<"\n";
 
 		if(!dtct_obj.is_cvbridge_image()||!img_cls.is_cur_image())
 			continue;
@@ -159,9 +179,9 @@ int main(int argc,char **argv){
 		img_cls.publish_debug_image( dtct_obj.draw_cluster(img_cls.get_cur_image_by_ref() ) );
 
 		
-		time_cls.set_time();
+
 		std::cout<<"dt:"<<time_cls.get_delta_time()<<"\n";
-		dtct_obj.publish_cluster();
+		dtct_obj.publish_cluster(odm_cls.get_velocity(),odm_cls.get_angular_velocity(),time_cls.get_delta_time());
 		dtct_obj.publish_response();
 	}
 
