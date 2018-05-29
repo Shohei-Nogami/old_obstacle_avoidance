@@ -176,7 +176,7 @@ int main(int argc,char **argv){
 
 		std::cout<<"9:clusterig_by_density_based:"<<time_cls.get_time_now()<<"\n";
 
-		img_cls.publish_debug_image( dtct_obj.draw_cluster(img_cls.get_cur_image_by_ref() ) );
+		//img_cls.publish_debug_image( dtct_obj.draw_cluster(img_cls.get_cur_image_by_ref() ) );
 
 		
 

@@ -38,7 +38,7 @@ class culculate_optical_flow
 		const int height=376;
 		const float f=350.505;
 	//--特徴点抽出
-		const int max_points=1200;//720;//800;//500
+		const int max_points=2000;//1200;//720;//800;//500
 		int point_size;
 		static const int cnh=9;//10;//cnh=cnw=16 -> fp.size:987
 		static const int cnw=14;//18;
@@ -71,6 +71,8 @@ class culculate_optical_flow
 
 		//add 0524
 		cv::Point3f clp_vel_ave_pre[18][28];
+		//publish message
+		::obst_avoid::matching match_msg;
 	public:
 		culculate_optical_flow();
 		virtual ~culculate_optical_flow();

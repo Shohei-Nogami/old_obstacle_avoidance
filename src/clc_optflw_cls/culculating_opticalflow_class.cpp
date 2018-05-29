@@ -74,12 +74,13 @@ void culculate_optical_flow::set_clip_images(void){
 bool culculate_optical_flow::obtain_feature_points(const cv::Mat& pre_depth_image){
   //nh=nw=16 -> fp.size:987
   int clp_max_points=max_points/(cnh*cnw)*4;
-  auto detector = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
+  //auto detector = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
+  auto detector = cv::FastFeatureDetector(10,false);
   cv::Point2i ppts;
-  float ppre_z;
-    float y;
-    const float y_th=0.1;
-    //METHOD1
+	float ppre_z;
+	float y;
+	const float y_th=0.1;
+  //METHOD1
   for(int i=0;i<cnh-cnh/5;i++){
     for(int j=0;j<cnw;j++){
       detector.detect(clp_img[i][j], keypoints);
@@ -180,19 +181,19 @@ void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Ma
           (int)npts[i].y,
           (int)npts[i].x
           );
-            /*
-            if(npts[i].y<0||npts[i].x<0)
-            {
-                while(ros::ok()){
-                    std::cout<<"npts["<<i<<"]:"<<npts[i]<<"\n";
-                    std::cout<<"pcur_z:"<<pcur_z<<"\n";
-                    std::cout<<"(int)npts[i]:"<<(int)npts[i].y<<","<<(int)npts[i].x<<"\n";
-                    std::cout<<"sts[i]:"<<sts[i]<<"\n";
-                    
-                }
-                
-            }
-            */
+      
+      if(npts[i].y<0||npts[i].x<0)
+      {
+          while(ros::ok()){
+              std::cout<<"npts["<<i<<"]:"<<npts[i]<<"\n";
+              std::cout<<"pcur_z:"<<pcur_z<<"\n";
+              std::cout<<"(int)npts[i]:"<<(int)npts[i].y<<","<<(int)npts[i].x<<"\n";
+              std::cout<<"sts[i]:"<<sts[i]<<"\n";
+              
+          }
+          
+      }
+      
       if(!std::isinf(pcur_z)&&pcur_z>=0.5){
         X=(float)(pts[i].x-width/2.0);//-width;
         //  Y=(float)(pts[i].y-height/2.0);//-height;
@@ -386,7 +387,7 @@ void culculate_optical_flow::cul_clip_vel(const double& dt) {
 }
 void culculate_optical_flow::publish_matching_msg(const cv::Mat& cur_depth_image)
 {
-	::obst_avoid::matching match_msg;
+
 	::obst_avoid::points pre_temp;
 	::obst_avoid::points cur_temp;
 	  float pcur_z;
@@ -413,6 +414,8 @@ void culculate_optical_flow::publish_matching_msg(const cv::Mat& cur_depth_image
     }
   }
 */
+	match_msg.pre.clear();
+	match_msg.cur.clear();
 	match_msg.pre.resize(width*height);
 	match_msg.cur.resize(width*height);
 	//init all points
@@ -429,7 +432,7 @@ void culculate_optical_flow::publish_matching_msg(const cv::Mat& cur_depth_image
 	//match_msg
 	//pre[h*width+w] = current point2i
 	//cur[h*width+w] = previous point2i
-  for(int i=0;i<pts.size();i++)
+/*  for(int i=0;i<pts.size();i++)
 	{
     if(sts[i]&&npts[i].x>=0&&npts[i].y>=0){
       pcur_z=cur_depth_image.at<float>(
@@ -447,6 +450,16 @@ void culculate_optical_flow::publish_matching_msg(const cv::Mat& cur_depth_image
 
     }
 
+  }
+*/
+  for(int i=0;i<points.size();i++){
+      	match_msg.pre[(int)points[i].y*width+(int)points[i].x].x=(int)newpoints[i].x;
+
+      	match_msg.pre[(int)points[i].y*width+(int)points[i].x].y=(int)newpoints[i].y;
+
+      	match_msg.cur[(int)newpoints[i].y*width+(int)newpoints[i].x].x=(int)points[i].x;
+
+      	match_msg.cur[(int)newpoints[i].y*width+(int)newpoints[i].x].y=(int)points[i].y;
   }
 	//debug-----------
 	int n=0;
@@ -467,6 +480,7 @@ void culculate_optical_flow::publish_objects_velocity(void){
  
 void culculate_optical_flow::publish_flow_image(const cv::Mat& cur_image){
   view_image=cur_image.clone();
+/*
   for(int i=0;i<points.size();i++){
     cvArrow(&view_image,
     cv::Point( (int)(points[i].x),
@@ -475,7 +489,26 @@ void culculate_optical_flow::publish_flow_image(const cv::Mat& cur_image){
       (int)(newpoints[i].y) ),
     cv::Scalar(0,200,200) );//
   }
- 
+*/
+  for(int i=0;i<match_msg.cur.size();i++){
+
+		if(match_msg.cur[i].x==-1)
+		{
+			continue;
+		}
+
+    cvArrow(&view_image,
+
+    cv::Point((int)(match_msg.cur[i].x),
+      (int)(match_msg.cur[i].y)  ),
+
+    cv::Point( (int)(i%width),
+      (int)(i/width) ),
+
+    cv::Scalar(0,200,200) );//
+
+  }
+
   //publish_debug_image(view_image);
 }
 void culculate_optical_flow::clear_vector(void){
@@ -573,11 +606,11 @@ int main(int argc,char **argv){
 								std::cout<<"12.5:cul_clip_vel\n";
                 cul_optflw.publish_flow_image(img_cls.get_cur_image_by_ref());
                 std::cout<<"13:publish_flow_image\n";
-                //img_cls.publish_debug_image(cul_optflw.get_view_image());
+                img_cls.publish_debug_image(cul_optflw.get_view_image());
                 std::cout<<"14:publish_debug_image\n";
                 std::cout<<"dt:"<<time_cls.get_delta_time()<<"\n";
-            cul_optflw.publish_objects_velocity();
-		cul_optflw.publish_matching_msg(depth_img_cls.get_cur_image_by_ref());
+				        cul_optflw.publish_objects_velocity();
+								cul_optflw.publish_matching_msg(depth_img_cls.get_cur_image_by_ref());
             }
         }
     cul_optflw.clear_vector();

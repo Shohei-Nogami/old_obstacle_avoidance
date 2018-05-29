@@ -132,7 +132,12 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 				//std::cout<<"task_objects.pt[i]:"<<task_objects.pt[i]<<"\n";
 				if(depth_0>1)
 				{
-					min_pn=depth_0*(-1)+8;
+					//min_pn=depth_0*(-1)+8;
+					min_pn=depth_0*(-1)+6;
+				}
+				else
+				{
+					min_pn=6;
 				}
 				for(int l=-search_range;l<=search_range;l++){
 					for(int m=-search_range;m<=search_range;m++){

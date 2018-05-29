@@ -45,20 +45,27 @@ class estimate_velocity{
 		::obst_avoid::cluster pre_cluster;
 		::obst_avoid::cluster cur_cluster;
 		std::vector<int> cluster_match;
-		std::vector<std::vector<int> > pre_cluster_index;
-		std::vector<std::vector<int> > cur_cluster_index;
+		std::vector<int> pre_cluster_match;
+		//std::vector<std::vector<int> > pre_cluster_index;
+		//std::vector<std::vector<int> > cur_cluster_index;
+		//int **pre_cluster_index;
+		//int **cur_cluster_index;
+		int pre_cluster_index[height][width];
+		int cur_cluster_index[height][width];
 		std::vector<cv::Point3f> pre_gp;
 		std::vector<cv::Point3f> cur_gp;
 		std::vector<cv::Point3f> vel;
+		std::vector<cv::Point3f> pre_vel;
 	//---opticalflow 
 		::obst_avoid::matching match_msg;
 
 	//--matching
-		//std::vector<int> match_n;
+		std::vector< std::vector<int> > match_n;
 		//in recently github
 	
 	//debug	
 		cv::Mat view_vel_image;
+		cv::Mat view_image;
 	//--time_cls
 		time_class tm_cls;
 		public:
@@ -74,4 +81,7 @@ class estimate_velocity{
 			bool estimate_velocity_of_cluster(void);
 			void draw_velocity(cv::Mat& image);
 			void publish_pointcloud(void);
+			cv::Mat& debug_image(cv::Mat& image);
+			void cvArrow(cv::Mat* img, cv::Point2i pt1, cv::Point2i pt2, cv::Scalar color);
+
 };
