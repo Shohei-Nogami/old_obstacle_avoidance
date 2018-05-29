@@ -231,10 +231,18 @@ for(int i=0;i<pre_cluster.clst.size();i++)
 			pw=cur_cluster.clst[i].pt[k].x*ksize+ksize/2;
 			//std::cout<<"match_msg.cur.size():"<<match_msg.cur.size()<<"\n";
 			// match point from previous cluster
-			for(int v=ph-ksize/2;v<=ph+ksize/2;v++)
+			//for(int v=ph-ksize/2;v<=ph+ksize/2;v++)
+			//{
+			//	for(int u=pw-ksize/2;u<=pw+ksize/2;u++)
+			//	{
+			for(int v=ph-ksize;v<=ph+ksize;v++)
 			{
-				for(int u=pw-ksize/2;u<=pw+ksize/2;u++)
+				for(int u=pw-ksize;u<=pw+ksize;u++)
 				{
+					if(v<0||u<0||v>height||u>width)
+					{
+						continue;
+					}
 					ch=match_msg.cur[v*width+u].y;
 					cw=match_msg.cur[v*width+u].x;
 					if(ch==-1||cw==-1)
@@ -268,27 +276,32 @@ for(int i=0;i<pre_cluster.clst.size();i++)
 				}
 			}
 		}
-		//std::cout<<"111\n";
+	}
+	matched.resize(cur_cluster.clst.size());
+	for(int i=0;i<cur_cluster.clst.size();i++)
+	{
+		matched[i]=false;
+		cluster_match[i]=-1;
+	}
+
+	for(int k=0;k<pre_cluster.clst.size();k++)
+	{
 		//select best match
 		int max_n=0;
 		int max_i=-1;
-		for(int k=0;k<pre_cluster.clst.size();k++)
+		for(int i=0;i<cur_cluster.clst.size();i++)
 		{
-			//std::cout<<"pre_cluster.clst["<<k<<"].size():"<<pre_cluster.clst[k].pt.size()<<"\n";
 			
-			if(max_n<match_n[i][k])
+			if(max_n<match_n[i][k]&&!matched[i])
 			{
 				max_n=match_n[i][k];
-				max_i=k;
+				max_i=i;
 			}
 		}
 		if(max_i!=-1)
 		{
-			cluster_match[i]=max_i;//cur -> pre
-		}
-		else
-		{
-			cluster_match[i]=-1;
+			cluster_match[max_i]=k;//cur -> pre
+			matched[max_i]=true;
 		}
 		//std::cout<<"1111\n";
 	}
@@ -418,7 +431,8 @@ void estimate_velocity::draw_velocity(cv::Mat& image)
 	for(int i=0;i<cur_cluster.clst.size();i++)
 	{
 		if(!std::isnan(vel[i].x)
-				&&std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0))>0.1
+				//&&std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0))>0.1
+				//&&std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0))<1.1
 				)
 		{
 			std::string vel_string_x,vel_string_z,vel_string;

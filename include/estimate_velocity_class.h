@@ -61,6 +61,7 @@ class estimate_velocity{
 
 	//--matching
 		std::vector< std::vector<int> > match_n;
+		std::vector<bool> matched;
 		//in recently github
 	
 	//debug	

@@ -208,6 +208,14 @@ void culculate_optical_flow::culculating_moving_objects_opticalflow(const cv::Ma
           -(Y/pre_z[i]*w_v*cos(-dyaw)*dt)
           -(X*Y*dyaw/f
           ));
+
+			float dis = std::sqrt(std::pow(npts[i].x*pcur_z-pts[i].x*pre_z[i],2.0) 
+				+ std::pow(npts[i].y*pcur_z-pts[i].y*pre_z[i],2.0) )/f;
+
+			if(dis /dt > 1.5)
+			{
+				continue;
+			}
 //  std::cout<<"pts[i],ppt,npts[i]:"<<pts[i]<<","<<ppt<<","<<npts[i]<<"\n";
       points.push_back(pts[i]);
             cv::Point2i newpoints_temp;
