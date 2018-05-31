@@ -119,6 +119,7 @@ int main(int argc,char **argv){
 		std::cout<<"set_odometry:"<<t.get_time_now()-t_now<<"\n";
 		t_now=t.get_time_now();
 		std::cout<<"v,w:"<<odom_cls.get_velocity()<<","<<odom_cls.get_angular_velocity()<<"\n";
+		std::cout<<"r,p,y:"<<odom_cls.get_odometry_r()<<","<<odom_cls.get_odometry_p()<<","<<odom_cls.get_odometry_yw()<<"\n";
 		t.set_time();
 		std::cout<<"dt:"<<t.get_delta_time()<<"\n";
 	}
@@ -127,3 +128,4 @@ int main(int argc,char **argv){
 	return 0;
 }
 */
+

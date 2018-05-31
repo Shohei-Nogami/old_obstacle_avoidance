@@ -25,7 +25,7 @@ vfh_class::vfh_class()
 	temp_p.reserve(vfh_resolution);
 	max_process_n.reserve(vfh_resolution);
 	rank_trajectory.resize(vfh_resolution);
-	float delta_vel_dif=temp_v_dif_max/(vel_resolution-1);
+	//float delta_vel_dif=temp_v_dif_max/(vel_resolution-1);
 	double dtheta=M_PI/180;
 /*
 	for(int i=0;i<vel_resolution;i++){
@@ -58,6 +58,7 @@ vfh_class::vfh_class()
 			(int)( 2*(temp_x)/grid_cell_size / 2 ) + ( (int)(2*(temp_x)/grid_cell_size)  ) % 2 );
 	}
 //debug
+/*
 	for(int i=0;i<vel_resolution;i++){
 		std::cout<<"vr,vl,w,p,dtheta,:"<<temp_vr[i]<<","<<temp_vl[i]<<","<<temp_w[i]<<","<<temp_p[i]<<","<<delta_theta[i]<<","<<max_process_n[i]<<"\n";
 	}
@@ -65,6 +66,7 @@ vfh_class::vfh_class()
 	for(int j=0;j<jn_Rd;j++){
 		std::cout<<"in_Rd["<<j<<"]:"<<in_Rd[j]<<"\n";
 	}
+*/
 }
 
 vfh_class::~vfh_class(){
@@ -172,15 +174,33 @@ void vfh_class::select_best_trajectory(void){
 			rank_trajectory.push_back(j);		
 	}
 */
-
+	float x0=0;
+	float y0=0;
+	float theta0=0;
+	int max_search_n=20;
 	for(int i=0;i<vfh_resolution;i++)
 	{
-		
+		float x=x0;
+		float y=y0;
+		float theta=min_angle+i*(max_angle-min_angle)/vfh_resolution;
+		float mv_length=R/2;
+		for(int n=0;n<max_search_n;n++)
+		{
+			x=x0+mv_length*(-sin(theta));
+			y=y0+mv_length*(cos(theta));
+			transport_robot_to_gridn(x,y,nx,ny);
+			
+			if( is_obstacle(nx,ny)||n==max_search_n-1 ){
+				rank_trajectory.push_back(n);
+				break;
+			}
+		}dd
 	}
-
+	
 	float good_trajectory_value=0;
 	int good_trajectory_num=0;
 	float evaluation_formula;
+	/*
 	for(int i=0;i<vel_resolution;i++){
 		evaluation_formula=rank_trajectory[i];
 		std::cout<<"trajectory["<<i<<"]:"<<evaluation_formula<<"\n";
@@ -190,6 +210,7 @@ void vfh_class::select_best_trajectory(void){
 			good_trajectory_num=i;
 		}
 	}
+	*/
 	std::cout<<"good tarjectory is "<<good_trajectory_num<<"\n";
 	std::cout<<"good tarjectory value is "<<good_trajectory_value<<"\n";
 	draw_best_trajectory(good_trajectory_num);
@@ -229,6 +250,7 @@ void vfh_class::draw_best_trajectory(const int& num){
 	double xr=0;
 	double yr=0;
 	double theta=0;
+/*
 	for(int j=0;j<rank_trajectory[num] ;j++,theta+=good_delta_theta){
 		if(good_w>0){
 			xr=good_p*(cos(good_delta_theta*j)-1);
@@ -249,7 +271,7 @@ void vfh_class::draw_best_trajectory(const int& num){
 		nx_1=nx;
 		ny_1=ny;
 	}
-	
+*/
 }
 void vfh_class::draw_all_trajectory(void){
 	double xr;
