@@ -6,18 +6,25 @@
 #include<opencv2/highgui/highgui.hpp>
 #include<opencv2/imgproc/imgproc.hpp>
 #include<sensor_msgs/image_encodings.h>
+
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl_ros/point_cloud.h>
+#include"obst_avoid/cluster_with_vel.h"
+#include"odometry_class.h"
+
 //#include <pcl_ros/point_cloud.h>
 
 //#include <pcl/point_types.h>
 //#include <pcl/point_cloud.h>
 //#include <pcl_conversions/pcl_conversions.h>
 
-class grid_class{
+class vfh_class{
 	private:
 		//pcl::PointCloud<pcl::PointXYZRGB> pcl_data;
 		//pcl::PointCloud<pcl::PointXYZ> pcl_data;
-		ros::NodeHandle nh_pub,nh_pub2,nh_sub;
+		ros::NodeHandle nh_pub,nh_pub2,nh_sub,nh_pubpcl;
 		ros::Subscriber sub;
+		ros::Publisher pc_pub;
 		ros::CallbackQueue queue;
 		cv::Mat grid_map;
 		cv::Mat grid_map_view,binary_grid_map_view;
@@ -25,7 +32,7 @@ class grid_class{
 		image_transport::Publisher pub;
 		image_transport::ImageTransport it_pub2;
 		image_transport::Publisher pub2;
-		cv_bridge::CvImagePtr cvbridge_image;
+		::obst_avoid::cluster_with_vel cluster;
 		cv::Mat depth_image;
 		int grid_resolution;//
 		float grid_size;
@@ -34,12 +41,12 @@ class grid_class{
 		const int width=672;
 		const int height=376;
 		const float f=350.505;
-		
+		const int ksize=3;
 		bool EXECUTED_CALLBACK;
 		uint8_t/*uchar*/ binary_threshold;
 
 //parameter of trajectory
-		const int vel_resolution=9;
+		const int vfh_resolution=90;
 		const float temp_v=0.2;
 		const float temp_v_dif_max=0.2;
 		const float d=0.138;
@@ -50,6 +57,8 @@ class grid_class{
 		std::vector<double> delta_theta;
 		std::vector<int> max_process_n;
 		std::vector<int> rank_trajectory;
+		const int max_angle=45;
+		const int min_angle=-45;
 //parameter of collision avoidanace 
 		float R=0.2;
 		float d_r=0.1;
@@ -57,13 +66,12 @@ class grid_class{
 		std::vector<int> in_Rd;
 		
 	public:
-		grid_class();
-		~grid_class();
+		vfh_class();
+		~vfh_class();
 		//void subscribe_pcl(void);
-		void subscribe_depth_image(void);
-		//void pcl_callback(const sensor_msgs::PointCloud2ConstPtr& msg);
-		void image_callback(const sensor_msgs::ImageConstPtr& msg);
-		bool is_cvbridge_image(void);
+		void subscribe_cluster(void);
+		void cluster_callback(const obst_avoid::cluster_with_vel::ConstPtr& msg);
+		bool is_cluster(void);
 		void set_grid_map(void);
 		void select_best_trajectory(void);
 		void transport_robot_to_gridn(const double& xr,const double& yr,int& n_xr,int& n_yr);
@@ -77,5 +85,7 @@ class grid_class{
 
 		void draw_all_trajectory(void);
 			
+		void publish_cloud(void);
+
 };
 

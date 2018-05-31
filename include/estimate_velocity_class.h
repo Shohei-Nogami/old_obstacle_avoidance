@@ -18,6 +18,7 @@
 #include"obst_avoid/cluster_element.h"
 #include"obst_avoid/cluster.h"
 #include"obst_avoid/cluster_point.h"
+#include"obst_avoid/cluster_with_vel.h"
 #include"time_class.h"
 #include"image_class.h"
 
@@ -27,9 +28,9 @@
 //#include <iostream>
 class estimate_velocity{
 	private:
-		ros::NodeHandle nh_cluster,nh_optflw,nh_match,nh_pubpcl,nh_pub1;
+		ros::NodeHandle nh_cluster,nh_optflw,nh_match,nh_pubpcl,nh_pub1,nh_pub2;
 
-		ros::Publisher pc_pub;
+		ros::Publisher pc_pub,pub2;
 		
 		image_transport::ImageTransport it_pub1;
 		image_transport::Publisher pub1;
@@ -56,14 +57,17 @@ class estimate_velocity{
 		std::vector<cv::Point3f> cur_gp;
 		std::vector<cv::Point3f> vel;
 		std::vector<cv::Point3f> pre_vel;
+		std::vector<double> cur_cluster_size;
 	//---opticalflow 
 		::obst_avoid::matching match_msg;
 
 	//--matching
 		std::vector< std::vector<int> > match_n;
 		std::vector<bool> matched;
-		//in recently github
-	
+		
+	//----tracking count
+	std::vector<int> track_n;
+	std::vector<int> pre_track_n;
 	//debug	
 		cv::Mat view_vel_image;
 		cv::Mat view_image;
@@ -80,9 +84,10 @@ class estimate_velocity{
 			void match_index_callback(const obst_avoid::matching::ConstPtr& msg);
 			bool matching_cluster(void);
 			bool estimate_velocity_of_cluster(void);
+			void predict_cluster(void);
 			void draw_velocity(cv::Mat& image);
 			void publish_pointcloud(void);
 			cv::Mat& debug_image(cv::Mat& image);
 			void cvArrow(cv::Mat* img, cv::Point2i pt1, cv::Point2i pt2, cv::Scalar color);
-
+			void publish_cluster_with_vel(void);
 };

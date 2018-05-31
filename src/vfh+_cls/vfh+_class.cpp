@@ -1,13 +1,16 @@
-#include"grid_class.h"
+#include"vfh+_class.h"
 
-grid_class::grid_class()
+vfh_class::vfh_class()
 	:it_pub(nh_pub),it_pub2(nh_pub2),grid_resolution(201),grid_size(8.0),EXECUTED_CALLBACK(false),binary_threshold(90)
 {
 	pub=it_pub.advertise("grid_image",1);
 	pub2=it_pub2.advertise("binary_grid_image",1);
+	pc_pub = nh_pubpcl.advertise<sensor_msgs::PointCloud2>("cluster_usedvfh", 1);
+	
+
 	nh_sub.setCallbackQueue(&queue);
-//	sub=nh_sub.subscribe("/zed/point_cloud/cloud_registered",1,&grid_class::plc_callback,this);
-	sub=nh_sub.subscribe("/zed/depth/depth_registered",1,&grid_class::image_callback,this);
+//	sub=nh_sub.subscribe("/zed/point_cloud/cloud_registered",1,&vfh_class::plc_callback,this);
+	sub=nh_sub.subscribe("/cluster_with_vel",1,&vfh_class::cluster_callback,this);
 	cv::Mat m = cv::Mat::zeros(cv::Size(grid_resolution,grid_resolution), CV_8UC1);
 	grid_map=m.clone();
 	cv::Mat m_view = cv::Mat::zeros(cv::Size(grid_resolution,grid_resolution), CV_8UC3);	
@@ -16,14 +19,17 @@ grid_class::grid_class()
 	grid_cell_size=grid_size/grid_resolution;
 
 //set parameter of trajectory
-	temp_vl.reserve(vel_resolution);
-	temp_vr.reserve(vel_resolution);
-	temp_w.reserve(vel_resolution);
-	temp_p.reserve(vel_resolution);
-	max_process_n.reserve(vel_resolution);
-	rank_trajectory.reserve(vel_resolution);
+	temp_vl.reserve(vfh_resolution);
+	temp_vr.reserve(vfh_resolution);
+	temp_w.reserve(vfh_resolution);
+	temp_p.reserve(vfh_resolution);
+	max_process_n.reserve(vfh_resolution);
+	rank_trajectory.resize(vfh_resolution);
 	float delta_vel_dif=temp_v_dif_max/(vel_resolution-1);
+	double dtheta=M_PI/180;
+/*
 	for(int i=0;i<vel_resolution;i++){
+
 		temp_vr.push_back(temp_v-temp_v_dif_max/2+i*delta_vel_dif);
 		temp_vl.push_back(temp_v+temp_v_dif_max/2-i*delta_vel_dif);
 		temp_w.push_back( (temp_vr[i]-temp_vl[i])/(2*d) );
@@ -37,10 +43,10 @@ grid_class::grid_class()
 		else{
 			temp_p.push_back(0);
 		}
-		delta_theta.push_back(R/temp_p[i]);
-//		max_process_n.push_back((int)(2*M_PI/delta_theta[i]));
-		max_process_n.push_back((int)(M_PI/delta_theta[i]));
-	}
+*/
+
+//		max_process_n.push_back((int)(M_PI/delta_theta[i]));
+//	}
 //set parameter of collision avoidance
 	int n_circle_size=2*(int)( 2*(R+d_r)/grid_cell_size / 2 ) + ( (int)(2*(R+d_r)/grid_cell_size) / 2 ) % 2; 
 	jn_Rd=n_circle_size;
@@ -61,90 +67,84 @@ grid_class::grid_class()
 	}
 }
 
-grid_class::~grid_class(){
+vfh_class::~vfh_class(){
 
 }
-void grid_class::subscribe_depth_image(void){
+void vfh_class::subscribe_cluster(void){
 	queue.callOne(ros::WallDuration(1));
 }
 /*
-void grid_class::subscribe_pcl(void){
+void vfh_class::subscribe_pcl(void){
 	queue.callOne(ros::WallDuration(1));
 }
-void grid_class::pcl_callback(const sensor_msgs::PointCloud2ConstPtr& msg){
+void vfh_class::pcl_callback(const sensor_msgs::PointCloud2ConstPtr& msg){
   pcl::fromROSMsg (*msg, pcl_data);
 	ROS_INFO("into plc_callback");
 }
 */
-void grid_class::image_callback(const sensor_msgs::ImageConstPtr& msg)
+void vfh_class::cluster_callback(const obst_avoid::cluster_with_vel::ConstPtr& msg)
 {
-	try{
-//		std::cout<<"depth_image_callback \n";
-		cvbridge_image=cv_bridge::toCvCopy(msg,sensor_msgs::image_encodings::TYPE_32FC1);
-		EXECUTED_CALLBACK=true;
-	}
-  catch(cv_bridge::Exception& e) {
-	std::cout<<"depth_image_callback Error \n";
-	  ROS_ERROR("Could not convert from '%s' to 'TYPE_32FC1'.",
-	  msg->encoding.c_str());
-	  return ;
-  }
+	cluster.clst=msg->clst;
+	cluster.vel=msg->vel;
+	EXECUTED_CALLBACK=true;
 }
-bool grid_class::is_cvbridge_image(void){
+bool vfh_class::is_cluster(void){
 	return EXECUTED_CALLBACK;
 }
-void grid_class::set_grid_map(void){
-	float x,y;
+void vfh_class::set_grid_map(void){
 	int grid_x,grid_z;
-	float depth_temp;
-	const float floor_threshold=0.10;
-	depth_image=cvbridge_image->image.clone();
 
 //renew
 	cv::Mat m = cv::Mat::zeros(cv::Size(grid_resolution,grid_resolution), CV_8UC1);
 	grid_map=m.clone();
 
-	for(int h=0;h<height;h++){
-		for(int w=0;w<width;w++){
-			depth_temp=depth_image.at<float>(h,w);
-			if(!std::isnan(depth_temp)&&!std::isinf(depth_temp)){
-				y=(height/2-h)*depth_temp/f;//for estimate floor
-				if(y+0.23>floor_threshold){//||y_init+0.23>1.0){
-					if(depth_temp<grid_size/2){
-						grid_z=(int)( (grid_size/2-depth_temp) /grid_cell_size);
-						x=(w-width/2)*depth_temp/f;
-						if(std::abs(x)<grid_size/2){
-//							grid_x=(int)( (x+grid_size/2)/grid_cell_size);
-							grid_x=( (int)(2*(x+grid_size/2)/grid_cell_size)/2 ) + ( (int)(2*(x+grid_size/2)/grid_cell_size) ) % 2;
-//							grid_map.at<uchar>(grid_z,grid_x)=255;
-							grid_map.at<uint8_t/*uchar*/>(grid_z,grid_x)+=2;
-							if(grid_map.at<uint8_t/*uchar*/>(grid_z,grid_x)>=255){
-								grid_map.at<uint8_t/*uchar*/>(grid_z,grid_x)=255;
-							}
-						}
+
+	for(int i=0;i<cluster.clst.size();i++)
+	{
+		double vel_size=std::sqrt( std::pow(cluster.vel[i].x,2.0) + std::pow(cluster.vel[i].y,2.0) + std::pow(cluster.vel[i].z,2.0) );
+		if( vel_size<1.1&&vel_size>0.1)
+		{
+		
+		}
+		for(int k=0;k<cluster.clst[i].pt.size();k++)
+		{
+			float x = (cluster.clst[i].pt[k].x*ksize+ksize/2-width/2)*cluster.clst[i].pt[k].z/f;
+			float y = (height/2 - cluster.clst[i].pt[k].y*ksize+ksize/2)*cluster.clst[i].pt[k].z/f;
+			float z = cluster.clst[i].pt[k].z;
+			if(z<grid_size/2){
+				grid_z=(int)( (grid_size/2-z) /grid_cell_size);
+				if(std::abs(x)<grid_size/2){
+					grid_x=( (int)(2*(x+grid_size/2)/grid_cell_size)/2 ) + ( (int)(2*(x+grid_size/2)/grid_cell_size) ) % 2;
+					grid_map.at<uint8_t/*uchar*/>(grid_z,grid_x)+=2;
+					if(grid_map.at<uint8_t/*uchar*/>(grid_z,grid_x)>=255){
+						grid_map.at<uint8_t/*uchar*/>(grid_z,grid_x)=255;
 					}
 				}
 			}
 		}
 	}
-
 	grid_map-=1;
 
 }
 
-void grid_class::select_best_trajectory(void){
+void vfh_class::select_best_trajectory(void){
 	double xr;
 	double yr;
 	int nx;
 	int ny;
-	rank_trajectory.clear();
+	for(int i=0;i<vfh_resolution;i++)
+	{
+		rank_trajectory[i]=0;
+	}
 
+/*
 	for(int i=0;i<temp_p.size();i++){
 		double theta=0;
 		int j_max=15;//test param
 		int j=0;
 		bool LOOP_OUT=false;
-		for(/*int j=0*/;j<j_max && (j<max_process_n[i] || i==temp_p.size()/2);j++,theta+=delta_theta[i]){
+
+		for(;j<j_max && (j<max_process_n[i] || i==temp_p.size()/2);j++,theta+=delta_theta[i]){
 			if(temp_w[i]>0){
 				xr=temp_p[i]*(cos(delta_theta[i]*j)-1);
 				yr=temp_p[i]*sin(delta_theta[i]*j);
@@ -158,15 +158,26 @@ void grid_class::select_best_trajectory(void){
 				yr=j*R;
 			}
 			transport_robot_to_gridn(xr,yr,nx,ny);
+
 			if( is_obstacle(nx,ny) ){
 				LOOP_OUT=true;
+				j--;
 				rank_trajectory.push_back(j);
 				break;
 			}
 		}
+
+
 		if(!LOOP_OUT)
 			rank_trajectory.push_back(j);		
 	}
+*/
+
+	for(int i=0;i<vfh_resolution;i++)
+	{
+		
+	}
+
 	float good_trajectory_value=0;
 	int good_trajectory_num=0;
 	float evaluation_formula;
@@ -183,19 +194,19 @@ void grid_class::select_best_trajectory(void){
 	std::cout<<"good tarjectory value is "<<good_trajectory_value<<"\n";
 	draw_best_trajectory(good_trajectory_num);
 }
-void grid_class::transport_robot_to_gridn(const double& xr,const double& yr,int& n_xr,int& n_yr){
+void vfh_class::transport_robot_to_gridn(const double& xr,const double& yr,int& n_xr,int& n_yr){
 	double grid_x=xr+grid_size/2;
 	double grid_y=grid_size/2-yr;
 
 	transport_gridx_to_gridn(grid_x,grid_y,n_xr,n_yr);
 }
 
-void grid_class::transport_gridx_to_gridn(const double& x,const double& y,int& n_x,int& n_y){
+void vfh_class::transport_gridx_to_gridn(const double& x,const double& y,int& n_x,int& n_y){
 	n_x = (int)(2*x/grid_cell_size/2) + (int)(2*x/grid_cell_size) % 2;
 	n_y = (int)(2*y/grid_cell_size/2) + (int)(2*y/grid_cell_size) % 2;
 }
 
-bool grid_class::is_obstacle(const int nx,const int ny){
+bool vfh_class::is_obstacle(const int nx,const int ny){
 
 	for(int j=0;j<jn_Rd;j++){
 		for(int i=-in_Rd[j]+nx;i<=in_Rd[j]+nx;i++){
@@ -207,7 +218,7 @@ bool grid_class::is_obstacle(const int nx,const int ny){
 	}
 	return false;
 }
-void grid_class::draw_best_trajectory(const int& num){
+void vfh_class::draw_best_trajectory(const int& num){
 
 	double good_p=temp_p[num];
 	double good_delta_theta=delta_theta[num];
@@ -240,7 +251,7 @@ void grid_class::draw_best_trajectory(const int& num){
 	}
 	
 }
-void grid_class::draw_all_trajectory(void){
+void vfh_class::draw_all_trajectory(void){
 	double xr;
 	double yr;
 	int nx;
@@ -285,7 +296,7 @@ void grid_class::draw_all_trajectory(void){
 }
 
 
-void grid_class::set_grid_map_view(void){
+void vfh_class::set_grid_map_view(void){
 	for(int h=0;h<grid_resolution;h++){
 		for(int w=0;w<grid_resolution;w++){
 			grid_map_view.at<cv::Vec3b>(h,w)[1]=grid_map.at<uchar>(h,w);	
@@ -295,7 +306,7 @@ void grid_class::set_grid_map_view(void){
 		}
 	}
 }
-void grid_class::set_binary_grid_map_view(void){
+void vfh_class::set_binary_grid_map_view(void){
 	for(int h=0;h<grid_resolution;h++){
 		for(int w=0;w<grid_resolution;w++){
 			if(grid_map.at<uchar>(h,w)>=binary_threshold)
@@ -305,7 +316,7 @@ void grid_class::set_binary_grid_map_view(void){
 		}
 	}
 } 
-void grid_class::publish_grid_map_view(void){
+void vfh_class::publish_grid_map_view(void){
 
 	float robot_r=R;
 	int robot_cell_size=(int)(robot_r/grid_cell_size);
@@ -326,7 +337,7 @@ void grid_class::publish_grid_map_view(void){
 	publish_cvimage->image=grid_map_view.clone();
 	pub.publish(publish_cvimage->toImageMsg());	
 }
-void grid_class::publish_binary_grid_map_view(void){
+void vfh_class::publish_binary_grid_map_view(void){
 
 
 	float robot_r=R;
@@ -359,21 +370,73 @@ void grid_class::publish_binary_grid_map_view(void){
 	pub2.publish(publish_cvimage->toImageMsg());	
 }
 
+void vfh_class::publish_cloud(void)
+{
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new  pcl::PointCloud<pcl::PointXYZRGB>);
+
+	pcl::PointXYZRGB cloud_temp;
+
+	float colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト
+
+	for(int i=0;i<cluster.clst.size();i++)
+	{
+		for(int t=0;t<4;t++)
+		{
+			if(std::sqrt(std::pow(cluster.vel[i].x,2.0)+std::pow(cluster.vel[i].z,2.0))>1.1
+			//|| 
+			)
+			{
+				//continue;
+			}
+			for(int k=0;k<cluster.clst[i].pt.size();k++)
+			{
+				//cloud_temp.y=-(cluster.clst[i].pt[k].x*ksize-width/2)*cluster.clst[i].pt[k].z/f;
+				//cloud_temp.z=((height/2-cluster.clst[i].pt[k].y*ksize)*cluster.clst[i].pt[k].z)/f+0.4125;
+				cloud_temp.y=-(cluster.clst[i].pt[k].x*ksize+ksize/2-width/2)*cluster.clst[i].pt[k].z/f;
+				cloud_temp.z=((height/2-cluster.clst[i].pt[k].y*ksize+ksize/2)*cluster.clst[i].pt[k].z)/f+0.4125;
+				cloud_temp.x=cluster.clst[i].pt[k].z;
+				cloud_temp.r=colors[i%12][0];
+				cloud_temp.g=colors[i%12][1];
+				cloud_temp.b=colors[i%12][2];
+				//cloud_temp.x+=cluster.vel[i].z*t;
+		    //cloud_temp.y+=-cluster.vel[i].x*t;			
+		    //cloud_temp.z+=cluster.vel[i].y*t;
+		
+				cloud->points.push_back(cloud_temp);
+			}
+		}
+	}
+	sensor_msgs::PointCloud2 edit_cloud;
+	pcl::toROSMsg (*cloud, edit_cloud);
+	edit_cloud.header.frame_id="/zed_current_frame";
+	pc_pub.publish(edit_cloud);
+}
+
 int main(int argc,char **argv){
-	ros::init(argc,argv,"grid_class_test");
-	grid_class grid;
+	ros::init(argc,argv,"vfh_class_test");
+	vfh_class vfh;
 	std::cout<<"ready\n";
 
 	while(ros::ok()){
-		grid.subscribe_depth_image();
-		if(grid.is_cvbridge_image()){
-			grid.set_grid_map();
-			grid.set_grid_map_view();
-			grid.select_best_trajectory();
-//			grid.draw_all_trajectory();
-			grid.publish_grid_map_view();
-			grid.set_binary_grid_map_view();
-			grid.publish_binary_grid_map_view();
+		vfh.subscribe_cluster();
+		std::cout<<"subscribe_cluster\n";
+		if(vfh.is_cluster()){
+		std::cout<<"is_cluster\n";
+			vfh.set_grid_map();
+		std::cout<<"set_grid_map\n";
+			vfh.set_grid_map_view();
+		std::cout<<"set_grid_map_view\n";
+			vfh.select_best_trajectory();
+		std::cout<<"select_best_trajectory\n";
+//			vfh.draw_all_trajectory();
+			vfh.publish_grid_map_view();
+		std::cout<<"publish_grid_map_view\n";
+			vfh.set_binary_grid_map_view();
+		std::cout<<"set_binary_grid_map_view\n";
+			vfh.publish_binary_grid_map_view();
+		std::cout<<"publish_binary_grid_map_view\n";
+		vfh.publish_cloud();
+		std::cout<<"publish_cloud\n";
 		}
 	}
 

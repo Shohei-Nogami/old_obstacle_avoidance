@@ -133,11 +133,11 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 				if(depth_0>1)
 				{
 					//min_pn=depth_0*(-1)+8;
-					min_pn=depth_0*(-1)+6;
+					min_pn=depth_0*(-1)+7;
 				}
 				else
 				{
-					min_pn=6;
+					min_pn=7;
 				}
 				for(int l=-search_range;l<=search_range;l++){
 					for(int m=-search_range;m<=search_range;m++){
@@ -230,10 +230,10 @@ cv::Mat& detect_objects::draw_cluster(cv::Mat& image)
 
 	for(int k=0;k<Q.clst.size();k++)
 	{
-		if((int)Q.clst[k].pt.size()<10)
-		{
-			continue;
-		}
+		//if((int)Q.clst[k].pt.size()<10)
+		//{
+		//	continue;
+		//}
 		for(int kn=0;kn<Q.clst[k].pt.size();kn++)
 		{
 			for(int u=Q.clst[k].pt[kn].x*ksize;u<Q.clst[k].pt[kn].x*ksize+ksize;u++){

@@ -614,7 +614,7 @@ int main(int argc,char **argv){
 								std::cout<<"12.5:cul_clip_vel\n";
                 cul_optflw.publish_flow_image(img_cls.get_cur_image_by_ref());
                 std::cout<<"13:publish_flow_image\n";
-                img_cls.publish_debug_image(cul_optflw.get_view_image());
+                //img_cls.publish_debug_image(cul_optflw.get_view_image());
                 std::cout<<"14:publish_debug_image\n";
                 std::cout<<"dt:"<<time_cls.get_delta_time()<<"\n";
 				        cul_optflw.publish_objects_velocity();
