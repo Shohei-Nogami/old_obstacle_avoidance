@@ -6,7 +6,7 @@ vfh_class::vfh_class()
 	pub=it_pub.advertise("grid_image",1);
 	pub2=it_pub2.advertise("binary_grid_image",1);
 	pc_pub = nh_pubpcl.advertise<sensor_msgs::PointCloud2>("cluster_usedvfh", 1);
-	
+
 
 	nh_sub.setCallbackQueue(&queue);
 //	sub=nh_sub.subscribe("/zed/point_cloud/cloud_registered",1,&vfh_class::plc_callback,this);
@@ -29,7 +29,6 @@ vfh_class::vfh_class()
 	double dtheta=M_PI/180;
 /*
 	for(int i=0;i<vel_resolution;i++){
-
 		temp_vr.push_back(temp_v-temp_v_dif_max/2+i*delta_vel_dif);
 		temp_vl.push_back(temp_v+temp_v_dif_max/2-i*delta_vel_dif);
 		temp_w.push_back( (temp_vr[i]-temp_vl[i])/(2*d) );
@@ -100,13 +99,14 @@ void vfh_class::set_grid_map(void){
 	cv::Mat m = cv::Mat::zeros(cv::Size(grid_resolution,grid_resolution), CV_8UC1);
 	grid_map=m.clone();
 
+	return ;
 
 	for(int i=0;i<cluster.clst.size();i++)
 	{
 		double vel_size=std::sqrt( std::pow(cluster.vel[i].x,2.0) + std::pow(cluster.vel[i].y,2.0) + std::pow(cluster.vel[i].z,2.0) );
 		if( vel_size<1.1&&vel_size>0.1)
 		{
-		
+
 		}
 		for(int k=0;k<cluster.clst[i].pt.size();k++)
 		{
@@ -145,7 +145,6 @@ void vfh_class::select_best_trajectory(void){
 		int j_max=15;//test param
 		int j=0;
 		bool LOOP_OUT=false;
-
 		for(;j<j_max && (j<max_process_n[i] || i==temp_p.size()/2);j++,theta+=delta_theta[i]){
 			if(temp_w[i]>0){
 				xr=temp_p[i]*(cos(delta_theta[i]*j)-1);
@@ -160,7 +159,6 @@ void vfh_class::select_best_trajectory(void){
 				yr=j*R;
 			}
 			transport_robot_to_gridn(xr,yr,nx,ny);
-
 			if( is_obstacle(nx,ny) ){
 				LOOP_OUT=true;
 				j--;
@@ -168,8 +166,6 @@ void vfh_class::select_best_trajectory(void){
 				break;
 			}
 		}
-
-
 		if(!LOOP_OUT)
 			rank_trajectory.push_back(j);		
 	}
@@ -182,38 +178,47 @@ void vfh_class::select_best_trajectory(void){
 	{
 		float x=x0;
 		float y=y0;
-		float theta=min_angle+i*(max_angle-min_angle)/vfh_resolution;
+		float theta=min_angle+i*(max_angle-min_angle)/vfh_resolution*M_PI/180;
 		float mv_length=R/2;
 		for(int n=0;n<max_search_n;n++)
 		{
 			x=x0+mv_length*(-sin(theta));
 			y=y0+mv_length*(cos(theta));
 			transport_robot_to_gridn(x,y,nx,ny);
-			
+
 			if( is_obstacle(nx,ny)||n==max_search_n-1 ){
 				rank_trajectory.push_back(n);
 				break;
 			}
-		}dd
+		}
 	}
-	
-	float good_trajectory_value=0;
-	int good_trajectory_num=0;
-	float evaluation_formula;
-	/*
-	for(int i=0;i<vel_resolution;i++){
-		evaluation_formula=rank_trajectory[i];
-		std::cout<<"trajectory["<<i<<"]:"<<evaluation_formula<<"\n";
 
-		if(good_trajectory_value<evaluation_formula){
+	float good_trajectory_value=100;
+	int good_trajectory_num=vfh_resolution/2;
+	float evaluation_formula;
+	float w_angle=0.5;
+	float xp=0;//purpose
+	float yp=5;
+	float xc=0;//current
+	float yc=0;
+	float w_target=0.8;
+	for(int i=0;i<vfh_resolution;i++){
+		float theta=min_angle+i*(max_angle-min_angle)/vfh_resolution*M_PI/180;
+		float theta_half=std::abs((max_angle-min_angle)/vfh_resolution)*M_PI/180;
+		evaluation_formula=(max_search_n-rank_trajectory[i])
+	+(std::abs(i-vfh_resolution/2)/(vfh_resolution/2))*max_search_n*w_angle
+	+std::abs(std::atan(-(xp-xc)/(yp-yc))-theta)/theta_half*max_search_n*w_target;
+		
+		std::cout<<"trajectory["<<i<<"]:"<<evaluation_formula<<"\n";
+		if(good_trajectory_value>evaluation_formula){
 			good_trajectory_value=evaluation_formula;
 			good_trajectory_num=i;
 		}
 	}
-	*/
+	
 	std::cout<<"good tarjectory is "<<good_trajectory_num<<"\n";
 	std::cout<<"good tarjectory value is "<<good_trajectory_value<<"\n";
-	draw_best_trajectory(good_trajectory_num);
+	//draw_best_trajectory(good_trajectory_num);
 }
 void vfh_class::transport_robot_to_gridn(const double& xr,const double& yr,int& n_xr,int& n_yr){
 	double grid_x=xr+grid_size/2;
@@ -241,37 +246,36 @@ bool vfh_class::is_obstacle(const int nx,const int ny){
 }
 void vfh_class::draw_best_trajectory(const int& num){
 
-	double good_p=temp_p[num];
-	double good_delta_theta=delta_theta[num];
-	double good_w=temp_w[num];
+	std::cout<<"draw_best_trajectory_start\n";
+	
+//	double good_p=temp_p[num];
+//	double good_delta_theta=delta_theta[num];
+//	double good_w=temp_w[num];
 	int nx,ny;
 	int nx_1=0;
 	int ny_1=0;
-	double xr=0;
-	double yr=0;
-	double theta=0;
-/*
-	for(int j=0;j<rank_trajectory[num] ;j++,theta+=good_delta_theta){
-		if(good_w>0){
-			xr=good_p*(cos(good_delta_theta*j)-1);
-			yr=good_p*sin(good_delta_theta*j);
-		}
-		else if(good_w<0){
-			xr=good_p*(1-cos(good_delta_theta*j));
-			yr=good_p*sin(good_delta_theta*j);
-		}
-		else{
-			xr=0;
-			yr=j*R;
-		}
-		transport_robot_to_gridn(xr,yr,nx,ny);
-		if(j>0&&( (nx_1!=nx&&ny_1!=ny)||num==vel_resolution/2 ) ){
+	double x0=0;
+	double y0=0;
+	double theta0=0;
+	float x=x0;
+	float y=y0;
+
+	transport_robot_to_gridn(x,y,nx_1,ny_1);
+
+	for(int j=0;j<rank_trajectory[num] ;j++){
+		float theta=min_angle+num*(max_angle-min_angle)/vfh_resolution;
+		float mv_length=R/2;
+		x=x+mv_length*(-sin(theta));
+		y=x+mv_length*(cos(theta));
+		transport_robot_to_gridn(x,y,nx,ny);
+
+		if(j>0&&( (nx_1!=nx&&ny_1!=ny)||num==vfh_resolution/2 ) ){
 			cv::line(grid_map_view, cv::Point(nx_1, ny_1), cv::Point(nx, ny), cv::Scalar(0,255,255), 1, 4);	
 		}
 		nx_1=nx;
 		ny_1=ny;
 	}
-*/
+	std::cout<<"draw_best_trajectory\n";
 }
 void vfh_class::draw_all_trajectory(void){
 	double xr;
@@ -280,41 +284,39 @@ void vfh_class::draw_all_trajectory(void){
 	int ny;
 	int nx_1;
 	int ny_1;
-	for(int i=0;i<temp_p.size();i++){
-		double theta=0;
-		int j_max=15;//test param
-		int j=1;
-		nx_1=0;
-		ny_1=0;
-		nx=0;
-		ny=0;
-		for(/*int j=0*/;j<j_max && (j<max_process_n[i] || i==temp_p.size()/2) ;j++,theta+=delta_theta[i]){
-			if(temp_w[i]>0){
-				xr=temp_p[i]*(cos(delta_theta[i]*j)-1);
-				yr=temp_p[i]*sin(delta_theta[i]*j);
-			}
-			else if(temp_w[i]<0){
-				xr=temp_p[i]*(1-cos(delta_theta[i]*j));
-				yr=temp_p[i]*sin(delta_theta[i]*j);
-			}
-			else{
-				xr=0;
-				yr=j*R;
-			}
+	
+	nx_1=0;
+	ny_1=0;
+	nx=0;
+	ny=0;
+	
+	float x0=0;
+	float y0=0;
+	float theta0=0;
+	int max_search_n=20;
+	for(int i=0;i<vfh_resolution;i++)
+	{
+		
+		float x=x0;
+		float y=y0;
+		float theta=min_angle+i*(max_angle-min_angle)/vfh_resolution*M_PI/180;
+		float mv_length=R/2;
+		transport_robot_to_gridn(x0,y0,nx_1,ny_1);
+		for(int n=0;n<max_search_n;n++)
+		{
+			x=x0+mv_length*(-sin(theta))*n;
+			y=y0+mv_length*(cos(theta))*n;
+			transport_robot_to_gridn(x,y,nx,ny);
 
-			transport_robot_to_gridn(xr,yr,nx,ny);
-			if( is_obstacle(nx,ny) ){
+			if( is_obstacle(nx,ny)||n==max_search_n-1 ){
 				break;
 			}
-			else{
-				if(nx_1!=nx&&ny_1!=ny)
-					cv::line(grid_map_view, cv::Point(nx_1, ny_1), cv::Point(nx, ny), cv::Scalar(0,255,255), 1, 4);	
-			}
+			cv::line(grid_map_view, cv::Point(nx_1, ny_1), cv::Point(nx, ny), cv::Scalar(0,255,255), 1, 4);	
 			nx_1=nx;
 			ny_1=ny;
-		}	
+		}
 	}
-
+	
 }
 
 
@@ -324,7 +326,7 @@ void vfh_class::set_grid_map_view(void){
 			grid_map_view.at<cv::Vec3b>(h,w)[1]=grid_map.at<uchar>(h,w);	
 			grid_map_view.at<cv::Vec3b>(h,w)[0]=0;	
 			grid_map_view.at<cv::Vec3b>(h,w)[2]=0;	
-					
+
 		}
 	}
 }
@@ -349,7 +351,7 @@ void vfh_class::publish_grid_map_view(void){
 			grid_map_view.at<cv::Vec3b>(h,w)[2]=255;			
 		}
 	}
-	
+
 	grid_map_view.at<cv::Vec3b>(grid_resolution/2,grid_resolution/2)[0]=255;
 	grid_map_view.at<cv::Vec3b>(grid_resolution/2,grid_resolution/2)[2]=255;
 	grid_map_view.at<cv::Vec3b>(grid_resolution/2,grid_resolution/2)[1]=255;
@@ -423,7 +425,7 @@ void vfh_class::publish_cloud(void)
 				//cloud_temp.x+=cluster.vel[i].z*t;
 		    //cloud_temp.y+=-cluster.vel[i].x*t;			
 		    //cloud_temp.z+=cluster.vel[i].y*t;
-		
+
 				cloud->points.push_back(cloud_temp);
 			}
 		}
@@ -440,9 +442,9 @@ int main(int argc,char **argv){
 	std::cout<<"ready\n";
 
 	while(ros::ok()){
-		vfh.subscribe_cluster();
+	//	vfh.subscribe_cluster();
 		std::cout<<"subscribe_cluster\n";
-		if(vfh.is_cluster()){
+	//	if(vfh.is_cluster()){
 		std::cout<<"is_cluster\n";
 			vfh.set_grid_map();
 		std::cout<<"set_grid_map\n";
@@ -450,7 +452,7 @@ int main(int argc,char **argv){
 		std::cout<<"set_grid_map_view\n";
 			vfh.select_best_trajectory();
 		std::cout<<"select_best_trajectory\n";
-//			vfh.draw_all_trajectory();
+		//	vfh.draw_all_trajectory();
 			vfh.publish_grid_map_view();
 		std::cout<<"publish_grid_map_view\n";
 			vfh.set_binary_grid_map_view();
@@ -459,9 +461,8 @@ int main(int argc,char **argv){
 		std::cout<<"publish_binary_grid_map_view\n";
 		vfh.publish_cloud();
 		std::cout<<"publish_cloud\n";
-		}
+	//	}
 	}
 
 	return 0;
 }
-
