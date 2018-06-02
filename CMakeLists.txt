@@ -242,6 +242,9 @@ include_directories(
 add_executable(vfh_class_test src/vfh+_cls/vfh+_class.cpp )
 target_link_libraries(vfh_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
+add_executable(wheel_control_class_test src/wheel_control/whl_cntrl.cpp )
+target_link_libraries(wheel_control_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 #add_executable(point_cloud_test src/point_cloud_test.cpp src/tm_cls/time_class.cpp)
 #target_link_libraries(point_cloud_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 

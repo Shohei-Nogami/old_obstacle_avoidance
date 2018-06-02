@@ -22,9 +22,9 @@ class vfh_class{
 	private:
 		//pcl::PointCloud<pcl::PointXYZRGB> pcl_data;
 		//pcl::PointCloud<pcl::PointXYZ> pcl_data;
-		ros::NodeHandle nh_pub,nh_pub2,nh_sub,nh_pubpcl;
+		ros::NodeHandle nh_pub,nh_pub2,nh_sub,nh_pubpcl,nh_pub_w;
 		ros::Subscriber sub;
-		ros::Publisher pc_pub;
+		ros::Publisher pc_pub,pub_wheel;
 		ros::CallbackQueue queue;
 		cv::Mat grid_map;
 		cv::Mat grid_map_view,binary_grid_map_view;
@@ -46,10 +46,11 @@ class vfh_class{
 		uint8_t/*uchar*/ binary_threshold;
 
 //parameter of trajectory
-		const int vfh_resolution=90;
+		const int vfh_resolution=90+1;
 		const float temp_v=0.2;
 		const float temp_v_dif_max=0.2;
 		const float d=0.138;
+		int good_trajectory_num;
 //		float temp_vl[vel_patern],temp_vr[vel_patern];
 		std::vector<float> temp_vl,temp_vr;
 		std::vector<double> temp_w;
@@ -64,7 +65,18 @@ class vfh_class{
 		float d_r=0.1;
 		int jn_Rd;
 		std::vector<int> in_Rd;
-		
+		float target_x;
+		float target_y;
+		int process_n;
+//wheel msg			
+		float vel;
+		float ang_vel;
+		float max_dif=0.2;
+		float length=0.2;
+		int vl,vr;
+		float z_th=1;
+
+		::obst_avoid::wheel_msg wheelMsg;
 	public:
 		vfh_class();
 		~vfh_class();
@@ -86,6 +98,10 @@ class vfh_class{
 		void draw_all_trajectory(void);
 			
 		void publish_cloud(void);
+
+		void simulate_obstacle(void);
+
+		void publish_velocity(void);
 
 };
 

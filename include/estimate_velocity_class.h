@@ -58,11 +58,13 @@ class estimate_velocity{
 		std::vector<cv::Point3f> vel;
 		std::vector<cv::Point3f> pre_vel;
 		std::vector<double> cur_cluster_size;
+		std::vector<double> pre_cluster_size;
 	//---opticalflow 
 		::obst_avoid::matching match_msg;
 
 	//--matching
 		std::vector< std::vector<int> > match_n;
+		std::vector< std::vector<float> > match_gp;
 		std::vector<bool> matched;
 		
 	//----tracking count
@@ -83,6 +85,7 @@ class estimate_velocity{
 			void subsuctibe_match_index(void);
 			void match_index_callback(const obst_avoid::matching::ConstPtr& msg);
 			bool matching_cluster(void);
+			void set_gp(void);
 			bool estimate_velocity_of_cluster(void);
 			void predict_cluster(void);
 			void draw_velocity(cv::Mat& image);
@@ -90,4 +93,6 @@ class estimate_velocity{
 			cv::Mat& debug_image(cv::Mat& image);
 			void cvArrow(cv::Mat* img, cv::Point2i pt1, cv::Point2i pt2, cv::Scalar color);
 			void publish_cluster_with_vel(void);
+	
+			void culc_distance_3f(const cv::Point3f x1,cv::Point3f x2,float& dis);
 };

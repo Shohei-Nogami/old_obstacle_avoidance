@@ -73,6 +73,9 @@ bool estimate_velocity::matching_cluster(void)
 	{
 		return false;
 	}
+
+	set_gp();
+
 	pre_cluster_match.resize(cluster_match.size());
 	for(int i=0;i<cluster_match.size();i++)
 	{
@@ -129,6 +132,10 @@ bool estimate_velocity::matching_cluster(void)
 	{
 		return false;
 	}
+	if(!pre_gp.size())
+	{
+		return false;
+	}
 	std::cout<<"aabbbb\n";
 	//matching exist bagggg
 	//
@@ -181,7 +188,22 @@ bool estimate_velocity::matching_cluster(void)
 		match_n[cur_index][pre_index]++;
 		
 	}
+//matching value by gp (distance)
+	match_gp.resize((int)cur_cluster.clst.size());
 
+	for(int i=0;i<cur_cluster.clst.size();i++)
+	{
+		match_gp[i].resize((int)pre_cluster.clst.size());
+	}
+	for(int i=0;i<cur_cluster.clst.size();i++)
+	{
+		for(int k=0;k<pre_cluster.clst.size();k++)
+		{
+			culc_distance_3f(cur_gp[i],pre_gp[k],match_gp[i][k]);
+		}
+	}
+
+//init match value 
 
 	matched.resize(cur_cluster.clst.size());
 	for(int i=0;i<cur_cluster.clst.size();i++)
@@ -189,42 +211,89 @@ bool estimate_velocity::matching_cluster(void)
 		matched[i]=false;
 		cluster_match[i]=-1;
 	}
+//matching cluster
 
 	for(int k=0;k<pre_cluster.clst.size();k++)
 	{
-		//select best match
-		int max_n=0;
-		int max_i=-1;
+	//min distance cluster and max matching points
+		//min distance
+		float min_dis=5;//match_gp[0][k];
+		int min_dis_i=-1;//0;
+		//max matching point
+		int max_pt=0;//match_n[0][k];
+		int max_pt_i=-1;//0;
+
+		//min dif size
+		
+		double min_dsize=5*5;
+		//min_dsize=std::abs(pre_cluster_size[k]-cur_cluster_size[0]);
+		int min_dsize_i=-1;//0;
+
+		//ef
+		float ef=0;
+		int ef_i=-1;
+
 		for(int i=0;i<cur_cluster.clst.size();i++)
 		{
-			
-			if(max_n<match_n[i][k]&&!matched[i]
-				&&( (float)( std::abs( (int)pre_cluster.clst[i].pt.size() - (int)cur_cluster.clst[i].pt.size() ))/(int)cur_cluster.clst[i].pt.size()<2 )
-			)
+			if(matched[i])
 			{
-				max_n=match_n[i][k];
-				max_i=i;
+				continue;
 			}
+			//min distance
+			if(min_dis>match_gp[i][k])
+			{
+				min_dis=match_gp[i][k];
+				min_dis_i=i;
+			}
+			//max num of point 
+			if(max_pt<match_n[i][k])
+			{
+				max_pt=match_n[i][k];
+				max_pt_i=i;
+			}
+			/*
+			//min dif of size
+			float dif_size = std::abs(pre_cluster_size[k]-cur_cluster_size[i])
+			if(min_dsize > dif_size)
+			{
+				min_dsize=dif_size;
+				min_dsize_i=i;
+			}
+			*/
+			float ef_temp=match_n[i][k] + (1/match_gp[i][k]);
+			if(ef<ef_temp)
+			{
+				ef=ef_temp;
+				ef_i=i;
+			}
+			
 		}
-		if(max_i!=-1)
+		/*
+		if(max_pt_i==0)
 		{
-			cluster_match[max_i]=k;//cur -> pre 
-			matched[max_i]=true;
+			float dX;
+			culc_distance_3f(cur_gp[min_dis_i],pre_gp[k],dX);
+
+			//float dif_size = std::abs(pre_cluster_size[k]-cur_cluster_size[min_dis_i]);
+
+			cluster_match[min_dis_i]=k;
+			matched[min_dis_i]=true;
 		}
+		else if(min_dis_i==max_pt_i)//good match 
+		{
+			cluster_match[max_pt_i]=k;
+			matched[max_pt_i]=true;
+		}
+		else
+		{
+			cluster_match[max_pt_i]=k;
+			matched[max_pt_i]=true;
+		}
+		*/
+		cluster_match[ef_i]=k;
+		matched[ef_i]=true;
 		//std::cout<<"1111\n";
 	}
-	//std::cout<<"count:"<<count<<"\n";
-	//std::cout<<"end\n";
-	//delete match_n;
-	/*
-	for(int i=0;i<4;i++)
-	{
-		for(int k=0;k<4;k++)
-		{
-			std::cout<<"cur_cluster_index:("<<i<<","<<k<<"):("<<cur_cluster_index[i][k]<<"\n";			
-		}
-	}
-	*/
 	//pre_cluster_index.resize(cur_cluster_index.size());
 	//std::copy(pre_cluster_index.begin(),pre_cluster_index.end(),cur_cluster_index.begin());
 	//for(int h=0;h<cur_cluster_index.size();h++)
@@ -250,8 +319,23 @@ bool estimate_velocity::matching_cluster(void)
 	return true;
 }
 
-bool estimate_velocity::estimate_velocity_of_cluster(void)
+void estimate_velocity::set_gp(void)
 {
+	std::cout<<"1\n";
+	/*
+	if(cur_cluster_size.size())
+	{
+		//pre_cluster_size.clear();
+		pre_cluster_size.resize(cur_cluster_size.size());
+		for(int i=0;i<cur_cluster.clst.size();i++)
+		{
+			 pre_cluster_size[i]=cur_cluster_size[i];
+		}
+	}
+	*/
+	std::cout<<"1.1\n";
+	//std::cout<<"cur_cluster.clst.size()):"<<cur_cluster.clst.size()<<"\n";
+	//cur_cluster_size.clear();
 	cur_cluster_size.resize(cur_cluster.clst.size());
 	for(int i=0;i<cur_cluster.clst.size();i++)
 	{
@@ -259,10 +343,111 @@ bool estimate_velocity::estimate_velocity_of_cluster(void)
 	}
 	if(cur_gp.size())
 	{
-    pre_gp=cur_gp;
+		//pre_gp.clear();
+		pre_gp.resize(cur_gp.size());
+		for(int i=0;i<cur_gp.size();i++)
+		{
+			 pre_gp[i]=cur_gp[i];
+		}
 	}	
-	cur_gp.clear();
+
+	std::cout<<"1.2\n";
+
+	//cur_gp.clear();
 	cur_gp.resize(cur_cluster.clst.size());
+	for(int i=0;i<cur_cluster.clst.size();i++)
+	{
+		cur_gp[i].x=0;
+		cur_gp[i].y=0;
+		cur_gp[i].z=0;
+
+		//add0531
+		float x_min,x_max;
+		float z_min,z_max;
+		float x_tmp,z_tmp;
+			x_min=(cur_cluster.clst[i].pt[0].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[0].z/f;
+		
+		x_max=x_min;
+		
+		z_min=cur_cluster.clst[i].pt[0].z;
+		z_max=z_min;
+		
+		
+		for(int k=1;k<cur_cluster.clst[i].pt.size();k++)
+		{
+		  		
+			x_tmp=(cur_cluster.clst[i].pt[k].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[k].z/f;
+			//cur_gp[i].y+=((height/2-cur_cluster.clst[i].pt[k].y*ksize+ksize/2)*cur_cluster.clst[i].z)/f+0.4125;
+			z_tmp=cur_cluster.clst[i].pt[k].z;
+		  if(x_max<x_tmp)
+		  {
+		    x_max=x_tmp;
+		  }
+		  if(x_min>x_tmp)
+		  {
+		    x_min=x_tmp;
+		  }
+		  if(z_max<z_tmp)
+		  {
+		    z_max=z_tmp;
+		  }
+		  if(z_min>z_tmp)
+		  {
+		    z_min=z_tmp;
+		  }
+		  
+		}
+		//end
+		float rate=0.2;
+		if(x_max-x_min>0.1)
+		{
+		  x_max-=(x_max-x_min)*rate;
+		  x_min+=(x_max-x_min)*rate;
+		}
+		if(z_max-z_min>0.1)
+		{
+		  z_max-=(z_max-z_min)*rate;
+		  z_min+=(z_max-z_min)*rate;
+		}
+
+		for(int k=0;k<cur_cluster.clst[i].pt.size();k++)
+		{
+		  float x=(cur_cluster.clst[i].pt[k].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[k].z/f;
+		  float z=cur_cluster.clst[i].pt[k].z;
+			//add cluster size
+			cur_cluster_size[i]+=std::pow(ksize*cur_cluster.clst[i].pt[k].z/f,2.0);
+		  
+		  if(x<x_min||x>x_max
+		    ||z<z_min||z>z_max)
+		  {
+		    continue;
+		  }
+			//cur_gp[i].x+=(cur_cluster.clst[i].pt[k].x*ksize-width/2)*cur_cluster.clst[i].pt[k].z/f;
+			////cur_gp[i].y+=((height/2-cur_cluster.clst[i].pt[k].y*ksize)*cur_cluster.clst[i].z)/f+0.4125;
+			//cur_gp[i].z+=cur_cluster.clst[i].pt[k].z;
+			cur_gp[i].x+=x;
+			//cur_gp[i].y+=((height/2-cur_cluster.clst[i].pt[k].y*ksize+ksize/2)*cur_cluster.clst[i].z)/f+0.4125;
+			cur_gp[i].z+=z;
+
+
+		}
+		cur_gp[i].x=cur_gp[i].x/(int)cur_cluster.clst[i].pt.size();
+		//cur_gp[i].y=cur_gp[i].y/(int)cur_cluster.clst[i].pt.size();
+		cur_gp[i].z=cur_gp[i].z/(int)cur_cluster.clst[i].pt.size();
+
+		
+	}
+
+}
+bool estimate_velocity::estimate_velocity_of_cluster(void)
+{
+	/*
+	cur_cluster_size.resize(cur_cluster.clst.size());
+	for(int i=0;i<cur_cluster.clst.size();i++)
+	{
+		 cur_cluster_size[i]=0;
+	}
+	*/
 
 	pre_vel.resize(vel.size());
 	for(int i=0;i<vel.size();i++)
@@ -277,34 +462,13 @@ bool estimate_velocity::estimate_velocity_of_cluster(void)
 		vel[i].y=0;
 		vel[i].z=0;
 	}
-	for(int i=0;i<cur_cluster.clst.size();i++)
-	{
-		cur_gp[i].x=0;
-		cur_gp[i].y=0;
-		cur_gp[i].z=0;
 
-		for(int k=0;k<cur_cluster.clst[i].pt.size();k++)
-		{
-			//cur_gp[i].x+=(cur_cluster.clst[i].pt[k].x*ksize-width/2)*cur_cluster.clst[i].pt[k].z/f;
-			////cur_gp[i].y+=((height/2-cur_cluster.clst[i].pt[k].y*ksize)*cur_cluster.clst[i].z)/f+0.4125;
-			//cur_gp[i].z+=cur_cluster.clst[i].pt[k].z;
-			cur_gp[i].x+=(cur_cluster.clst[i].pt[k].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[k].z/f;
-			//cur_gp[i].y+=((height/2-cur_cluster.clst[i].pt[k].y*ksize+ksize/2)*cur_cluster.clst[i].z)/f+0.4125;
-			cur_gp[i].z+=cur_cluster.clst[i].pt[k].z;
-			
-			//add cluster size
-			cur_cluster_size[i]+=std::pow(ksize*cur_cluster.clst[i].pt[k].z/f,2.0);
-		}
-		cur_gp[i].x=cur_gp[i].x/(int)cur_cluster.clst[i].pt.size();
-		//cur_gp[i].y=cur_gp[i].y/(int)cur_cluster.clst[i].pt.size();
-		cur_gp[i].z=cur_gp[i].z/(int)cur_cluster.clst[i].pt.size();
-
-		
-	}
 	if(!pre_gp.size())
 	{
 		return false;
 	}
+	float dX;
+	cv::Point3f temp0=cv::Point3f(0,0,0);
 	for(int i=0;i<cur_cluster.clst.size();i++)
 	{
 		int match_num = cluster_match[i];
@@ -317,8 +481,22 @@ bool estimate_velocity::estimate_velocity_of_cluster(void)
 		vel[i].x = (cur_gp[i].x-pre_gp[match_num].x)/cur_cluster.t-cur_cluster.dX.x/cur_cluster.t;
 		vel[i].y = 0;//(cur_gp[i].y-pre_gp[i].y)/cur_cluster.t-cur_cluster.dX.y/cur_cluster.t;
 		vel[i].z = (cur_gp[i].z-pre_gp[match_num].z)/cur_cluster.t-cur_cluster.dX.z/cur_cluster.t;
+		culc_distance_3f(vel[i],temp0,dX);
+		if(dX>1.1)
+		{
+			if(track_n[i]>0)
+			{
+				vel[i] = pre_vel[i]; 
+			}
+			else
+			{
+				vel[i].x = 0;
+				vel[i].y = 0;
+				vel[i].z = 0;
+			}
+		}
 		int k=0;
-		float T=0.1;
+		float T=cur_cluster.t/5;
 		if(track_n[i]>0)
 		{
 			//std::cout<<"i,k:"<<i<<","<<k<<"\n";
@@ -464,7 +642,8 @@ void estimate_velocity::publish_pointcloud(void)
 		for(int t=0;t<4;t++)
 		{
 			if(track_n[i]<1||std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0))>1.1
-				||cur_cluster_size[i]>1.0*1.0||cur_cluster_size[i]<0.1*0.1
+				||cur_cluster_size[i]>1.0*1.0
+				||cur_cluster_size[i]<0.2*0.2
 			)
 			{
 				continue;
@@ -633,6 +812,10 @@ void estimate_velocity::publish_cluster_with_vel(void)
 	}
 	pub2.publish(pub_cluster);
 }
+void estimate_velocity::culc_distance_3f(const cv::Point3f x1,cv::Point3f x2,float& dis)
+{
+	dis = std::sqrt((x1.x-x2.x)*(x1.x-x2.x) + (x1.y-x2.y)*(x1.y-x2.y) + (x1.z-x2.z)*(x1.z-x2.z) );
+}
 
 int main(int argc,char **argv)
 {
@@ -686,5 +869,6 @@ int main(int argc,char **argv)
 	}
 
 }
+
 
 

@@ -48,6 +48,7 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 	
 	pcl::PointXYZ voxel_element_temp;
 
+	//std::cout<<"aa\n";
 	//ground estimate
 	ground_estimation_from_image(y_th,cam_y,a,b,c,d);
 

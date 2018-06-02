@@ -72,12 +72,15 @@ void detect_objects::ground_estimation_from_image(const float& y_th,const float&
   float z_temp;
   pcl::PointXYZ p_temp;
   //ground_points->points.clear();
+  //std::cout<<"depth_image.empty():"<<depth_image.empty()<<"\n";
   ground_points->points.reserve(height/2*width);
   for(int h=height/2+1;h<height;h++){
     for(int w=0;w<width;w++){
       z_temp=depth_image.at<float>(h,w);
       if(z_temp>0.5&&!std::isinf(z_temp)){
         y_temp=(height/2-h)*z_temp/f;
+	//std::cout<<"y_temp:"<<y_temp<<"\n";
+	
         if(std::abs(y_temp+cam_y)<y_th){
           x_temp=-( ((float)w-(float)width/2)*z_temp/f-cam_y );
           
@@ -91,7 +94,7 @@ void detect_objects::ground_estimation_from_image(const float& y_th,const float&
   }
   ground_points->width=ground_points->points.size();
   ground_points->height=1;
-
+	std::cout<<"ground_points->points.size():"<<ground_points->points.size()<<"\n";
   seg.setInputCloud (ground_points);
 
 	seg.segment (*inliers, *coefficients);
