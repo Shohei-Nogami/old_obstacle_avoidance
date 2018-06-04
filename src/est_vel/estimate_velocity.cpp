@@ -31,8 +31,40 @@ estimate_velocity::estimate_velocity()
 			pre_cluster_index[h][w]=-1;
 		}
 	}
-	//std::cout<<"cur_cluster_index.size():"<<cur_cluster_index.size()<<"\n";
-	//std::cout<<"cur_cluster_index[0].size():"<<cur_cluster_index[0].size()<<"\n";
+	
+	//calmanfilter parameter
+	
+	//Eigen::MatrixXd sig_ut(6,6);
+	sig_ut = Eigen::MatrixXd::Zero(6,6); 
+	del_t = Eigen::MatrixXd::Zero(6,6); 
+	sig_x0 = Eigen::MatrixXd::Zero(6,6); 
+	I = Eigen::MatrixXd::Identity(6,6);
+	
+	//仮
+	sig_ut(0,0)=1;
+	sig_ut(1,1)=1;
+	sig_ut(2,2)=1;
+	sig_ut(3,3)=1;
+	sig_ut(4,4)=1;
+	sig_ut(5,5)=1;
+	
+	del_t(0,0)=1;
+	del_t(1,1)=1;
+	del_t(2,2)=1;
+	del_t(3,3)=1;
+	del_t(4,4)=1;
+	del_t(5,5)=1;
+	
+	sig_x0(0,0)=1;
+	sig_x0(1,1)=1;
+	sig_x0(2,2)=1;
+	sig_x0(3,3)=1;
+	sig_x0(4,4)=1;
+	sig_x0(5,5)=1;
+	
+	
+	
+	
 }
 estimate_velocity::~estimate_velocity()
 {
@@ -341,6 +373,15 @@ void estimate_velocity::set_gp(void)
 	{
 		 cur_cluster_size[i]=0;
 	}
+	if(pre_gp.size())
+	{
+		//pre_gp.clear();
+		prepre_gp.resize(pre_gp.size());
+		for(int i=0;i<pre_gp.size();i++)
+		{
+			 prepre_gp[i]=pre_gp[i];
+		}
+	}
 	if(cur_gp.size())
 	{
 		//pre_gp.clear();
@@ -448,12 +489,19 @@ bool estimate_velocity::estimate_velocity_of_cluster(void)
 		 cur_cluster_size[i]=0;
 	}
 	*/
-
+	prepre_vel.resize(pre_vel.size());
+	
+	for(int i=0;i<pre_vel.size();i++)
+	{
+		prepre_vel[i]=pre_vel[i];
+	}
+	
 	pre_vel.resize(vel.size());
 	for(int i=0;i<vel.size();i++)
 	{
 		pre_vel[i]=vel[i];
 	}
+	
 	vel.clear();
 	vel.resize(cur_cluster.clst.size());
 	for(int i=0;i<vel.size();i++)
@@ -462,58 +510,356 @@ bool estimate_velocity::estimate_velocity_of_cluster(void)
 		vel[i].y=0;
 		vel[i].z=0;
 	}
-
-	if(!pre_gp.size())
+	
+	
+	pre_acc.resize(acc.size());
+	for(int i=0;i<acc.size();i++)
+	{
+		pre_acc[i]=acc[i];
+	}
+	
+	vel.clear();
+	vel.resize(cur_cluster.clst.size());
+	
+	
+	acc.clear();
+	acc.resize(cur_cluster.clst.size());
+	
+	for(int i=0;i<vel.size();i++)
+	{
+		vel[i].x=0;
+		vel[i].y=0;
+		vel[i].z=0;
+	}
+	
+	
+	if(!prepre_gp.size())
 	{
 		return false;
 	}
-	float dX;
+
+
+	//velocity
 	cv::Point3f temp0=cv::Point3f(0,0,0);
-	for(int i=0;i<cur_cluster.clst.size();i++)
+	//cluster match[i]=j : i -> j
+	for(int i=0;i<vel.size();i++)
 	{
-		int match_num = cluster_match[i];
-		track_n[i]=0;
-		//std::cout<<"cluster_match["<<i<<"]:"<<cluster_match[i]<<"\n";
-		if(match_num==-1)
+		if(cluster_match[i] != -1)
 		{
-			continue;
-		}
-		vel[i].x = (cur_gp[i].x-pre_gp[match_num].x)/cur_cluster.t-cur_cluster.dX.x/cur_cluster.t;
-		vel[i].y = 0;//(cur_gp[i].y-pre_gp[i].y)/cur_cluster.t-cur_cluster.dX.y/cur_cluster.t;
-		vel[i].z = (cur_gp[i].z-pre_gp[match_num].z)/cur_cluster.t-cur_cluster.dX.z/cur_cluster.t;
-		culc_distance_3f(vel[i],temp0,dX);
-		if(dX>1.1)
-		{
-			if(track_n[i]>0)
+			if( pre_cluster_match[ cluster_match[i] ] != -1)
 			{
-				vel[i] = pre_vel[i]; 
+		
+				vel[i].x=(3*cur_gp[i].x - 4*pre_gp[ cluster_match[i] ].x + prepre_gp[ pre_cluster_match[ cluster_match[i] ] ].x )/(cur_cluster.t+pre_cluster.t);
+			
+				vel[i].y=(3*cur_gp[i].y - 4*pre_gp[ cluster_match[i] ].y + prepre_gp[ pre_cluster_match[ cluster_match[i] ] ].y )/(cur_cluster.t+pre_cluster.t);
+			
+				vel[i].z=( 3*cur_gp[i].z - 4*pre_gp[ cluster_match[i] ].z + prepre_gp[ pre_cluster_match[ cluster_match[i] ] ].z )/(cur_cluster.t+pre_cluster.t);
+			
+			
+				pre_vel[ cluster_match[i] ].x = ( cur_gp[i].x - prepre_gp[ pre_cluster_match[ cluster_match[i] ] ].x )/(cur_cluster.t+pre_cluster.t);
+				pre_vel[ cluster_match[i] ].y = ( cur_gp[i].y - prepre_gp[ pre_cluster_match[ cluster_match[i] ] ].y )/(cur_cluster.t+pre_cluster.t);
+				pre_vel[ cluster_match[i] ].z = ( cur_gp[i].z - prepre_gp[ pre_cluster_match[ cluster_match[i] ] ].z )/(cur_cluster.t+pre_cluster.t);
+		
 			}
 			else
 			{
-				vel[i].x = 0;
-				vel[i].y = 0;
-				vel[i].z = 0;
+				vel[i].x = (cur_gp[i].x-pre_gp[cluster_match[i]].x)/cur_cluster.t-cur_cluster.dX.x/cur_cluster.t;
+				vel[i].y = 0;//(cur_gp[i].y-pre_gp[i].y)/cur_cluster.t-cur_cluster.dX.y/cur_cluster.t;
+				vel[i].z = (cur_gp[i].z-pre_gp[cluster_match[i]].z)/cur_cluster.t-cur_cluster.dX.z/cur_cluster.t;
+			
+			}
+			
+			//increment number of tracking
+			track_n[i]=pre_track_n[cluster_match[i]]+1;
+			
+			
+			//threshold filter
+			float dX;
+			culc_distance_3f(vel[i],temp0,dX);
+			/*
+			if(dX>1.1)
+			{
+				if(track_n[i]>=2)
+				{
+					vel[i] = pre_vel[cluster_match[i]];
+				}
+				else
+				{
+					vel[i].x = 0;
+					vel[i].y = 0;
+					vel[i].z = 0;
+				}
+			}
+			*/
+		}
+		else
+		{
+			track_n[i]=0;
+			vel[i].x = 0;
+			vel[i].y = 0;
+			vel[i].z = 0;
+		}
+	}
+	//accelerate
+	if(prepre_vel.size())
+	{
+		//cluster match[i]=j : i -> j
+		for(int i=0;i<pre_acc.size();i++)
+		{
+			pre_acc[ cluster_match[i] ].x = ( vel[i].x - prepre_vel[ pre_cluster_match[ cluster_match[i] ] ].x )/(cur_cluster.t+pre_cluster.t);
+			pre_acc[ cluster_match[i] ].y = ( vel[i].y - prepre_vel[ pre_cluster_match[ cluster_match[i] ] ].y )/(cur_cluster.t+pre_cluster.t);
+			pre_acc[ cluster_match[i] ].z = ( vel[i].z - prepre_vel[ pre_cluster_match[ cluster_match[i] ] ].z )/(cur_cluster.t+pre_cluster.t);
+		}
+	}
+	else
+	{
+		//cluster match[i]=j : i -> j
+		for(int i=0;i<acc.size();i++)
+		{
+			acc[i].x=(3*vel[i].x - 4*pre_vel[ cluster_match[i] ].x + prepre_vel[ pre_cluster_match[ cluster_match[i] ] ].x )/(cur_cluster.t+pre_cluster.t);
+				
+			acc[i].y=(3*vel[i].y - 4*pre_vel[ cluster_match[i] ].y + prepre_vel[ pre_cluster_match[ cluster_match[i] ] ].y )/(cur_cluster.t+pre_cluster.t);
+		
+			acc[i].z=( 3*vel[i].z - 4*pre_vel[ cluster_match[i] ].z + prepre_vel[ pre_cluster_match[ cluster_match[i] ] ].z )/(cur_cluster.t+pre_cluster.t);
+		}
+	}
+	for(int i=0;i<vel.size();i++)
+	{
+		std::cout<<"vel["<<i<<"]("<< track_n[i] << "):"<<vel[i]<<"\n";
+	}
+	for(int i=0;i<acc.size();i++)
+	{
+		std::cout<<"acc["<<i<<"]("<< track_n[i] << "):"<<acc[i]<<"\n";
+	}
+}
+void estimate_velocity::LPF(void)
+{
+	for(int i=0;i<vel.size();i++)
+	{
+		float T=cur_cluster.t/5;
+		if(track_n[i]>=2)
+		{
+			if(cluster_match[i] != -1)
+			{
+				//std::cout<<"i,k:"<<i<<","<<k<<"\n";
+				vel[i].x=(vel[i].x*cur_cluster.t+pre_vel[cluster_match[i]].x*T)/(T+cur_cluster.t);
+				vel[i].y=(vel[i].y*cur_cluster.t+pre_vel[cluster_match[i]].y*T)/(T+cur_cluster.t);
+				vel[i].z=(vel[i].z*cur_cluster.t+pre_vel[cluster_match[i]].z*T)/(T+cur_cluster.t);
 			}
 		}
-		int k=0;
-		float T=cur_cluster.t/5;
-		if(track_n[i]>0)
-		{
-			//std::cout<<"i,k:"<<i<<","<<k<<"\n";
-			vel[i].x=(vel[i].x*cur_cluster.t+pre_vel[match_num].x*T)/(T+cur_cluster.t);
-			vel[i].y=(vel[i].y*cur_cluster.t+pre_vel[match_num].y*T)/(T+cur_cluster.t);
-			vel[i].z=(vel[i].z*cur_cluster.t+pre_vel[match_num].z*T)/(T+cur_cluster.t);
-		}
-		track_n[i]=pre_track_n[k]+1;
-
-		
-		
-		//std::cout<<"cur_gp["<<i<<"]:"<<cur_gp[i]<<"\n";
-		//std::cout<<"pre_gp["<<i<<"]:"<<pre_gp[i]<<"\n";
-		//std::cout<<"cur_cluster.t:"<<cur_cluster.t<<"\n";
-		std::cout<<"vel["<<i<<"]("<< track_n[i] << "):"<<vel[i]<<"\n";
-		//std::cout<<"cur_cluster_size["<<i<<"]:"<<cur_cluster_size[i]<<"\n";
 	}
+}
+
+void estimate_velocity::calmanfilter(void)
+{
+
+	//std::vector<Eigen::MatrixXd,Eigen::aligned_allocator<Eigen::MatrixXd> > xh_t;
+	//std::vector<Eigen::MatrixXd,Eigen::aligned_allocator<Eigen::MatrixXd> > sig_xh_t;
+	
+	//std::vector<Eigen::MatrixXd,Eigen::aligned_allocator<Eigen::MatrixXd> > xh_t_1;
+	//std::vector<Eigen::MatrixXd,Eigen::aligned_allocator<Eigen::MatrixXd> > sig_xh_t_1;
+	
+	
+	//static
+	//Eigen::MatrixXd xh_t(6,1);
+	//Eigen::MatrixXd sig_xh_t(6,6);
+	Eigen::MatrixXd d_t(6,6);
+	Eigen::MatrixXd K_t(6,6);
+	
+	
+	//public
+	Eigen::MatrixXd xt_t(6,1);
+	//Eigen::MatrixXd xh_t_1(6,1);
+	Eigen::MatrixXd z_t(6,1);
+	Eigen::MatrixXd F_t(6,6);
+	Eigen::MatrixXd B_t(6,3);
+	//Eigen::MatrixXd sig_xh_t_1(6,6);
+	Eigen::MatrixXd sig_xt(6,6);
+	Eigen::MatrixXd u_t(3,1);
+	
+	//const
+	/*
+	//Eigen::MatrixXd sig_ut(6,6);
+	sig_ut = Eigen::MatrixXd::Identity(6,6);
+	//Eigen::MatrixXd del_t(6,6);
+	//Eigen::MatrixXd sig_x0(6,6);
+	//Eigen::MatrixXd I = Eigen::MatrixXd::Identity(6,6);
+	//in constracter
+	//init
+	for(int l=0;l<6;l++)
+	{
+		for(int r=0;r<6;r++)
+		{
+			sig_ut(l,r)=0;
+			del_t(l,r)=0;
+			sig_x0(l,r)=0;
+		}
+	}
+	//仮
+	sig_ut(0,0)=1;
+	sig_ut(1,1)=1;
+	sig_ut(2,2)=1;
+	sig_ut(3,3)=1;
+	sig_ut(4,4)=1;
+	sig_ut(5,5)=1;
+	
+	del_t(0,0)=1;
+	del_t(1,1)=1;
+	del_t(2,2)=1;
+	del_t(3,3)=1;
+	del_t(4,4)=1;
+	del_t(5,5)=1;
+	
+	sig_x0(0,0)=1;
+	sig_x0(1,1)=1;
+	sig_x0(2,2)=1;
+	sig_x0(3,3)=1;
+	sig_x0(4,4)=1;
+	sig_x0(5,5)=1;
+	*/
+	//end
+	
+	//x : x,y,z,vx,vy,vz
+	//u : ax,ay,az
+	
+	xh_t_1.resize(xh_t.size());
+	sig_xh_t_1.resize(sig_xh_t.size());
+	
+	for(int i=0;i<cur_cluster.clst.size();i++)
+	{
+		//observation
+		z_t(0,0)=cur_gp[i].x;
+		z_t(1,0)=cur_gp[i].y;
+		z_t(2,0)=cur_gp[i].z;
+		z_t(3,0)=vel[i].x;
+		z_t(4,0)=vel[i].y;
+		z_t(5,0)=vel[i].z;
+		
+		//can't do filter
+		if(track_n[i]<3)//1:no tracking,2:vel,3:acc
+		{
+			xh_t[i]=z_t;
+			
+			sig_xh_t[i]=sig_x0;
+			
+			continue;
+		}
+		//t -> t-1
+		// i の値を cur,pre 間で揃える
+		xh_t_1[i]=xh_t[ cluster_match[i] ];
+		sig_xh_t_1[i]=sig_xh_t[ cluster_match[i] ];
+		
+	}
+	
+	xh_t.clear();
+	sig_xh_t.clear();
+	xh_t.resize(cur_cluster.clst.size());
+	sig_xh_t.resize(cur_cluster.clst.size());
+	
+	
+	for(int i=0;i<cur_cluster.clst.size();i++)
+	{
+		//can't do filter
+		if(track_n[i]<3)
+		{	
+			continue;
+		}
+		//filtering
+		
+		float dt = cur_cluster.t;
+		
+		//set F,B
+		for(int l=0;l<6;l++)
+		{
+			//set F
+			for(int r=0;r<6;r++)
+			{
+				if(l==r)
+				{
+					F_t(l,r)=1;
+				}
+				else if((l+3)==r)
+				{
+					F_t(l,r)=dt;
+				}
+			}
+			//set B
+			for(int r=0;r<3;r++)
+			{
+				if(l==r)
+				{
+					B_t(l,r)=2*dt*dt;
+				}
+				else if((r+3)==l)
+				{
+					B_t(l,r)=dt;
+				}
+			}
+		}
+		//
+		
+		//set ut
+		
+		u_t(0,0)=acc[i].x;
+		u_t(1,0)=acc[i].y;
+		u_t(2,0)=acc[i].z;
+		
+		//predict
+		xt_t = F_t*xh_t_1[i] + B_t*u_t ;
+		
+		sig_xt = F_t.transpose() * sig_xh_t_1[i] * F_t + B_t.transpose() * sig_ut * B_t ;
+		
+		K_t = sig_xt*( (sig_xt+del_t).inverse() );
+		
+		xh_t[i] = xt_t + K_t*( z_t - xt_t );
+		
+		sig_xh_t[i] = (I - K_t)*sig_xt;
+	}
+}
+
+void estimate_velocity::record_odom_and_vel(void)
+{
+	
+	std::ofstream ofss("./Documents/obstacle_odom_and_vel.csv",std::ios::app);
+	for(int i=0;i<cur_cluster.clst.size();i++)
+	{
+		if(vel.size())
+		{
+			if(acc.size())
+			{
+				ofss<< cur_gp[i].x <<","//x
+					<< cur_gp[i].y <<","//y
+					<< cur_gp[i].z <<","//z
+					<<"-"<<","
+					<<vel[i].x<<","//vx
+					<<vel[i].y<<","//vy
+					<<vel[i].z<<","//vz
+					<<"-"<<","
+					<<acc[i].x<<","//ax
+					<<acc[i].y<<","//ay
+					<<acc[i].z<<","//az
+					<<std::endl;
+			}
+			else
+			{
+				ofss<< cur_gp[i].x <<","//x
+					<< cur_gp[i].y <<","//y
+					<< cur_gp[i].z <<","//z
+					<<"-"<<","
+					<<vel[i].x<<","//vx
+					<<vel[i].y<<","//vy
+					<<vel[i].z<<","//vz
+					<<std::endl;
+			}
+		}
+		else
+		{
+			ofss<< cur_gp[i].x <<","//x
+				<< cur_gp[i].y <<","//y
+				<< cur_gp[i].z <<","//z
+				<<std::endl;
+		}
+	}	
 }
 
 void estimate_velocity::predict_cluster(void)
