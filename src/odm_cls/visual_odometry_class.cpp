@@ -2,7 +2,7 @@
 
 visual_odometry_class::visual_odometry_class()
 	:first_process_flag(true),first_delta_process_flag(true)
-	,dx(0),dy(0),dz(0),droll(0),dpitch(0),dyaw(0)
+	,dx(0),dy(0),dz(0),droll(0),dpitch(0),dyaw(0),vy(0)
 {
 
 }
@@ -120,6 +120,7 @@ void visual_odometry_class::odometry_callback(const nav_msgs::Odometry::ConstPtr
 void visual_odometry_class::set_pre_delta_odometry(void){
 	pre_dx=dx;
 	pre_dz=dz;
+	pre_dr=dr;
 	pre_droll=droll;
 	pre_dpitch=dpitch;
 	pre_dyaw=dyaw;
@@ -193,13 +194,32 @@ void visual_odometry_class::set_delta_odometry(void){
 	set_delta_position();
 	turn_first_delta_process_flag();
 }
+
+bool visual_odometry_class::set_dt(void)
+{
+	bool rflag=false;
+	if(!std::isnan(dt))
+	{
+		pre_dt=dt;
+		rflag=true;
+		
+	}
+	dt=tm_vsodm.get_delta_time();
+	return rflag;
+}
+
 void visual_odometry_class::set_velocity(void){
-	if(tm_vsodm.is_delta_time()){
-		vx=dx/tm_vsodm.get_delta_time();
-		vy=dy/tm_vsodm.get_delta_time();
-		vz=dz/tm_vsodm.get_delta_time();
-		wy=dyaw/tm_vsodm.get_delta_time();
-		v=dr/tm_vsodm.get_delta_time();
+	if(set_dt()){
+		//vx=dx/tm_vsodm.get_delta_time();
+		//vy=dy/tm_vsodm.get_delta_time();
+		//vz=dz/tm_vsodm.get_delta_time();
+		//wy=dyaw/tm_vsodm.get_delta_time();
+		//v=dr/tm_vsodm.get_delta_time();
+		vx=(3*dx-pre_dx)/(dt+pre_dt);
+		//vy=(3*dy-pre_dy)/(dt+pre_dt);
+		vz=(3*dz-pre_dz)/(dt+pre_dt);
+		wy=(3*dyaw-pre_dyaw)/(dt+pre_dt);
+		v=(3*dr-pre_dr)/(dt+pre_dt);
 	}
 }
 double& visual_odometry_class::get_velocity_x(void){

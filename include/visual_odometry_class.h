@@ -24,8 +24,9 @@ class visual_odometry_class{
 		double pre_roll,pre_pitch,pre_yaw;
 		double droll,dpitch,dyaw;
 		double pre_dx,pre_dz,pre_droll,pre_dpitch,pre_dyaw;
-		double dr;
+		double dr,pre_dr;
 		double dx,dy,dz;
+		double dt,pre_dt;
 		double vx,vy,vz,wy,v;
 		bool first_process_flag;
 		bool first_delta_process_flag;
@@ -65,7 +66,7 @@ class visual_odometry_class{
 		void set_pre_delta_odometry(void);
 		void set_delta_position(void);
 		bool pose_detection(void);
-
+		bool set_dt(void);
 
 //		virtual void publish_debug_image(void);
 
