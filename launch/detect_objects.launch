@@ -1,7 +1,7 @@
 <launch>
   <node pkg="obst_avoid" name="detect_objects_class_test" type="detect_objects_class_test" />
   <node pkg="obst_avoid" name="culculating_opticalflow_class_test" type="culculating_opticalflow_class_test" />
-  <node pkg="obst_avoid" name="estimate_velocity_class_test" type="estimate_velocity_class_test" output="screen"/>
+  <node pkg="obst_avoid" name="culculate_centroid_class_test" type="culculate_centroid_class_test" output="screen"/>
 
 
 </launch>

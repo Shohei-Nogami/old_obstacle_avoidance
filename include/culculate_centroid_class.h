@@ -19,6 +19,8 @@
 #include"obst_avoid/cluster.h"
 #include"obst_avoid/cluster_point.h"
 #include"obst_avoid/cluster_with_vel.h"
+#include"obst_avoid/object_info.h"
+#include"obst_avoid/objects_info.h"
 #include"time_class.h"
 #include"image_class.h"
 #include<fstream>//file input output
@@ -27,11 +29,11 @@
 //#include <pcl/io/pcd_io.h>  
 //#include <pcl/point_types.h> 
 //#include <iostream>
-class estimate_velocity{
+class culculate_centroid{
 	private:
-		ros::NodeHandle nh_cluster,nh_optflw,nh_match,nh_pubpcl,nh_pub1,nh_pub2;
+		ros::NodeHandle nh_cluster,nh_optflw,nh_match,nh_pubpcl,nh_pub1,nh_pub2,nh_pub3;
 
-		ros::Publisher pc_pub,pub2;
+		ros::Publisher pc_pub,pub2,pub3;
 		
 		image_transport::ImageTransport it_pub1;
 		image_transport::Publisher pub1;
@@ -65,6 +67,7 @@ class estimate_velocity{
 		
 		std::vector<double> cur_cluster_size;
 		std::vector<double> pre_cluster_size;
+		std::vector<double> cur_cluster_radius;
 	//---opticalflow 
 		::obst_avoid::matching match_msg;
 
@@ -76,26 +79,14 @@ class estimate_velocity{
 	//----tracking count
 	std::vector<int> track_n;
 	std::vector<int> pre_track_n;
-	
-	//---calmanfilter
-	std::vector<Eigen::MatrixXd,Eigen::aligned_allocator<Eigen::MatrixXd> > xh_t;
-	std::vector<Eigen::MatrixXd,Eigen::aligned_allocator<Eigen::MatrixXd> > sig_xh_t;
-	
-	std::vector<Eigen::MatrixXd,Eigen::aligned_allocator<Eigen::MatrixXd> > xh_t_1;
-	std::vector<Eigen::MatrixXd,Eigen::aligned_allocator<Eigen::MatrixXd> > sig_xh_t_1;
-	
-	Eigen::MatrixXd sig_ut;
-	Eigen::MatrixXd del_t;
-	Eigen::MatrixXd sig_x0;
-	Eigen::MatrixXd I;
 	//debug	
 		cv::Mat view_vel_image;
 		cv::Mat view_image;
 	//--time_cls
 		time_class tm_cls;
 		public:
-			estimate_velocity();
-			~estimate_velocity();
+			culculate_centroid();
+			~culculate_centroid();
 
 
 			void subsuctibe_cluster(void);		
@@ -104,17 +95,17 @@ class estimate_velocity{
 			void match_index_callback(const obst_avoid::matching::ConstPtr& msg);
 			bool matching_cluster(void);
 			void set_gp(void);
-			bool estimate_velocity_of_cluster(void);
+			bool culculate_centroid_of_cluster(void);
 			void predict_cluster(void);
 			void draw_velocity(cv::Mat& image);
 			void publish_pointcloud(void);
 			cv::Mat& debug_image(cv::Mat& image);
 			void cvArrow(cv::Mat* img, cv::Point2i pt1, cv::Point2i pt2, cv::Scalar color);
 			void publish_cluster_with_vel(void);
-		
+			void publish_objects_info(void);
+
 			void culc_distance_3f(const cv::Point3f x1,cv::Point3f x2,float& dis);
 			void calmanfilter(void);
 			void LPF(void);
 			
-			void record_odom_and_vel(void);
 };

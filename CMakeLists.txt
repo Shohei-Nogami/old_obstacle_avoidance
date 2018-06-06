@@ -77,6 +77,8 @@ find_package(OpenCV REQUIRED)
    cluster_point.msg
    cluster.msg
    cluster_with_vel.msg
+   object_info.msg
+   objects_info.msg
 #   Message1.msg
 #   Message2.msg
  )
@@ -254,7 +256,10 @@ target_link_libraries(wheel_control_class_test  ${catkin_LIBRARIES} ${OpenCV_LIB
 add_executable(detect_objects_class_test src/dtct_obj_cls/detect_objects_class.cpp src/dtct_obj_cls/density_based_clustering.cpp src/tm_cls/time_class.cpp src/img_cls/image_class.cpp src/odm_cls/odometry_class.cpp src/odm_cls/wheel_odometry_class.cpp src/odm_cls/visual_odometry_class.cpp)
 target_link_libraries(detect_objects_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(estimate_velocity_class_test src/est_vel/estimate_velocity.cpp src/tm_cls/time_class.cpp src/img_cls/image_class.cpp)
+add_executable(culculate_centroid_class_test src/clc_cnt/culculate_centroid.cpp src/tm_cls/time_class.cpp src/img_cls/image_class.cpp)
+target_link_libraries(culculate_centroid_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(estimate_velocity_class_test src/est_vel/estimate_velocity.cpp src/tm_cls/time_class.cpp )
 target_link_libraries(estimate_velocity_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #add_executable(img_prc src/main.cpp src/img_prc_cls.cpp src/prcs_fnc.cpp src/image_function.cpp src/depth_function.cpp src/odom_function.cpp src/time_function.cpp src/cvArrow_function.cpp src/vector_function.cpp src/debug_function.cpp src/tracking_fp_function.cpp src/prd_prc.cpp src/wheel_control.cpp)
