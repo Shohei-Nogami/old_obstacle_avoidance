@@ -14,8 +14,8 @@
 
 class estimate_velocity{
 	private:
-		ros::NodeHandle nh_sub,nh_pub;
-		ros::Publisher pub;
+		ros::NodeHandle nh_sub,nh_pub,nh_pcl;
+		ros::Publisher pub,pub_pcl;
 		ros::Subscriber sub;
 		ros::CallbackQueue queue;
 
@@ -56,7 +56,7 @@ class estimate_velocity{
 
 
 		//write files
-		
+		std::string ofilename;
 	public:
 		estimate_velocity();
 		~estimate_velocity();
@@ -72,6 +72,6 @@ class estimate_velocity{
 		//void estimate_velocity(void);
 		void culc_distance_3f(const cv::Point3f& x1,cv::Point3f& x2,float& dis);
 		void record_odom_and_vel(void);
-		
+		void publish_pointcloud(void);
 };
 

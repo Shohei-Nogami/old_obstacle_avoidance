@@ -4,6 +4,8 @@ estimate_velocity::estimate_velocity()
 {
 	nh_sub.setCallbackQueue(&queue);
 	sub=nh_sub.subscribe("/objects_info",1,&estimate_velocity::objects_callback,this);
+
+  pub_pcl = nh_pcl.advertise<sensor_msgs::PointCloud2>("clusted_cloud2", 1);
 	
 
 	//calmanfilter parameter
@@ -32,6 +34,34 @@ estimate_velocity::estimate_velocity()
 	sig_x0(3,3)=1;
 	sig_x0(4,4)=1;
 	sig_x0(5,5)=1;
+
+
+	//現在日時を取得する
+	time_t t = time(nullptr);
+	 
+	//形式を変換する    
+	const tm* lt = localtime(&t);
+	 
+	//sに独自フォーマットになるように連結していく
+	std::stringstream s;
+	s<<"20";
+	s<<lt->tm_year-100; //100を引くことで20xxのxxの部分になる
+	s<<"-";
+	s<<lt->tm_mon+1; //月を0からカウントしているため
+	s<<"-";
+	s<<lt->tm_mday; //そのまま
+	s<<"_";
+	s<<lt->tm_hour;
+	s<<":";
+	s<<lt->tm_min;
+	s<<":";
+	s<<lt->tm_sec;
+	//result = "2015-5-19" 
+	std::string result = s.str();
+	
+
+	ofilename="obstacle_odom_and_vel"+result+".csv";
+
 }
 
 estimate_velocity::~estimate_velocity()
@@ -62,6 +92,9 @@ void estimate_velocity::objects_callback(const obst_avoid::objects_info::ConstPt
 			prepre_objs.obj[i].pos.y=pre_objs.obj[i].pos.y;
 			prepre_objs.obj[i].pos.z=pre_objs.obj[i].pos.z;
 			prepre_objs.obj[i].match=pre_objs.obj[i].match;
+			prepre_objs.obj[i].size=pre_objs.obj[i].size;
+			prepre_objs.obj[i].r=pre_objs.obj[i].r;
+			
 		}
 		
 		//prepre_objs.obj=pre_objs.obj;
@@ -81,6 +114,8 @@ void estimate_velocity::objects_callback(const obst_avoid::objects_info::ConstPt
 			pre_objs.obj[i].pos.y=cur_objs.obj[i].pos.y;
 			pre_objs.obj[i].pos.z=cur_objs.obj[i].pos.z;
 			pre_objs.obj[i].match=cur_objs.obj[i].match;
+			pre_objs.obj[i].size=cur_objs.obj[i].size;
+			pre_objs.obj[i].r=cur_objs.obj[i].r;
 		}
 		
 		//pre_objs.obj=cur_objs.obj;
@@ -98,6 +133,8 @@ void estimate_velocity::objects_callback(const obst_avoid::objects_info::ConstPt
 		cur_objs.obj[i].pos.y=msg->obj[i].pos.y;
 		cur_objs.obj[i].pos.z=msg->obj[i].pos.z;
 		cur_objs.obj[i].match=msg->obj[i].match;
+		cur_objs.obj[i].size=msg->obj[i].size;
+		cur_objs.obj[i].r=msg->obj[i].r;
 	}
 	
 	//cur_objs.obj=msg->obj;
@@ -202,10 +239,15 @@ bool estimate_velocity::culculate_velocity(void)
 				//std::cout<<"pre_objs.obj["<<cur_objs.obj[i].match<<"].match:"<<pre_objs.obj[ cur_objs.obj[i].match ].match<<"\n";
 				if(std::abs( pre_objs.obj[ cur_objs.obj[i].match ].match )>=  (int)prepre_objs.obj.size() )
 				{
-					track_n[i]=0;
-					vel[i].x = 0;
-					vel[i].y = 0;
-					vel[i].z = 0;
+					//std::cout<<"else pre_objs.obj[ cur_objs.obj[i].match ].match != -1)\n";
+					vel[i].x = (cur_objs.obj[ i ].pos.x-pre_objs.obj[cur_objs.obj[i].match].pos.x)/cur_objs.dt-cur_objs.dX.x/cur_objs.dt;
+					vel[i].y = 0;//(cur_objs.obj[ i ].pos.y-pre_objs.obj[i].y)/cur_objs.dt-cur_objs.dX.y/cur_objs.dt;
+					vel[i].z = (cur_objs.obj[ i ].pos.z-pre_objs.obj[cur_objs.obj[i].match].pos.z)/cur_objs.dt-cur_objs.dX.z/cur_objs.dt;
+					//LPF
+					double T=0.05;
+					LPF(vel[i].x,pre_vel[ cur_objs.obj[i].match ].x,cur_objs.dt,T);
+					LPF(vel[i].y,pre_vel[ cur_objs.obj[i].match ].y,cur_objs.dt,T);
+					LPF(vel[i].z,pre_vel[ cur_objs.obj[i].match ].z,cur_objs.dt,T);
 					continue;
 				}
 				
@@ -257,6 +299,11 @@ bool estimate_velocity::culculate_velocity(void)
 				vel[i].x = (cur_objs.obj[ i ].pos.x-pre_objs.obj[cur_objs.obj[i].match].pos.x)/cur_objs.dt-cur_objs.dX.x/cur_objs.dt;
 				vel[i].y = 0;//(cur_objs.obj[ i ].pos.y-pre_objs.obj[i].y)/cur_objs.dt-cur_objs.dX.y/cur_objs.dt;
 				vel[i].z = (cur_objs.obj[ i ].pos.z-pre_objs.obj[cur_objs.obj[i].match].pos.z)/cur_objs.dt-cur_objs.dX.z/cur_objs.dt;
+				//LPF
+				double T=0.05;
+				LPF(vel[i].x,pre_vel[ cur_objs.obj[i].match ].x,cur_objs.dt,T);
+				LPF(vel[i].y,pre_vel[ cur_objs.obj[i].match ].y,cur_objs.dt,T);
+				LPF(vel[i].z,pre_vel[ cur_objs.obj[i].match ].z,cur_objs.dt,T);
 			
 			}
 			
@@ -367,30 +414,8 @@ void estimate_velocity::record_odom_and_vel(void)
 {
 	
 
-	//現在日時を取得する
-	time_t t = time(nullptr);
-	 
-	//形式を変換する    
-	const tm* lt = localtime(&t);
-	 
-	//sに独自フォーマットになるように連結していく
-	std::stringstream s;
-	s<<"20";
-	s<<lt->tm_year-100; //100を引くことで20xxのxxの部分になる
-	s<<"-";
-	s<<lt->tm_mon+1; //月を0からカウントしているため
-	s<<"-";
-	s<<lt->tm_mday; //そのまま
-	s<<"_";
-	s<<lt->tm_hour;
-	s<<":";
-	s<<lt->tm_min;
-	//result = "2015-5-19" 
-	std::string result = s.str();
-	
 	//std::cout<<"write file:"<<result<< "\n";
 	//std::ofstream ofss("./Documents/obstacle_odom_and_vel"+result+".csv",std::ios::app);
-	std::string ofilename="obstacle_odom_and_vel"+result+".csv";
 	std::ofstream ofss(ofilename,std::ios::app);
 	//std::cout<<"cur_objs.obj.size():"<<cur_objs.obj.size()<<"\n";
 	if(!ofss)
@@ -399,9 +424,15 @@ void estimate_velocity::record_odom_and_vel(void)
 		std::cout<<"	if(!ofss)\n";
 		std::cin>>a;
 	}
-	ofss<<"aa"<<std::endl;
 	for(int i=0;i<cur_objs.obj.size();i++)
 	{
+		if(track_n[i]<1||std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0))>1.1
+			||cur_objs.obj[i].size>1.0*1.0
+			||cur_objs.obj[i].size<0.2*0.2
+		)
+		{
+			continue;
+		}
 		if(vel.size())
 		{
 			if(acc.size())
@@ -549,8 +580,8 @@ void estimate_velocity::calmanfilter(void)
 		}
 		//t -> t-1
 		// i の値を cur,pre 間で揃える
-		std::cout<<"i:"<<i<<"\n";
-		std::cout<<"cur_objs.obj["<<i<<"].match:"<<cur_objs.obj[i].match<<"\n";
+		//std::cout<<"i:"<<i<<"\n";
+		//std::cout<<"cur_objs.obj["<<i<<"].match:"<<cur_objs.obj[i].match<<"\n";
 		if(std::abs( cur_objs.obj[i].match ) <  (int)pre_objs.obj.size() )
 		//if(cur_objs.obj[i].match !=-1)
 		{
@@ -658,6 +689,74 @@ void estimate_velocity::LPF(float& x_t,float& x_t_1,double& dt,const double& T)
 	x_t=(x_t*dt+x_t_1*T)/(T+dt);
 } 
 
+
+void estimate_velocity::publish_pointcloud(void)
+{
+	int j = 0;
+	float colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr clusted_cloud(new  pcl::PointCloud<pcl::PointXYZRGB>);
+	clusted_cloud->points.clear();
+	clusted_cloud->points.reserve(673*376);
+
+	pcl::PointXYZRGB cloud_temp;
+	float resolution=0.05;
+	for(int i=0;i<cur_objs.obj.size();i++)
+	{
+		///std::cout<<"i:"<<i<<"\n";
+			
+		for(int t=0;t<4;t++)
+		{
+			std::cout<<"track_n[i]:"<<track_n[i]<<"\n";
+			std::cout<<"std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0)):"<<std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0))<<"\n";
+			std::cout<<"cur_objs.obj[i].size:"<<cur_objs.obj[i].size<<"\n";
+			
+			if(track_n[i]<1||std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0))>1.1
+				||cur_objs.obj[i].size>1.0*1.0
+				||cur_objs.obj[i].size<0.2*0.2
+			)
+			{
+				continue;
+			}
+			std::cout<<"(cur_objs.obj[i].r:"<<cur_objs.obj[i].r<<"\n";
+			for(int w=-(int)(cur_objs.obj[i].r/resolution);w<=(int)(cur_objs.obj[i].r/resolution);w++)
+			{
+				for(int d=-(int)(cur_objs.obj[i].r/resolution);d<=(int)(cur_objs.obj[i].r/resolution);d++)
+				{
+					//int d=0;
+					
+					cloud_temp.y=-cur_objs.obj[i].pos.x+w*resolution;
+					cloud_temp.z=cur_objs.obj[i].pos.y+0.4125+d*resolution;
+					cloud_temp.x=cur_objs.obj[i].pos.z;//+d*resolution;
+					cloud_temp.r=colors[i%12][0];
+					cloud_temp.g=colors[i%12][1];
+					cloud_temp.b=colors[i%12][2];
+					cloud_temp.x+=vel[i].z*t;
+				  cloud_temp.y+=-vel[i].x*t;			
+				  cloud_temp.z+=vel[i].y*t;
+				
+				  cloud_temp.y+=10;		
+
+					clusted_cloud->points.push_back(cloud_temp);
+				}
+			}		
+		
+		}
+	}
+	std::cout<<"clusted_cloud->points.size():"<<clusted_cloud->points.size()<<"\n";
+	clusted_cloud->height=1;
+	clusted_cloud->width=clusted_cloud->points.size();
+	std::cout<<"cloud->points.size():"<<clusted_cloud->points.size()<<"\n";
+	if(!clusted_cloud->points.size())
+	{
+		return ;
+	}
+	sensor_msgs::PointCloud2 edit_cloud;
+	pcl::toROSMsg (*clusted_cloud, edit_cloud);
+	edit_cloud.header.frame_id="/zed_current_frame";
+	pub_pcl.publish(edit_cloud);
+}
+
+
 int main(int argc,char **argv)
 {
   ros::init(argc,argv,"estimate_velocity_class_test");
@@ -677,9 +776,9 @@ int main(int argc,char **argv)
 		std::cout<<"culculate_accelerate\n";
 		est_vel_cls.calmanfilter();
 		std::cout<<"calmanfilter\n";
-		est_vel_cls.record_odom_and_vel();
-		std::cout<<"record_odom_and_vel\n";
-		
+//		est_vel_cls.record_odom_and_vel();
+//		std::cout<<"record_odom_and_vel\n";
+		est_vel_cls.publish_pointcloud();
 		std::cout<<"loop\n";
 	}
 }
