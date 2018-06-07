@@ -419,7 +419,7 @@ void culculate_centroid::set_gp(void)
 		  z_max-=(z_max-z_min)*rate;
 		  z_min+=(z_max-z_min)*rate;
 		}
-
+		int count=0;
 		for(int k=0;k<cur_cluster.clst[i].pt.size();k++)
 		{
 		  float x=(cur_cluster.clst[i].pt[k].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[k].z/f;
@@ -438,12 +438,12 @@ void culculate_centroid::set_gp(void)
 			cur_gp[i].x+=x;
 			//cur_gp[i].y+=((height/2-cur_cluster.clst[i].pt[k].y*ksize+ksize/2)*cur_cluster.clst[i].z)/f+0.4125;
 			cur_gp[i].z+=z;
-
+			count++;
 
 		}
-		cur_gp[i].x=cur_gp[i].x/(int)cur_cluster.clst[i].pt.size();
+		cur_gp[i].x=cur_gp[i].x/count;
 		//cur_gp[i].y=cur_gp[i].y/(int)cur_cluster.clst[i].pt.size();
-		cur_gp[i].z=cur_gp[i].z/(int)cur_cluster.clst[i].pt.size();
+		cur_gp[i].z=cur_gp[i].z/count;
 
 		
 	}

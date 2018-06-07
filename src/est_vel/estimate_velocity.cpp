@@ -240,37 +240,38 @@ bool estimate_velocity::culculate_velocity(void)
 				if(std::abs( pre_objs.obj[ cur_objs.obj[i].match ].match )>=  (int)prepre_objs.obj.size() )
 				{
 					//std::cout<<"else pre_objs.obj[ cur_objs.obj[i].match ].match != -1)\n";
-					vel[i].x = (cur_objs.obj[ i ].pos.x-pre_objs.obj[cur_objs.obj[i].match].pos.x)/cur_objs.dt-cur_objs.dX.x/cur_objs.dt;
+					vel[i].x = (cur_objs.obj[ i ].pos.x-pre_objs.obj[cur_objs.obj[i].match].pos.x)/cur_objs.dt-cur_objs.dX.x/cur_objs.dt-cur_objs.dX.x/cur_objs.dt;
 					vel[i].y = 0;//(cur_objs.obj[ i ].pos.y-pre_objs.obj[i].y)/cur_objs.dt-cur_objs.dX.y/cur_objs.dt;
-					vel[i].z = (cur_objs.obj[ i ].pos.z-pre_objs.obj[cur_objs.obj[i].match].pos.z)/cur_objs.dt-cur_objs.dX.z/cur_objs.dt;
+					vel[i].z = (cur_objs.obj[ i ].pos.z-pre_objs.obj[cur_objs.obj[i].match].pos.z)/cur_objs.dt-cur_objs.dX.z/cur_objs.dt-cur_objs.dX.z/cur_objs.dt;
 					//LPF
-					double T=0.05;
-					LPF(vel[i].x,pre_vel[ cur_objs.obj[i].match ].x,cur_objs.dt,T);
-					LPF(vel[i].y,pre_vel[ cur_objs.obj[i].match ].y,cur_objs.dt,T);
-					LPF(vel[i].z,pre_vel[ cur_objs.obj[i].match ].z,cur_objs.dt,T);
-					continue;
+					//double T=0.05;
+					//LPF(vel[i].x,pre_vel[ cur_objs.obj[i].match ].x,cur_objs.dt,T);
+					//LPF(vel[i].y,pre_vel[ cur_objs.obj[i].match ].y,cur_objs.dt,T);
+					//LPF(vel[i].z,pre_vel[ cur_objs.obj[i].match ].z,cur_objs.dt,T);
+					//continue;
 				}
-				
-				//std::cout<<"prepre_objs.pos.x:"<<prepre_objs.obj[pre_objs.obj[ cur_objs.obj[i].match ].match ].pos.x<<"\n";
+				else
+				{
+					//std::cout<<"prepre_objs.pos.x:"<<prepre_objs.obj[pre_objs.obj[ cur_objs.obj[i].match ].match ].pos.x<<"\n";
 
-				//std::cout<<"pre_objs.obj[ cur_objs.obj[i].match ].pos.x:"<<pre_objs.obj[ cur_objs.obj[i].match ].pos.x<<"\n";
-				//std::cout<<"cur_objs.obj[ i ].pos.x :"<<cur_objs.obj[ i ].pos.x <<"\n";
-				//std::cout<<"vel.size():"<<vel.size()<<"\n";
-				//std::cout<<"cur_objs.dt:"<<cur_objs.dt<<"\n";
-				//std::cout<<"pre_objs.dt:"<<pre_objs.dt<<"\n";
+					//std::cout<<"pre_objs.obj[ cur_objs.obj[i].match ].pos.x:"<<pre_objs.obj[ cur_objs.obj[i].match ].pos.x<<"\n";
+					//std::cout<<"cur_objs.obj[ i ].pos.x :"<<cur_objs.obj[ i ].pos.x <<"\n";
+					//std::cout<<"vel.size():"<<vel.size()<<"\n";
+					//std::cout<<"cur_objs.dt:"<<cur_objs.dt<<"\n";
+					//std::cout<<"pre_objs.dt:"<<pre_objs.dt<<"\n";
 
-				vel[i].x=(3*cur_objs.obj[ i ].pos.x - 4*pre_objs.obj[ cur_objs.obj[i].match ].pos.x + prepre_objs.obj[pre_objs.obj[ cur_objs.obj[i].match ].match ].pos.x )/(cur_objs.dt+pre_objs.dt);
+					vel[i].x=(3*cur_objs.obj[ i ].pos.x - 4*pre_objs.obj[ cur_objs.obj[i].match ].pos.x + prepre_objs.obj[pre_objs.obj[ cur_objs.obj[i].match ].match ].pos.x )/(cur_objs.dt+pre_objs.dt)-cur_objs.dX.x/cur_objs.dt;
 			
-				vel[i].y=(3*cur_objs.obj[ i ].pos.y - 4*pre_objs.obj[ cur_objs.obj[i].match ].pos.y + prepre_objs.obj[pre_objs.obj[ cur_objs.obj[i].match ].match ].pos.y )/(cur_objs.dt+pre_objs.dt);
+					vel[i].y=0;//(3*cur_objs.obj[ i ].pos.y - 4*pre_objs.obj[ cur_objs.obj[i].match ].pos.y + prepre_objs.obj[pre_objs.obj[ cur_objs.obj[i].match ].match ].pos.y )/(cur_objs.dt+pre_objs.dt);
 			
-				vel[i].z=( 3*cur_objs.obj[ i ].pos.z - 4*pre_objs.obj[ cur_objs.obj[i].match ].pos.z + prepre_objs.obj[pre_objs.obj[ cur_objs.obj[i].match ].match ].pos.z )/(cur_objs.dt+pre_objs.dt);
+					vel[i].z=( 3*cur_objs.obj[ i ].pos.z - 4*pre_objs.obj[ cur_objs.obj[i].match ].pos.z + prepre_objs.obj[pre_objs.obj[ cur_objs.obj[i].match ].match ].pos.z )/(cur_objs.dt+pre_objs.dt)-cur_objs.dX.z/cur_objs.dt;
 			
-				//std::cout<<"pre_vel\n";
-				//std::cout<<"pre_vel.size():"<<pre_vel.size()<<"\n";
-				pre_vel[ cur_objs.obj[i].match ].x = ( cur_objs.obj[ i ].pos.x - prepre_objs.obj[pre_objs.obj[ cur_objs.obj[i].match ].match ].pos.x )/(cur_objs.dt+pre_objs.dt);
-				pre_vel[ cur_objs.obj[i].match ].y = ( cur_objs.obj[ i ].pos.y - prepre_objs.obj[pre_objs.obj[ cur_objs.obj[i].match ].match ].pos.y )/(cur_objs.dt+pre_objs.dt);
-				pre_vel[ cur_objs.obj[i].match ].z = ( cur_objs.obj[ i ].pos.z - prepre_objs.obj[pre_objs.obj[ cur_objs.obj[i].match ].match ].pos.z )/(cur_objs.dt+pre_objs.dt);
-				
+					//std::cout<<"pre_vel\n";
+					//std::cout<<"pre_vel.size():"<<pre_vel.size()<<"\n";
+					pre_vel[ cur_objs.obj[i].match ].x = ( cur_objs.obj[ i ].pos.x - prepre_objs.obj[pre_objs.obj[ cur_objs.obj[i].match ].match ].pos.x )/(cur_objs.dt+pre_objs.dt)-pre_objs.dX.x/pre_objs.dt;
+					pre_vel[ cur_objs.obj[i].match ].y = 0;//( cur_objs.obj[ i ].pos.y - prepre_objs.obj[pre_objs.obj[ cur_objs.obj[i].match ].match ].pos.y )/(cur_objs.dt+pre_objs.dt)-pre_objs.dX.y/pre_objs.dt;
+					pre_vel[ cur_objs.obj[i].match ].z = ( cur_objs.obj[ i ].pos.z - prepre_objs.obj[pre_objs.obj[ cur_objs.obj[i].match ].match ].pos.z )/(cur_objs.dt+pre_objs.dt)-pre_objs.dX.z/pre_objs.dt;
+				}
 				float dis;
 				cv::Point3f temp=cv::Point3f(0,0,0);
 				culc_distance_3f(vel[i],temp,dis);
