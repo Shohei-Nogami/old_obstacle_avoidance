@@ -17,16 +17,16 @@ estimate_velocity::estimate_velocity()
 	I = Eigen::MatrixXd::Identity(6,6);
 	
 	//仮
-	sig_ut(0,0)=1;
-	sig_ut(1,1)=1;
-	sig_ut(2,2)=1;
+	sig_ut(0,0)=0.5;
+	sig_ut(1,1)=0.5;
+	sig_ut(2,2)=0.5;
 	
-	del_t(0,0)=1;
-	del_t(1,1)=1;
-	del_t(2,2)=1;
-	del_t(3,3)=1;
-	del_t(4,4)=1;
-	del_t(5,5)=1;
+	del_t(0,0)=0.5;
+	del_t(1,1)=0;
+	del_t(2,2)=0.5;
+	del_t(3,3)=0.5;
+	del_t(4,4)=0;
+	del_t(5,5)=0.5;
 	
 	sig_x0(0,0)=1;
 	sig_x0(1,1)=1;
@@ -675,6 +675,7 @@ void estimate_velocity::calmanfilter(void)
 		//std::cout<<"xh_t[i] = xt_t + K_t*( z_t - xt_t )\n";
 		
 		sig_xh_t[i] = (I - K_t)*sig_xt;
+		std::cout<<"sig_xh["<<i<<"]:"<<sig_xh_t[i]<<"\n";
 		//std::cout<<"predict\n";
 	}
 }
@@ -703,12 +704,13 @@ void estimate_velocity::publish_pointcloud(void)
 	for(int i=0;i<cur_objs.obj.size();i++)
 	{
 		///std::cout<<"i:"<<i<<"\n";
-			
+		std::cout<<"track_n[i]:"<<track_n[i]<<"\n";
+		std::cout<<"std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0)):"<<std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0))<<"\n";
+		std::cout<<"cur_objs.obj[i].size:"<<cur_objs.obj[i].size<<"\n";
+		std::cout<<"(cur_objs.obj[i].r:"<<cur_objs.obj[i].r<<"\n";
+						
 		for(int t=0;t<4;t++)
 		{
-			std::cout<<"track_n[i]:"<<track_n[i]<<"\n";
-			std::cout<<"std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0)):"<<std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0))<<"\n";
-			std::cout<<"cur_objs.obj[i].size:"<<cur_objs.obj[i].size<<"\n";
 			
 			if(track_n[i]<1||std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0))>1.1
 				||cur_objs.obj[i].size>1.0*1.0
@@ -717,7 +719,6 @@ void estimate_velocity::publish_pointcloud(void)
 			{
 				continue;
 			}
-			std::cout<<"(cur_objs.obj[i].r:"<<cur_objs.obj[i].r<<"\n";
 			for(int w=-(int)(cur_objs.obj[i].r/resolution);w<=(int)(cur_objs.obj[i].r/resolution);w++)
 			{
 				for(int d=-(int)(cur_objs.obj[i].r/resolution);d<=(int)(cur_objs.obj[i].r/resolution);d++)
@@ -725,8 +726,8 @@ void estimate_velocity::publish_pointcloud(void)
 					//int d=0;
 					
 					cloud_temp.y=-cur_objs.obj[i].pos.x+w*resolution;
-					cloud_temp.z=cur_objs.obj[i].pos.y+0.4125+d*resolution;
-					cloud_temp.x=cur_objs.obj[i].pos.z;//+d*resolution;
+					cloud_temp.z=cur_objs.obj[i].pos.y+0.4125//+d*resolution;
+					cloud_temp.x=cur_objs.obj[i].pos.z+d*resolution;
 					cloud_temp.r=colors[i%12][0];
 					cloud_temp.g=colors[i%12][1];
 					cloud_temp.b=colors[i%12][2];
