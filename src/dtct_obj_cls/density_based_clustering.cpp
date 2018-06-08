@@ -55,7 +55,8 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 	float y_ground;
 	uint8_t color_th=3;
 
-	if(std::abs(d-(camera_height+camera_bias))>=0.15){
+	//if(std::abs(d-(camera_height+camera_bias))>=0.15){
+	if(1){
 		a=-0.08;
 		b=0;
 		c=1;

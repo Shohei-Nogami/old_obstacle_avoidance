@@ -600,7 +600,7 @@ void culculate_centroid::publish_pointcloud(void)
 	for(int i=0;i<cur_cluster.clst.size();i++)
 	{
 
-		
+		/*
 		for(int t=0;t<4;t++)
 		{
 			if(std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0))>1.1
@@ -648,7 +648,7 @@ void culculate_centroid::publish_pointcloud(void)
 		      clusted_cloud->points.push_back(cloud_temp);
 		  }
 		}
-
+		*/
 		for(int t=0;t<4;t++)
 		{
 			if(track_n[i]<1||std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0))>1.1
@@ -691,6 +691,7 @@ void culculate_centroid::publish_pointcloud(void)
 			continue;
 		}
 		*/
+	/*
     for(int k=0;k<pre_cluster.clst[match_num].pt.size();k++)
     {
         //cloud_temp.y=-(cur_cluster.clst[match_num].pt[k].x*ksize-width/2)*cur_cluster.clst[match_num].pt[k].z/f;
@@ -710,7 +711,7 @@ void culculate_centroid::publish_pointcloud(void)
 
         clusted_cloud->points.push_back(cloud_temp);
     }
-
+	*/
 
 		
 		j++;

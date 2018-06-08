@@ -68,7 +68,7 @@ class estimate_velocity{
 	
 		void calmanfilter(void);
 
-		void LPF(float& x_t,float& x_t_1,double& dt,const double& T);
+		void LPF(float& x_t,const float& x_t_1,double& dt,const double& T);
 		//void estimate_velocity(void);
 		void culc_distance_3f(const cv::Point3f& x1,cv::Point3f& x2,float& dis);
 		void record_odom_and_vel(void);
