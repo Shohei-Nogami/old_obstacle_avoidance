@@ -989,6 +989,7 @@ void estimate_velocity::publish_filted_objects_info(void)
 	{
 		obj_info.obj[i].pos = cur_objs.obj[i].pos;
 		obj_info.obj[i].r = cur_objs.obj[i].r;
+		obj_info.obj[i].size = cur_objs.obj[i].size;
 		obj_info.obj[i].vel.x = xh_t[i](2, 0);
 		obj_info.obj[i].vel.y = 0;
 		obj_info.obj[i].vel.z = xh_t[i](3, 0);
