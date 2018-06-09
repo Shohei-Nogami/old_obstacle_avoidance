@@ -115,6 +115,11 @@ void estimate_velocity::objects_callback(const obst_avoid::objects_info::ConstPt
 			prepre_objs.obj[i].size=pre_objs.obj[i].size;
 			prepre_objs.obj[i].r=pre_objs.obj[i].r;
 			
+			prepre_objs.obj[i].pt.resize(pre_objs.obj[i].pt.size());
+			for (int k = 0; k < prepre_objs.obj[i].pt.size(); k++)
+			{
+				prepre_objs.obj[i].pt[k] = pre_objs.obj[i].pt[k];
+			}
 		}
 		
 		//prepre_objs.obj=pre_objs.obj;
@@ -136,6 +141,12 @@ void estimate_velocity::objects_callback(const obst_avoid::objects_info::ConstPt
 			pre_objs.obj[i].match=cur_objs.obj[i].match;
 			pre_objs.obj[i].size=cur_objs.obj[i].size;
 			pre_objs.obj[i].r=cur_objs.obj[i].r;
+
+			pre_objs.obj[i].pt.resize(cur_objs.obj[i].pt.size());
+			for (int k = 0; k < pre_objs.obj[i].pt.size(); k++)
+			{
+				pre_objs.obj[i].pt[k] = cur_objs.obj[i].pt[k];
+			}
 		}
 		
 		//pre_objs.obj=cur_objs.obj;
@@ -155,6 +166,11 @@ void estimate_velocity::objects_callback(const obst_avoid::objects_info::ConstPt
 		cur_objs.obj[i].match=msg->obj[i].match;
 		cur_objs.obj[i].size=msg->obj[i].size;
 		cur_objs.obj[i].r=msg->obj[i].r;
+		cur_objs.obj[i].pt.resize(msg->obj[i].pt.size());
+		for (int k = 0; k < msg->obj[i].pt.size(); k++)
+		{
+			cur_objs.obj[i].pt[k] = cur_objs.obj[i].pt[k];
+		}
 	}
 	
 	//cur_objs.obj=msg->obj;
