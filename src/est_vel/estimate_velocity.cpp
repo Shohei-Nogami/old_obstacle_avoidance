@@ -926,12 +926,20 @@ void estimate_velocity::publish_pointcloud(void)
 		for(int t=0;t<4;t++)
 		{
 			
-			if(track_n[i]<1||std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0))>1.1
+			if(track_n[i]<1||std::sqrt(std::pow(xh_t[i](2, 0),2.0)+std::pow(xh_t[i](3, 0),2.0))>1.1
 				||cur_objs.obj[i].size>1.0*1.0
 				||cur_objs.obj[i].size<0.2*0.2
 			)
 			{
 				continue;
+			}
+			if (t > 0) {
+				if (std::sqrt(std::pow(sig_xh_t[i](2, 2), 2.0) + std::pow(sig_xh_t[i](2, 0), 2.0)) < xh_t[i](2, 0)
+					|| std::sqrt(std::pow(xh_t[i](2, 0), 2.0) + std::pow(xh_t[i](3, 0), 2.0)) < 0.1
+					)
+				{
+					continue;
+				}
 			}
 			for(int w=-(int)(cur_objs.obj[i].r/resolution);w<=(int)(cur_objs.obj[i].r/resolution);w++)
 			{
@@ -945,9 +953,9 @@ void estimate_velocity::publish_pointcloud(void)
 					cloud_temp.r = colors[i % 12][0];
 					cloud_temp.g = colors[i % 12][1];
 					cloud_temp.b = colors[i % 12][2];
-					cloud_temp.x += vel[i].z*t;
-					cloud_temp.y += -vel[i].x*t;
-				  cloud_temp.z += vel[i].y*t;
+					cloud_temp.x += xh_t[i](3, 0)*t;
+					cloud_temp.y += -xh_t[i](2, 0)*t;
+				  cloud_temp.z += 0*t;
 				
 				  cloud_temp.y+=10;		
 					cloud_temp.z+=4;
