@@ -503,6 +503,37 @@ void vfh_class::publish_velocity(void)
 
 }
 
+
+void vfh_class::set_grid_map(const std::vector<obst_avoid::point3d>& pt) {
+	int grid_x, grid_z;
+
+	
+	for (int k = 0; k<pt.size(); k++)
+	{
+		float x = (pt[k].x*ksize + ksize / 2 - width / 2)*pt[k].z / f;
+		float y = (height / 2 - pt[k].y*ksize + ksize / 2)*pt[k].z / f;
+		float z = cluster.clst[i].pt[k].z;
+		if (z < grid_size / 2) {
+			grid_z = (int)((grid_size / 2 - z) / grid_cell_size);
+			if (std::abs(x)<grid_size / 2) {
+				grid_x = ((int)(2 * (x + grid_size / 2) / grid_cell_size) / 2) + ((int)(2 * (x + grid_size / 2) / grid_cell_size)) % 2;
+				//grid_map.at<uint8_t/*uchar*/>(grid_z, grid_x) += 2;
+				grid_map.at<uint8_t/*uchar*/>(grid_z, grid_x) = 255;
+				if (grid_map.at<uint8_t/*uchar*/>(grid_z, grid_x) >= 255) {
+					grid_map.at<uint8_t/*uchar*/>(grid_z, grid_x) = 255;
+				}
+			}
+		}
+	}
+
+}
+void  vfh_class::clear_grid_map(void)
+{
+	cv::Mat m = cv::Mat::zeros(cv::Size(grid_resolution, grid_resolution), CV_8UC1);
+	grid_map = m.clone();
+}
+
+/*
 int main(int argc,char **argv){
 	ros::init(argc,argv,"vfh_class_test");
 	vfh_class vfh;
@@ -536,3 +567,4 @@ int main(int argc,char **argv){
 
 	return 0;
 }
+*/
