@@ -106,5 +106,7 @@ class vfh_class{
 
 		void clear_grid_map(void);
 		void set_grid_map(const std::vector<obst_avoid::point3d>& pt);
+		float select_best_trajectory(const cv::Point2f& x0, const float& theta0, const cv::Point2f& xp,
+			const float w_target, const float w_angle);
 };
 
