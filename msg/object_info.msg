@@ -4,3 +4,4 @@ point3d pos
 float64 size
 float64 r
 int32 match
+points3d[] pt
