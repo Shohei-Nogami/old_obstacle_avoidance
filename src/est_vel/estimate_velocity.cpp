@@ -373,7 +373,7 @@ bool estimate_velocity::culculate_velocity(void)
 			vel[i].y = 0;
 			vel[i].z = 0;
 		}
-	std::cout<<"vel["<<i<<"]:"<<vel[i]<<"\n";
+	std::cout<<"vel["<<i<<"]:"<<vel[i]<<", size_dif:("<< cur_objs.obj[i].size<<" to "<< pre_objs.obj[cur_objs.obj[i].match].size <<")\n";
 	}
 	return true;
 }
