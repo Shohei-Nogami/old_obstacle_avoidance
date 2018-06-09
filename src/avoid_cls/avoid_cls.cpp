@@ -79,5 +79,8 @@ float avoid::select_route(void)
 
 }
 
+void avoid::culculate_intersection(void)
+{
 
+}
 
