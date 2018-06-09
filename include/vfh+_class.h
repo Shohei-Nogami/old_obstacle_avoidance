@@ -10,6 +10,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_ros/point_cloud.h>
 #include"obst_avoid/cluster_with_vel.h"
+#include"obst_avoid/point3d.h"
 #include"odometry_class.h"
 
 //#include <pcl_ros/point_cloud.h>
@@ -103,5 +104,7 @@ class vfh_class{
 
 		void publish_velocity(void);
 
+		void clear_grid_map(void);
+		void set_grid_map(const std::vector<obst_avoid::point3d>& pt);
 };
 
