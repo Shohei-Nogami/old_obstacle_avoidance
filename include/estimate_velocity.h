@@ -6,6 +6,10 @@
 #include"obst_avoid/point3d.h"
 #include"obst_avoid/object_info.h"
 #include"obst_avoid/objects_info.h"
+#include"obst_avoid/filted_objects_info.h"
+#include"obst_avoid/filted_object_info.h"
+#include"obst_avoid/cluster_point.h"
+
 #include"time_class.h"
 #include <pcl_ros/point_cloud.h>
 //#include<Eigen/Core>
@@ -14,8 +18,8 @@
 
 class estimate_velocity{
 	private:
-		ros::NodeHandle nh_sub,nh_pub,nh_pcl;
-		ros::Publisher pub,pub_pcl;
+		ros::NodeHandle nh_sub,nh_pub,nh_pcl,nh_pub2;
+		ros::Publisher pub,pub_pcl,pub2;
 		ros::Subscriber sub;
 		ros::CallbackQueue queue;
 
@@ -73,5 +77,6 @@ class estimate_velocity{
 		void culc_distance_3f(const cv::Point3f& x1,cv::Point3f& x2,float& dis);
 		void record_odom_and_vel(void);
 		void publish_pointcloud(void);
+		void publish_filted_objects_info(void);
 };
 
