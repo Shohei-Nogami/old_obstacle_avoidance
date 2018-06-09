@@ -983,21 +983,21 @@ void estimate_velocity::publish_filted_objects_info(void)
 {
 	obst_avoid::filted_objects_info obj_info;
 
-	obj_info.obj.resize(cur_objs.obj.size());
+	obj_info.objs.resize(cur_objs.obj.size());
 
-	for (int i = 0; i < obj_info.obj.size(); i++)
+	for (int i = 0; i < obj_info.objs.size(); i++)
 	{
-		obj_info.obj[i].pos = cur_objs.obj[i].pos;
-		obj_info.obj[i].r = cur_objs.obj[i].r;
-		obj_info.obj[i].size = cur_objs.obj[i].size;
-		obj_info.obj[i].vel.x = xh_t[i](2, 0);
-		obj_info.obj[i].vel.y = 0;
-		obj_info.obj[i].vel.z = xh_t[i](3, 0);
-		obj_info.obj[i].dsp.x = std::sqrt(sig_xh_t[i](2, 0)*sig_xh_t[i](2, 0) + sig_xh_t[i](2, 2)*sig_xh_t[i](2, 2));
-		obj_info.obj[i].dsp.y = 0;
-		obj_info.obj[i].dsp.z = std::sqrt(sig_xh_t[i](3, 1)*sig_xh_t[i](3, 1) + sig_xh_t[i](3, 3)*sig_xh_t[i](3, 3));
+		obj_info.objs[i].pos = cur_objs.obj[i].pos;
+		obj_info.objs[i].r = cur_objs.obj[i].r;
+		obj_info.objs[i].size = cur_objs.obj[i].size;
+		obj_info.objs[i].vel.x = xh_t[i](2, 0);
+		obj_info.objs[i].vel.y = 0;
+		obj_info.objs[i].vel.z = xh_t[i](3, 0);
+		obj_info.objs[i].dsp.x = std::sqrt(sig_xh_t[i](2, 0)*sig_xh_t[i](2, 0) + sig_xh_t[i](2, 2)*sig_xh_t[i](2, 2));
+		obj_info.objs[i].dsp.y = 0;
+		obj_info.objs[i].dsp.z = std::sqrt(sig_xh_t[i](3, 1)*sig_xh_t[i](3, 1) + sig_xh_t[i](3, 3)*sig_xh_t[i](3, 3));
 		
-		obj_info.obj[i].pt = cur_objs.obj[i].pt;
+		obj_info.objs[i].pt = cur_objs.obj[i].pt;
 
 	}
 	pub2.publish(obj_info);
