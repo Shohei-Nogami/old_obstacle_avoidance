@@ -525,14 +525,73 @@ void vfh_class::set_grid_map(const std::vector<obst_avoid::point3d>& pt) {
 			}
 		}
 	}
-
 }
+
 void  vfh_class::clear_grid_map(void)
 {
 	cv::Mat m = cv::Mat::zeros(cv::Size(grid_resolution, grid_resolution), CV_8UC1);
 	grid_map = m.clone();
 }
 
+float vfh_class::select_best_trajectory(const cv::Point2f& x0,const float& theta0,const cv::Point2f& xp,
+		const float w_target,const float w_angle) {
+
+	double xr;
+	double yr;
+	int nx;
+	int ny;
+	for (int i = 0; i<vfh_resolution; i++)
+	{
+		rank_trajectory[i] = 0;
+	}
+
+	//float x0 = x0.x;
+	//float y0 = x0.y;
+	//float theta0 = 0;
+	int max_search_n = 20;
+	for (int i = 0; i<vfh_resolution; i++)
+	{
+		float x = x0.x;
+		float y = x0.y;
+		float theta = (min_angle + i * (max_angle - min_angle) / ( vfh_resolution )*M_PI / 180;
+		float mv_length = R;
+		for (int n = 0; n < max_search_n; n++)
+		{
+			x = x0.x + mv_length * (-sin(theta))*n;
+			y = x0.y + mv_length * (cos(theta))*n;
+			transport_robot_to_gridn(x, y, nx, ny);
+
+			if (is_obstacle(nx, ny) || n == max_search_n - 1) {
+				//std::cout<<"i,n:"<<i<<","<<n<<"\n";
+				rank_trajectory[i] = n;
+				break;
+			}
+		}
+	}
+
+	float good_trajectory_value = 100;
+	good_trajectory_num = vfh_resolution / 2;
+	float evaluation_formula;
+	//float w_angle = 0.5;
+	//float xp = 0;//purpose
+	//float yp = 5;
+	float xc = 0;//current
+	float yc = 0;
+	//float w_target = 0.8;
+	for (int i = 0; i<vfh_resolution; i++) {
+		float theta = (min_angle + i * (max_angle - min_angle) / ( vfh_resolution )*M_PI / 180;
+		float theta_half = vfh_resolution / 2 * std::abs((max_angle - min_angle) / (vfh_resolution))*M_PI / 180;
+		evaluation_formula = (max_search_n - rank_trajectory[i])
+			+ (std::abs(i - vfh_resolution / 2) / (vfh_resolution / 2))*max_search_n*w_angle
+			+ std::abs(std::atan(-(xp.x - xc) / (xp.y - yc)) - theta) / theta_half * max_search_n*w_target;
+		if (good_trajectory_value > evaluation_formula) {
+			good_trajectory_value = evaluation_formula;
+			good_trajectory_num = i;
+		}
+	}
+
+	return ((min_angle + good_trajectory_num * (max_angle - min_angle) / (vfh_resolution))*M_PI / 180);
+}
 /*
 int main(int argc,char **argv){
 	ros::init(argc,argv,"vfh_class_test");
