@@ -28,7 +28,7 @@ private:
 	std::vector<int> is_moving_obstacle;
 	vfh_class vfh;
 
-	std::vector<float> obj_eq_a;//ŒX‚«
+	std::vector<float> obj_eq_a;//Å’Xâ€šÂ«
 
 public:
 	avoid();
@@ -38,4 +38,5 @@ public:
 	void dicriminate_obstacle(void);
 	void culculate_equation(void);
 	float select_route(void);
+	void culculate_intersection(void);
 };
