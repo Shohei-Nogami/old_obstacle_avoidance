@@ -820,6 +820,8 @@ void culculate_centroid::publish_cluster_with_vel(void)
 		pub_cluster.vel[i].x=vel[i].x;
 		pub_cluster.vel[i].y=vel[i].y;
 		pub_cluster.vel[i].z=vel[i].z;
+
+
 	}
 	pub2.publish(pub_cluster);
 }
@@ -862,6 +864,14 @@ void culculate_centroid::publish_objects_info(void)
 		std::cout<<"cluster_match["<<i<<"]:"<<cluster_match[i]<<"\n";
 		std::cout<<"pre_cluster_match["<<cluster_match[i]<<"]:"<<pre_cluster_match[cluster_match[i]]<<"\n";
 		*/
+
+		objs.obj[i].pt.resize(cur_cluster.clst[i].pt.size());
+		for (int k = 0; k < objs.obj[i].pt.size(); k++)
+		{
+			objs.obj[i].pt[k] = cur_cluster.clst[i].pt[k];
+		}
+
+
 	}
 	objs.dt=cur_cluster.t;
 	std::cout<<"cur_cluster.t:"<<cur_cluster.t<<"\n";
