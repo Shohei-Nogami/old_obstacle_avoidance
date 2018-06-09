@@ -7,7 +7,7 @@ estimate_velocity::estimate_velocity()
 
   pub_pcl = nh_pcl.advertise<sensor_msgs::PointCloud2>("clusted_cloud2", 1);
 	
-
+	pub2 = nh_pub2.advertise<obst_avoid::filted_objects_info>("filted_objects_info", 1);
 	//calmanfilter parameter
 	
 	//Eigen::MatrixXd sig_ut(6,6);
@@ -939,15 +939,15 @@ void estimate_velocity::publish_pointcloud(void)
 				{
 					//int d=0;
 					
-					cloud_temp.y=-cur_objs.obj[i].pos.x+w*resolution;
-					cloud_temp.z=cur_objs.obj[i].pos.y+0.4125;//+d*resolution;
-					cloud_temp.x=cur_objs.obj[i].pos.z+d*resolution;
-					cloud_temp.r=colors[i%12][0];
-					cloud_temp.g=colors[i%12][1];
-					cloud_temp.b=colors[i%12][2];
-					cloud_temp.x+=vel[i].z*t;
-				  cloud_temp.y+=-vel[i].x*t;			
-				  cloud_temp.z+=vel[i].y*t;
+					cloud_temp.y = -xh_t[i](0, 0) + w * resolution;
+					cloud_temp.z= 0 +0.4125;//+d*resolution;
+					cloud_temp.x = xh_t[i](1, 0) + d * resolution;
+					cloud_temp.r = colors[i % 12][0];
+					cloud_temp.g = colors[i % 12][1];
+					cloud_temp.b = colors[i % 12][2];
+					cloud_temp.x += vel[i].z*t;
+					cloud_temp.y += -vel[i].x*t;
+				  cloud_temp.z += vel[i].y*t;
 				
 				  cloud_temp.y+=10;		
 					cloud_temp.z+=4;
@@ -969,6 +969,29 @@ void estimate_velocity::publish_pointcloud(void)
 	pcl::toROSMsg (*clusted_cloud, edit_cloud);
 	edit_cloud.header.frame_id="/zed_current_frame";
 	pub_pcl.publish(edit_cloud);
+}
+
+void estimate_velocity::publish_filted_objects_info(void)
+{
+	obst_avoid::filted_objects_info obj_info;
+
+	obj_info.obj.resize(cur_objs.obj.size());
+
+	for (int i = 0; i < obj_info.obj.size(); i++)
+	{
+		obj_info.obj[i].pos = cur_objs.obj[i].pos;
+		obj_info.obj[i].r = cur_objs.obj[i].r;
+		obj_info.obj[i].vel.x = xh_t[i](2, 0);
+		obj_info.obj[i].vel.y = 0;
+		obj_info.obj[i].vel.z = xh_t[i](3, 0);
+		obj_info.obj[i].dsp.x = std::sqrt(sig_xh_t[i](2, 0)*sig_xh_t[i](2, 0) + sig_xh_t[i](2, 2)*sig_xh_t[i](2, 2));
+		obj_info.obj[i].dsp.y = 0;
+		obj_info.obj[i].dsp.z = std::sqrt(sig_xh_t[i](3, 1)*sig_xh_t[i](3, 1) + sig_xh_t[i](3, 3)*sig_xh_t[i](3, 3));
+		
+		obj_info.obj[i].pt = cur_objs.obj[i].pt;
+
+	}
+	pub2.publish(obj_info);
 }
 
 
