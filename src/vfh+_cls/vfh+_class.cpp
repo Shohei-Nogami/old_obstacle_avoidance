@@ -512,7 +512,7 @@ void vfh_class::set_grid_map(const std::vector<obst_avoid::point3d>& pt) {
 	{
 		float x = (pt[k].x*ksize + ksize / 2 - width / 2)*pt[k].z / f;
 		float y = (height / 2 - pt[k].y*ksize + ksize / 2)*pt[k].z / f;
-		float z = cluster.clst[i].pt[k].z;
+		float z = pt[k].z;
 		if (z < grid_size / 2) {
 			grid_z = (int)((grid_size / 2 - z) / grid_cell_size);
 			if (std::abs(x)<grid_size / 2) {
@@ -553,7 +553,7 @@ float vfh_class::select_best_trajectory(const cv::Point2f& x0,const float& theta
 	{
 		float x = x0.x;
 		float y = x0.y;
-		float theta = (min_angle + i * (max_angle - min_angle) / ( vfh_resolution )*M_PI / 180;
+		float theta = (min_angle + (float)i * (max_angle - min_angle) / ( vfh_resolution ) )*M_PI / 180;
 		float mv_length = R;
 		for (int n = 0; n < max_search_n; n++)
 		{
@@ -579,7 +579,7 @@ float vfh_class::select_best_trajectory(const cv::Point2f& x0,const float& theta
 	float yc = 0;
 	//float w_target = 0.8;
 	for (int i = 0; i<vfh_resolution; i++) {
-		float theta = (min_angle + i * (max_angle - min_angle) / ( vfh_resolution )*M_PI / 180;
+		float theta = (min_angle + (float)i * (max_angle - min_angle) / ( vfh_resolution ))*M_PI / 180;
 		float theta_half = vfh_resolution / 2 * std::abs((max_angle - min_angle) / (vfh_resolution))*M_PI / 180;
 		evaluation_formula = (max_search_n - rank_trajectory[i])
 			+ (std::abs(i - vfh_resolution / 2) / (vfh_resolution / 2))*max_search_n*w_angle

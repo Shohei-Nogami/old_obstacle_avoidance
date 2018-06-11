@@ -54,6 +54,7 @@ class culculate_centroid{
 		//std::vector<std::vector<int> > cur_cluster_index;
 		//int **pre_cluster_index;
 		//int **cur_cluster_index;
+		//std::vector<float> pre_cluster_size;
 		int pre_cluster_index[height][width];
 		int cur_cluster_index[height][width];
 		std::vector<cv::Point3f> prepre_gp;

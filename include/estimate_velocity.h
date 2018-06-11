@@ -37,7 +37,10 @@ class estimate_velocity{
 		std::vector<cv::Point3f> acc;
 		std::vector<cv::Point3f> pre_acc;
 
-
+		static const int width=672;
+		static const int height=376;
+		const float f=350.505;
+		int ksize=3;
 		
 		//----tracking count
 		std::vector<int> track_n;

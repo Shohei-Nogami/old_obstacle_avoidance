@@ -79,6 +79,8 @@ find_package(OpenCV REQUIRED)
    cluster_with_vel.msg
    object_info.msg
    objects_info.msg
+   filted_objects_info.msg
+   filted_object_info.msg
 #   Message1.msg
 #   Message2.msg
  )
@@ -241,8 +243,8 @@ include_directories(
 #add_executable(odometry_class_test src/odm_cls/odometry_class.cpp src/odm_cls/wheel_odometry_class.cpp src/odm_cls/visual_odometry_class.cpp  src/tm_cls/time_class.cpp)
 #target_link_libraries(odometry_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(vfh_class_test src/vfh+_cls/vfh+_class.cpp )
-target_link_libraries(vfh_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#add_executable(vfh_class_test src/vfh+_cls/vfh+_class.cpp )
+#target_link_libraries(vfh_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(wheel_control_class_test src/wheel_control/whl_cntrl.cpp )
 target_link_libraries(wheel_control_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
@@ -250,8 +252,8 @@ target_link_libraries(wheel_control_class_test  ${catkin_LIBRARIES} ${OpenCV_LIB
 #add_executable(point_cloud_test src/point_cloud_test.cpp src/tm_cls/time_class.cpp)
 #target_link_libraries(point_cloud_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-#add_executable(culculating_opticalflow_class_test src/clc_optflw_cls/culculating_opticalflow_class.cpp src/img_cls/image_class.cpp src/img_cls/depth_image_class.cpp src/odm_cls/wheel_odometry_class.cpp src/odm_cls/visual_odometry_class.cpp  src/tm_cls/time_class.cpp)
-#target_link_libraries(culculating_opticalflow_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(culculating_opticalflow_class_test src/clc_optflw_cls/culculating_opticalflow_class.cpp src/img_cls/image_class.cpp src/img_cls/depth_image_class.cpp src/odm_cls/wheel_odometry_class.cpp src/odm_cls/visual_odometry_class.cpp  src/tm_cls/time_class.cpp)
+target_link_libraries(culculating_opticalflow_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(detect_objects_class_test src/dtct_obj_cls/detect_objects_class.cpp src/dtct_obj_cls/density_based_clustering.cpp src/tm_cls/time_class.cpp src/img_cls/image_class.cpp src/odm_cls/odometry_class.cpp src/odm_cls/wheel_odometry_class.cpp src/odm_cls/visual_odometry_class.cpp)
 target_link_libraries(detect_objects_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})

@@ -204,6 +204,21 @@ bool culculate_centroid::matching_cluster(void)
 		}
 	}
 
+//matching value by size
+  std::vector<std::vector< float> > dif_size;
+	dif_size.resize((int)cur_cluster.clst.size());
+
+	for(int i=0;i<dif_size.size();i++)
+	{
+		dif_size[i].resize((int)pre_cluster.clst.size());
+	}
+	for(int i=0;i<cur_cluster.clst.size();i++)
+	{
+		for(int k=0;k<pre_cluster.clst.size();k++)
+		{
+			dif_size[i][k]=std::abs(pre_cluster_size[k]-cur_cluster_size[i]);
+		}
+	}
 //init match value 
 
 	matched.resize(cur_cluster.clst.size());
@@ -261,13 +276,27 @@ bool culculate_centroid::matching_cluster(void)
 				min_dsize_i=i;
 			}
 			*/
-			float ef_temp=match_n[i][k] + (1/match_gp[i][k]);
+			//std::cout<<"n,gn,sn:"<<match_n[i][k]<<","<<(1/(1+match_gp[i][k])) <<","<<(1/(2*(1+dif_size[i][k])))<<"\n";
+			/*if(dif_size[i][k]>0.2*0.2)
+			{
+				continue;
+			}
+			*/
+			if(dif_size[i][k]>cur_cluster_size[i]/2||dif_size[i][k]>pre_cluster_size[k]/2)
+			{
+				continue;
+			}
+			float ef_temp=match_n[i][k] + (1/(1+match_gp[i][k])) + (1/(2*(1+dif_size[i][k])));
 			if(ef<ef_temp)
 			{
 				ef=ef_temp;
 				ef_i=i;
 			}
 			
+		}
+		if(ef_i==-1)
+		{
+			continue;
 		}
 		/*
 		if(max_pt_i==0)
@@ -337,6 +366,12 @@ void culculate_centroid::set_gp(void)
 	std::cout<<"1.1\n";
 	//std::cout<<"cur_cluster.clst.size()):"<<cur_cluster.clst.size()<<"\n";
 	//cur_cluster_size.clear();
+	pre_cluster_size.resize(cur_cluster_size.size());
+	//pre_cluster_size=cur_cluster_size;
+	for(int i=0;i<pre_cluster_size.size();i++)
+	{
+		pre_cluster_size[i]=cur_cluster_size[i];
+	}
 	cur_cluster_size.resize(cur_cluster.clst.size());
 	for(int i=0;i<cur_cluster.clst.size();i++)
 	{
@@ -521,7 +556,7 @@ bool culculate_centroid::culculate_centroid_of_cluster(void)
 		//std::cout<<"cur_gp["<<i<<"]:"<<cur_gp[i]<<"\n";
 		//std::cout<<"pre_gp["<<i<<"]:"<<pre_gp[i]<<"\n";
 		//std::cout<<"cur_cluster.t:"<<cur_cluster.t<<"\n";
-		std::cout<<"vel["<<i<<"]("<< track_n[i] << "):"<<vel[i]<<"\n";
+		//std::cout<<"vel["<<i<<"]("<< track_n[i] << "):"<<vel[i]<<"\n";
 		//std::cout<<"cur_cluster_size["<<i<<"]:"<<cur_cluster_size[i]<<"\n";
 	}
 }
@@ -866,13 +901,17 @@ void culculate_centroid::publish_objects_info(void)
 		*/
 
 		objs.obj[i].pt.resize(cur_cluster.clst[i].pt.size());
+		//objs.obj[i].pt = cur_cluster.clst[i].pt;
 		for (int k = 0; k < objs.obj[i].pt.size(); k++)
 		{
-			objs.obj[i].pt[k] = cur_cluster.clst[i].pt[k];
+			objs.obj[i].pt[k].x = cur_cluster.clst[i].pt[k].x;
+			objs.obj[i].pt[k].y = cur_cluster.clst[i].pt[k].y;
+			objs.obj[i].pt[k].z = cur_cluster.clst[i].pt[k].z;
 		}
 
-
+		//std::cout<<"objs.obj[i].pt.size():"<<objs.obj[i].pt.size()<<"\n";
 	}
+	
 	objs.dt=cur_cluster.t;
 	std::cout<<"cur_cluster.t:"<<cur_cluster.t<<"\n";
 	std::cout<<"objs.dt:"<<objs.dt<<"\n";

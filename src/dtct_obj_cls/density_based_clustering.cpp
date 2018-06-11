@@ -85,7 +85,8 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 	//resize memory
 	//int ksize=1;
 	int search_range=1;
-	double depth_threshold=0.02;//0.02;
+	double depth_threshold=0.03;//0.02;
+	int min_pn0=8;
 	double eps=0.02;
 	bool searched_flag[height/ksize][width/ksize];
 	//std::vector<cv::Point2i> task_objects;
@@ -100,6 +101,7 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 	}
 	
 	std::cout<<"1\n";
+	float height_th=1.0;//1.5;
 	//cv::Point2i temp;
 	obst_avoid::cluster_point temp;
 	for(int h=0+search_range;h<height/ksize-search_range;h++){
@@ -111,7 +113,7 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 			double y_0=(-(h*ksize-height/2))*depth_0/f;
 			double x_0=(w*ksize-width/2)*depth_0/f;
 			double y_ground=(-a*depth_0-b*(-x_0)-d)/c;
-			if(y_0-y_ground<=0||y_0>1.5-camera_height){
+			if(y_0-y_ground<=0||y_0-y_ground>height_th-camera_height){
 			//if(y_0-camera_height<=0||y_0>1.5-camera_height){
 				continue;
 			}
@@ -135,11 +137,11 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 				if(depth_0>1)
 				{
 					//min_pn=depth_0*(-1)+8;
-					min_pn=depth_0*(-1)+7;
+					min_pn=depth_0*(-1)+min_pn0;
 				}
 				else
 				{
-					min_pn=7;
+					min_pn=min_pn0;
 				}
 				for(int l=-search_range;l<=search_range;l++){
 					for(int m=-search_range;m<=search_range;m++){
@@ -161,7 +163,7 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 						float y_i=(-((task_objects.pt[i].y+l)*ksize-height/2))*depth_i/f;
 						float x_i=((task_objects.pt[i].x+m)*ksize-width/2)*depth_i/f;
 						double y_ground=(-a*depth_i-b*(-x_i)-d)/c;
-						if(y_i-y_ground<=0||y_i>1.5-camera_height)
+						if(y_i-y_ground<=0||y_i>height_th-camera_height)
 						//if(y_0-camera_height<=0||y_i>1.5-camera_height)
 						{
 							continue;
