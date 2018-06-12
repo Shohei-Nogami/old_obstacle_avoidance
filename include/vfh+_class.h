@@ -80,7 +80,7 @@ class vfh_class{
 		::obst_avoid::wheel_msg wheelMsg;
 	public:
 		vfh_class();
-		~vfh_class();
+		virtual ~vfh_class();
 		//void subscribe_pcl(void);
 		void subscribe_cluster(void);
 		void cluster_callback(const obst_avoid::cluster_with_vel::ConstPtr& msg);

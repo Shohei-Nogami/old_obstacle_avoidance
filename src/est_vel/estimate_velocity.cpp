@@ -967,12 +967,19 @@ void estimate_velocity::publish_pointcloud(void)
 				}
 			}		
 	*/
+			/*
 			for(int k=0;k<cur_objs.obj[i].pt.size();k++)
 			{
+				if(k%10)
+				{
+					continue;
+				}
 				//cloud_temp.y=-(cur_cluster.clst[i].pt[k].x*ksize-width/2)*cur_cluster.clst[i].pt[k].z/f;
 				//cloud_temp.z=((height/2-cur_cluster.clst[i].pt[k].y*ksize)*cur_cluster.clst[i].pt[k].z)/f+0.4125;
-				cloud_temp.y=-(cur_objs.obj[i].pt[k].x*ksize-width/2)*cur_objs.obj[i].pt[k].z/f;
-				cloud_temp.z=((height/2-cur_objs.obj[i].pt[k].y*ksize)*cur_objs.obj[i].pt[k].z)/f+0.4125;
+				//cloud_temp.y=-(cur_objs.obj[i].pt[k].x*ksize-width/2)*cur_objs.obj[i].pt[k].z/f;
+				//cloud_temp.z=((height/2-cur_objs.obj[i].pt[k].y*ksize)*cur_objs.obj[i].pt[k].z)/f+0.4125;
+				cloud_temp.y=-(cur_objs.obj[i].pt[k].x-width/2)*cur_objs.obj[i].pt[k].z/f;
+				cloud_temp.z=((height/2-cur_objs.obj[i].pt[k].y)*cur_objs.obj[i].pt[k].z)/f+0.4125;
 				cloud_temp.x=cur_objs.obj[i].pt[k].z;
 				cloud_temp.r=colors[i%12][0];
 				cloud_temp.g=colors[i%12][1];
@@ -984,8 +991,10 @@ void estimate_velocity::publish_pointcloud(void)
 		    cloud_temp.y+=10;		
 
 				clusted_cloud->points.push_back(cloud_temp);
-			}	
+			}
+			*/	
 		}
+		
 		for(int t=0;t<4;t++)
 		{
 			
@@ -1048,14 +1057,20 @@ void estimate_velocity::publish_pointcloud(void)
 			*/
 			for(int k=0;k<cur_objs.obj[i].pt.size();k++)
 			{
+				if(k%10)
+				{
+					continue;
+				}
 				//cloud_temp.y=-(cur_cluster.clst[i].pt[k].x*ksize-width/2)*cur_cluster.clst[i].pt[k].z/f;
 				//cloud_temp.z=((height/2-cur_cluster.clst[i].pt[k].y*ksize)*cur_cluster.clst[i].pt[k].z)/f+0.4125;
 				cv::Point3f temp;
 				temp.x=xh_t[i](0, 0)-cur_objs.obj[i].pos.x;
 				temp.z=xh_t[i](1, 0)-cur_objs.obj[i].pos.z;
 
-				cloud_temp.y=-(cur_objs.obj[i].pt[k].x*ksize-width/2)*cur_objs.obj[i].pt[k].z/f;
-				cloud_temp.z=((height/2-cur_objs.obj[i].pt[k].y*ksize)*cur_objs.obj[i].pt[k].z)/f+0.4125;
+				//cloud_temp.y=-(cur_objs.obj[i].pt[k].x*ksize-width/2)*cur_objs.obj[i].pt[k].z/f;
+				//cloud_temp.z=((height/2-cur_objs.obj[i].pt[k].y*ksize)*cur_objs.obj[i].pt[k].z)/f+0.4125;
+				cloud_temp.y=-(cur_objs.obj[i].pt[k].x-width/2)*cur_objs.obj[i].pt[k].z/f;
+				cloud_temp.z=((height/2-cur_objs.obj[i].pt[k].y)*cur_objs.obj[i].pt[k].z)/f+0.4125;
 				cloud_temp.x=cur_objs.obj[i].pt[k].z;
 				cloud_temp.r=colors[i%12][0];
 				cloud_temp.g=colors[i%12][1];
@@ -1098,9 +1113,9 @@ void estimate_velocity::publish_filted_objects_info(void)
 		obj_info.objs[i].vel.x = xh_t[i](2, 0);
 		obj_info.objs[i].vel.y = 0;
 		obj_info.objs[i].vel.z = xh_t[i](3, 0);
-		obj_info.objs[i].dsp.x = std::sqrt(sig_xh_t[i](2, 0)*sig_xh_t[i](2, 0) + sig_xh_t[i](2, 2)*sig_xh_t[i](2, 2));
+		obj_info.objs[i].dsp.x = sig_xh_t[i](2, 0) + sig_xh_t[i](2, 2);
 		obj_info.objs[i].dsp.y = 0;
-		obj_info.objs[i].dsp.z = std::sqrt(sig_xh_t[i](3, 1)*sig_xh_t[i](3, 1) + sig_xh_t[i](3, 3)*sig_xh_t[i](3, 3));
+		obj_info.objs[i].dsp.z = sig_xh_t[i](3, 1) + sig_xh_t[i](3, 3);
 		
 		obj_info.objs[i].pt = cur_objs.obj[i].pt;
 

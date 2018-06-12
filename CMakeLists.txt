@@ -264,6 +264,9 @@ target_link_libraries(culculate_centroid_class_test ${catkin_LIBRARIES} ${OpenCV
 add_executable(estimate_velocity_class_test src/est_vel/estimate_velocity.cpp src/tm_cls/time_class.cpp )
 target_link_libraries(estimate_velocity_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
+add_executable(avoid_class_test src/avoid_cls/avoid_cls.cpp src/vfh+_cls/vfh+_class.cpp src/tm_cls/time_class.cpp )
+target_link_libraries(avoid_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 #add_executable(img_prc src/main.cpp src/img_prc_cls.cpp src/prcs_fnc.cpp src/image_function.cpp src/depth_function.cpp src/odom_function.cpp src/time_function.cpp src/cvArrow_function.cpp src/vector_function.cpp src/debug_function.cpp src/tracking_fp_function.cpp src/prd_prc.cpp src/wheel_control.cpp)
 #target_link_libraries(img_prc ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 

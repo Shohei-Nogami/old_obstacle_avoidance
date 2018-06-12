@@ -84,7 +84,7 @@ bool culculate_centroid::matching_cluster(void)
 	}
 	cluster_match.clear();
 	cluster_match.resize(cur_cluster.clst.size());
-
+	std::cout<<"cur_cluster.clst.size():"<<cur_cluster.clst.size()<<"\n";
 	pre_cluster=cur_cluster;
 	
 	if(track_n.size())
@@ -113,10 +113,13 @@ bool culculate_centroid::matching_cluster(void)
 	{
 		for(int k=0;k<cur_cluster.clst[i].pt.size();k++)
 		{
-			int h=cur_cluster.clst[i].pt[k].y*ksize;
-			int w=cur_cluster.clst[i].pt[k].x*ksize;
+			int h=cur_cluster.clst[i].pt[k].y;
+			int w=cur_cluster.clst[i].pt[k].x;
+			//int h=cur_cluster.clst[i].pt[k].y*ksize;
+			//int w=cur_cluster.clst[i].pt[k].x*ksize;
 			//int h=cur_cluster.clst[i].pt[k].y*ksize+ksize/2;
 			//int w=cur_cluster.clst[i].pt[k].x*ksize+ksize/2;
+			/*
 			for(int v=h;v<h+ksize;v++)
 			{
 				for(int u=w;u<w+ksize;u++)
@@ -125,7 +128,7 @@ bool culculate_centroid::matching_cluster(void)
 					//std::cout<<"i:"<<i<<"\n";
 				}
 			}
-			
+			*/
 		}
 	}
 	
@@ -189,6 +192,7 @@ bool culculate_centroid::matching_cluster(void)
 		match_n[cur_index][pre_index]++;
 		
 	}
+	std::cout<<"match_opticalflow\n";
 //matching value by gp (distance)
 	match_gp.resize((int)cur_cluster.clst.size());
 
@@ -203,7 +207,6 @@ bool culculate_centroid::matching_cluster(void)
 			culc_distance_3f(cur_gp[i],pre_gp[k],match_gp[i][k]);
 		}
 	}
-
 //matching value by size
   std::vector<std::vector< float> > dif_size;
 	dif_size.resize((int)cur_cluster.clst.size());
@@ -406,7 +409,8 @@ void culculate_centroid::set_gp(void)
 		float x_min,x_max;
 		float z_min,z_max;
 		float x_tmp,z_tmp;
-			x_min=(cur_cluster.clst[i].pt[0].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[0].z/f;
+		//x_min=(cur_cluster.clst[i].pt[0].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[0].z/f;
+		x_min=(cur_cluster.clst[i].pt[0].x-width/2)*cur_cluster.clst[i].pt[0].z/f;
 		
 		x_max=x_min;
 		
@@ -417,7 +421,8 @@ void culculate_centroid::set_gp(void)
 		for(int k=1;k<cur_cluster.clst[i].pt.size();k++)
 		{
 		  		
-			x_tmp=(cur_cluster.clst[i].pt[k].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[k].z/f;
+			//x_tmp=(cur_cluster.clst[i].pt[k].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[k].z/f;
+			x_tmp=(cur_cluster.clst[i].pt[k].x-width/2)*cur_cluster.clst[i].pt[k].z/f;
 			//cur_gp[i].y+=((height/2-cur_cluster.clst[i].pt[k].y*ksize+ksize/2)*cur_cluster.clst[i].z)/f+0.4125;
 			z_tmp=cur_cluster.clst[i].pt[k].z;
 		  if(x_max<x_tmp)
@@ -457,10 +462,12 @@ void culculate_centroid::set_gp(void)
 		int count=0;
 		for(int k=0;k<cur_cluster.clst[i].pt.size();k++)
 		{
-		  float x=(cur_cluster.clst[i].pt[k].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[k].z/f;
+		  //float x=(cur_cluster.clst[i].pt[k].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[k].z/f;
+		  float x=(cur_cluster.clst[i].pt[k].x-width/2)*cur_cluster.clst[i].pt[k].z/f;
 		  float z=cur_cluster.clst[i].pt[k].z;
 			//add cluster size
-			cur_cluster_size[i]+=std::pow(ksize*cur_cluster.clst[i].pt[k].z/f,2.0);
+			//cur_cluster_size[i]+=std::pow(ksize*cur_cluster.clst[i].pt[k].z/f,2.0);
+		  cur_cluster_size[i]+=std::pow(cur_cluster.clst[i].pt[k].z/f,2.0);
 		  
 		  if(x<x_min||x>x_max
 		    ||z<z_min||z>z_max)
@@ -599,8 +606,10 @@ void culculate_centroid::draw_velocity(cv::Mat& image)
 			{
 				//gp.x+=cur_cluster.clst[i].pt[k].x*ksize;
 				//gp.y+=cur_cluster.clst[i].pt[k].y*ksize;
-				gp.x+=cur_cluster.clst[i].pt[k].x*ksize+ksize/2;
-				gp.y+=cur_cluster.clst[i].pt[k].y*ksize+ksize/2;
+				//gp.x+=cur_cluster.clst[i].pt[k].x*ksize+ksize/2;
+				//gp.y+=cur_cluster.clst[i].pt[k].y*ksize+ksize/2;
+				gp.x+=cur_cluster.clst[i].pt[k].x;
+				gp.y+=cur_cluster.clst[i].pt[k].y;
 
 				//view_vel_image.at<cv::Vec3b>(gp.y,gp.x)
 						
@@ -695,10 +704,16 @@ void culculate_centroid::publish_pointcloud(void)
 			}
 			for(int k=0;k<cur_cluster.clst[i].pt.size();k++)
 			{
+				if(k%10)
+				{
+					continue;
+				}
 				//cloud_temp.y=-(cur_cluster.clst[i].pt[k].x*ksize-width/2)*cur_cluster.clst[i].pt[k].z/f;
 				//cloud_temp.z=((height/2-cur_cluster.clst[i].pt[k].y*ksize)*cur_cluster.clst[i].pt[k].z)/f+0.4125;
-				cloud_temp.y=-(cur_cluster.clst[i].pt[k].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[k].z/f;
-				cloud_temp.z=((height/2-cur_cluster.clst[i].pt[k].y*ksize+ksize/2)*cur_cluster.clst[i].pt[k].z)/f+0.4125;
+				//cloud_temp.y=-(cur_cluster.clst[i].pt[k].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[k].z/f;
+				//cloud_temp.z=((height/2-cur_cluster.clst[i].pt[k].y*ksize+ksize/2)*cur_cluster.clst[i].pt[k].z)/f+0.4125;
+				cloud_temp.y=-(cur_cluster.clst[i].pt[k].x-width/2)*cur_cluster.clst[i].pt[k].z/f;
+				cloud_temp.z=((height/2-cur_cluster.clst[i].pt[k].y)*cur_cluster.clst[i].pt[k].z)/f+0.4125;
 				cloud_temp.x=cur_cluster.clst[i].pt[k].z;
 				cloud_temp.r=colors[i%12][0];
 				cloud_temp.g=colors[i%12][1];
@@ -778,6 +793,12 @@ cv::Mat& culculate_centroid::debug_image(cv::Mat& image)
 		//if(i==2)
 		for(int k=0;k<cur_cluster.clst[i].pt.size();k++)
 		{
+			int u=cur_cluster.clst[i].pt[k].x;
+			int v=cur_cluster.clst[i].pt[k].y;
+			view_image.at<cv::Vec3b>(v,u)[0]=colors[i%12][0];
+			view_image.at<cv::Vec3b>(v,u)[1]=colors[i%12][1];
+			view_image.at<cv::Vec3b>(v,u)[2]=colors[i%12][2];
+			/*
 			for(int u=cur_cluster.clst[i].pt[k].x*ksize;u<cur_cluster.clst[i].pt[k].x*ksize+ksize;u++){
 				for(int v=cur_cluster.clst[i].pt[k].y*ksize;v<cur_cluster.clst[i].pt[k].y*ksize+ksize;v++){
 					view_image.at<cv::Vec3b>(v,u)[0]=colors[i%12][0];
@@ -785,6 +806,7 @@ cv::Mat& culculate_centroid::debug_image(cv::Mat& image)
 					view_image.at<cv::Vec3b>(v,u)[2]=colors[i%12][2];
 				}
 			}
+			*/
 		}
 	}
 	
@@ -969,9 +991,9 @@ int main(int argc,char **argv)
 
 		clc_cnt_cls.publish_pointcloud();
 
-		img_cls.publish_debug_image(clc_cnt_cls.debug_image(img_cls.get_cur_image_by_ref()) );
+		//img_cls.publish_debug_image(clc_cnt_cls.debug_image(img_cls.get_cur_image_by_ref()) );
 
-		clc_cnt_cls.publish_cluster_with_vel();
+		//clc_cnt_cls.publish_cluster_with_vel();
 
 		clc_cnt_cls.publish_objects_info();
 

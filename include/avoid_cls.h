@@ -25,17 +25,19 @@ private:
 
 	obst_avoid::filted_objects_info obj_info;
 
-	std::vector<int> is_moving_obstacle;
+	std::vector<int> obstacle_status;
 	vfh_class vfh;
 
 	std::vector<float> obj_eq_a;//ŒX‚«
+
+	float selected_angle_i;
 
 public:
 	avoid();
 	~avoid();
 	void subscribe_objects(void);
 	void objects_callback(const obst_avoid::filted_objects_info::ConstPtr& msg);
-	void dicriminate_obstacle(void);
+	bool dicriminate_obstacle(void);
 	void culculate_equation(void);
 	float select_route(void);
 	void culculate_intersection(void);
