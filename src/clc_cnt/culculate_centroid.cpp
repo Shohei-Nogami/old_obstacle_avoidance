@@ -84,7 +84,7 @@ bool culculate_centroid::matching_cluster(void)
 	}
 	cluster_match.clear();
 	cluster_match.resize(cur_cluster.clst.size());
-	std::cout<<"cur_cluster.clst.size():"<<cur_cluster.clst.size()<<"\n";
+
 	pre_cluster=cur_cluster;
 	
 	if(track_n.size())
@@ -113,13 +113,10 @@ bool culculate_centroid::matching_cluster(void)
 	{
 		for(int k=0;k<cur_cluster.clst[i].pt.size();k++)
 		{
-			int h=cur_cluster.clst[i].pt[k].y;
-			int w=cur_cluster.clst[i].pt[k].x;
-			//int h=cur_cluster.clst[i].pt[k].y*ksize;
-			//int w=cur_cluster.clst[i].pt[k].x*ksize;
-			//int h=cur_cluster.clst[i].pt[k].y*ksize+ksize/2;
-			//int w=cur_cluster.clst[i].pt[k].x*ksize+ksize/2;
 			/*
+			int h=cur_cluster.clst[i].pt[k].y*ksize;
+			int w=cur_cluster.clst[i].pt[k].x*ksize;
+
 			for(int v=h;v<h+ksize;v++)
 			{
 				for(int u=w;u<w+ksize;u++)
@@ -129,6 +126,9 @@ bool culculate_centroid::matching_cluster(void)
 				}
 			}
 			*/
+			int h=cur_cluster.clst[i].pt[k].y;
+			int w=cur_cluster.clst[i].pt[k].x;	
+			cur_cluster_index[h][w]=i;		
 		}
 	}
 	
@@ -192,7 +192,6 @@ bool culculate_centroid::matching_cluster(void)
 		match_n[cur_index][pre_index]++;
 		
 	}
-	std::cout<<"match_opticalflow\n";
 //matching value by gp (distance)
 	match_gp.resize((int)cur_cluster.clst.size());
 
@@ -207,6 +206,7 @@ bool culculate_centroid::matching_cluster(void)
 			culc_distance_3f(cur_gp[i],pre_gp[k],match_gp[i][k]);
 		}
 	}
+
 //matching value by size
   std::vector<std::vector< float> > dif_size;
 	dif_size.resize((int)cur_cluster.clst.size());
@@ -219,7 +219,8 @@ bool culculate_centroid::matching_cluster(void)
 	{
 		for(int k=0;k<pre_cluster.clst.size();k++)
 		{
-			dif_size[i][k]=std::abs(pre_cluster_size[k]-cur_cluster_size[i]);
+			//dif_size[i][k]=std::abs(pre_cluster_size[k]-cur_cluster_size[i]);
+			dif_size[i][k]=std::abs(pre_cluster_size[k]-cur_cluster.clst[i].size);
 		}
 	}
 //init match value 
@@ -227,13 +228,27 @@ bool culculate_centroid::matching_cluster(void)
 	matched.resize(cur_cluster.clst.size());
 	for(int i=0;i<cur_cluster.clst.size();i++)
 	{
-		matched[i]=false;
+		if(cur_cluster.clst[i].size>1.0*1.0
+			||cur_cluster.clst[i].size<0.2*0.2)
+		{
+			matched[i]=true;			
+		}
+		else
+		{
+			matched[i]=false;
+		}
 		cluster_match[i]=-1;
 	}
 //matching cluster
 
 	for(int k=0;k<pre_cluster.clst.size();k++)
 	{
+		if(pre_cluster.clst[k].size>1.0*1.0
+			||pre_cluster.clst[k].size<0.2*0.2)
+		{
+			continue;
+		}
+	
 	//min distance cluster and max matching points
 		//min distance
 		float min_dis=5;//match_gp[0][k];
@@ -285,7 +300,8 @@ bool culculate_centroid::matching_cluster(void)
 				continue;
 			}
 			*/
-			if(dif_size[i][k]>cur_cluster_size[i]/2||dif_size[i][k]>pre_cluster_size[k]/2)
+			//if(dif_size[i][k]>cur_cluster_size[i]/2||dif_size[i][k]>pre_cluster_size[k]/2)
+			if(dif_size[i][k]>cur_cluster.clst[i].size/2||dif_size[i][k]>pre_cluster_size[k]/2)
 			{
 				continue;
 			}
@@ -369,17 +385,20 @@ void culculate_centroid::set_gp(void)
 	std::cout<<"1.1\n";
 	//std::cout<<"cur_cluster.clst.size()):"<<cur_cluster.clst.size()<<"\n";
 	//cur_cluster_size.clear();
-	pre_cluster_size.resize(cur_cluster_size.size());
+	//pre_cluster_size.resize(cur_cluster_size.size());
+	pre_cluster_size.resize(cur_cluster.clst.size());
 	//pre_cluster_size=cur_cluster_size;
 	for(int i=0;i<pre_cluster_size.size();i++)
 	{
-		pre_cluster_size[i]=cur_cluster_size[i];
+		pre_cluster_size[i]=cur_cluster.clst[i].size;//cur_cluster_size[i];
 	}
+	/*
 	cur_cluster_size.resize(cur_cluster.clst.size());
 	for(int i=0;i<cur_cluster.clst.size();i++)
 	{
 		 cur_cluster_size[i]=0;
 	}
+	*/
 	cur_cluster_radius.resize(cur_cluster.clst.size());
 	for(int i=0;i<cur_cluster_radius.size();i++)
 	{
@@ -407,13 +426,18 @@ void culculate_centroid::set_gp(void)
 
 		//add0531
 		float x_min,x_max;
+		float y_min,y_max;
 		float z_min,z_max;
-		float x_tmp,z_tmp;
-		//x_min=(cur_cluster.clst[i].pt[0].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[0].z/f;
-		x_min=(cur_cluster.clst[i].pt[0].x-width/2)*cur_cluster.clst[i].pt[0].z/f;
-		
+		float x_tmp,y_tmp,z_tmp;
+
+		//x_min=(cur_cluster.clst[i].pt[0].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[0].z/f;		
+		x_min=(cur_cluster.clst[i].pt[0].x-width/2)*cur_cluster.clst[i].pt[0].z/f;		
 		x_max=x_min;
 		
+		//y_min=((height/2-cur_cluster.clst[i].pt[0].y*ksize+ksize/2)*cur_cluster.clst[i].pt[0].z)/f+0.4125;	
+		y_min=((height/2-cur_cluster.clst[i].pt[0].y)*cur_cluster.clst[i].pt[0].z)/f+0.4125;	
+		y_max=y_min;
+
 		z_min=cur_cluster.clst[i].pt[0].z;
 		z_max=z_min;
 		
@@ -422,22 +446,31 @@ void culculate_centroid::set_gp(void)
 		{
 		  		
 			//x_tmp=(cur_cluster.clst[i].pt[k].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[k].z/f;
+			//y_tmp=((height/2-cur_cluster.clst[i].pt[k].y*ksize+ksize/2)*cur_cluster.clst[i].pt[k].z)/f+0.4125;
 			x_tmp=(cur_cluster.clst[i].pt[k].x-width/2)*cur_cluster.clst[i].pt[k].z/f;
-			//cur_gp[i].y+=((height/2-cur_cluster.clst[i].pt[k].y*ksize+ksize/2)*cur_cluster.clst[i].z)/f+0.4125;
+			y_tmp=((height/2-cur_cluster.clst[i].pt[k].y)*cur_cluster.clst[i].pt[k].z)/f+0.4125;
 			z_tmp=cur_cluster.clst[i].pt[k].z;
 		  if(x_max<x_tmp)
 		  {
 		    x_max=x_tmp;
 		  }
-		  if(x_min>x_tmp)
+		  else if(x_min>x_tmp)
 		  {
 		    x_min=x_tmp;
+		  }
+			if(y_max<y_tmp)
+		  {
+		    y_max=y_tmp;
+		  }
+		  else if(y_min>y_tmp)
+		  {
+		    y_min=y_tmp;
 		  }
 		  if(z_max<z_tmp)
 		  {
 		    z_max=z_tmp;
 		  }
-		  if(z_min>z_tmp)
+		  else if(z_min>z_tmp)
 		  {
 		    z_min=z_tmp;
 		  }
@@ -448,37 +481,49 @@ void culculate_centroid::set_gp(void)
 		cur_cluster_radius[i]=std::sqrt((z_max-z_min)*(z_max-z_min) + (x_max-x_min)*(x_max-x_min) )/2.0;
 		
 		//
-		float rate=0.2;
+		float rate=0.1;
+		float tp;
 		if(x_max-x_min>0.1)
 		{
-		  x_max-=(x_max-x_min)*rate;
+		  tp=x_max-(x_max-x_min)*rate;
 		  x_min+=(x_max-x_min)*rate;
+			x_max=tp;
+		}
+		if(y_max-y_min>0.1)
+		{
+		  tp=y_max-(y_max-y_min)*rate;
+		  y_min+=(y_max-y_min)*rate;
+			y_max=tp;
 		}
 		if(z_max-z_min>0.1)
 		{
-		  z_max-=(z_max-z_min)*rate;
+		  tp=z_max-(z_max-z_min)*rate;
 		  z_min+=(z_max-z_min)*rate;
+			z_max=tp;
 		}
 		int count=0;
 		for(int k=0;k<cur_cluster.clst[i].pt.size();k++)
 		{
 		  //float x=(cur_cluster.clst[i].pt[k].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[k].z/f;
-		  float x=(cur_cluster.clst[i].pt[k].x-width/2)*cur_cluster.clst[i].pt[k].z/f;
-		  float z=cur_cluster.clst[i].pt[k].z;
+		  //float y=((height/2-cur_cluster.clst[i].pt[k].y*ksize+ksize/2)*cur_cluster.clst[i].pt[k].z)/f+0.4125;
+			float x=(cur_cluster.clst[i].pt[k].x-width/2)*cur_cluster.clst[i].pt[k].z/f;
+		  float y=((height/2-cur_cluster.clst[i].pt[k].y)*cur_cluster.clst[i].pt[k].z)/f+0.4125;float z=cur_cluster.clst[i].pt[k].z;
 			//add cluster size
 			//cur_cluster_size[i]+=std::pow(ksize*cur_cluster.clst[i].pt[k].z/f,2.0);
-		  cur_cluster_size[i]+=std::pow(cur_cluster.clst[i].pt[k].z/f,2.0);
 		  
+			/*
 		  if(x<x_min||x>x_max
-		    ||z<z_min||z>z_max)
+		    ||z<z_min||z>z_max
+		    ||y<y_min||y>y_max)
 		  {
 		    continue;
 		  }
+			*/
 			//cur_gp[i].x+=(cur_cluster.clst[i].pt[k].x*ksize-width/2)*cur_cluster.clst[i].pt[k].z/f;
 			////cur_gp[i].y+=((height/2-cur_cluster.clst[i].pt[k].y*ksize)*cur_cluster.clst[i].z)/f+0.4125;
 			//cur_gp[i].z+=cur_cluster.clst[i].pt[k].z;
 			cur_gp[i].x+=x;
-			//cur_gp[i].y+=((height/2-cur_cluster.clst[i].pt[k].y*ksize+ksize/2)*cur_cluster.clst[i].z)/f+0.4125;
+			cur_gp[i].y+=y;
 			cur_gp[i].z+=z;
 			count++;
 
@@ -696,18 +741,16 @@ void culculate_centroid::publish_pointcloud(void)
 		for(int t=0;t<4;t++)
 		{
 			if(track_n[i]<1||std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0))>1.1
-				||cur_cluster_size[i]>1.0*1.0
-				||cur_cluster_size[i]<0.2*0.2
+				//||cur_cluster_size[i]>1.0*1.0
+				//||cur_cluster_size[i]<0.2*0.2
+				||cur_cluster.clst[i].size>1.0*1.0
+				||cur_cluster.clst[i].size<0.2*0.2
 			)
 			{
 				continue;
 			}
 			for(int k=0;k<cur_cluster.clst[i].pt.size();k++)
 			{
-				if(k%10)
-				{
-					continue;
-				}
 				//cloud_temp.y=-(cur_cluster.clst[i].pt[k].x*ksize-width/2)*cur_cluster.clst[i].pt[k].z/f;
 				//cloud_temp.z=((height/2-cur_cluster.clst[i].pt[k].y*ksize)*cur_cluster.clst[i].pt[k].z)/f+0.4125;
 				//cloud_temp.y=-(cur_cluster.clst[i].pt[k].x*ksize+ksize/2-width/2)*cur_cluster.clst[i].pt[k].z/f;
@@ -795,18 +838,13 @@ cv::Mat& culculate_centroid::debug_image(cv::Mat& image)
 		{
 			int u=cur_cluster.clst[i].pt[k].x;
 			int v=cur_cluster.clst[i].pt[k].y;
-			view_image.at<cv::Vec3b>(v,u)[0]=colors[i%12][0];
-			view_image.at<cv::Vec3b>(v,u)[1]=colors[i%12][1];
-			view_image.at<cv::Vec3b>(v,u)[2]=colors[i%12][2];
-			/*
-			for(int u=cur_cluster.clst[i].pt[k].x*ksize;u<cur_cluster.clst[i].pt[k].x*ksize+ksize;u++){
-				for(int v=cur_cluster.clst[i].pt[k].y*ksize;v<cur_cluster.clst[i].pt[k].y*ksize+ksize;v++){
+			//for(int u=cur_cluster.clst[i].pt[k].x*ksize;u<cur_cluster.clst[i].pt[k].x*ksize+ksize;u++){
+			//	for(int v=cur_cluster.clst[i].pt[k].y*ksize;v<cur_cluster.clst[i].pt[k].y*ksize+ksize;v++){
 					view_image.at<cv::Vec3b>(v,u)[0]=colors[i%12][0];
 					view_image.at<cv::Vec3b>(v,u)[1]=colors[i%12][1];
 					view_image.at<cv::Vec3b>(v,u)[2]=colors[i%12][2];
-				}
-			}
-			*/
+			//	}
+			//}
 		}
 	}
 	
@@ -896,7 +934,7 @@ void culculate_centroid::publish_objects_info(void)
 		objs.obj[i].pos.y=cur_gp[i].y;
 		objs.obj[i].pos.z=cur_gp[i].z;
 
-		objs.obj[i].size=cur_cluster_size[i];
+		objs.obj[i].size=cur_cluster.clst[i].size;//cur_cluster_size[i];
 		objs.obj[i].r=cur_cluster_radius[i];
 		if(pre_gp.size())
 		{
@@ -991,9 +1029,9 @@ int main(int argc,char **argv)
 
 		clc_cnt_cls.publish_pointcloud();
 
-		//img_cls.publish_debug_image(clc_cnt_cls.debug_image(img_cls.get_cur_image_by_ref()) );
+		img_cls.publish_debug_image(clc_cnt_cls.debug_image(img_cls.get_cur_image_by_ref()) );
 
-		//clc_cnt_cls.publish_cluster_with_vel();
+		clc_cnt_cls.publish_cluster_with_vel();
 
 		clc_cnt_cls.publish_objects_info();
 

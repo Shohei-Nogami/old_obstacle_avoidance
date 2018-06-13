@@ -74,10 +74,8 @@ class detect_objects{
 		::obst_avoid::cluster Q;
 		cv::Mat temp_image;
 		cv::Mat filted_image;
-		const int ksize_w=3;
-		const int ksize_h=3;
-		const int median_param_w=3;
-		const int median_param_h=3;
+		const int ksize=3;
+		const int median_param=3;
 	//--time_cls
 		time_class tm_cls;
 	//--response msg

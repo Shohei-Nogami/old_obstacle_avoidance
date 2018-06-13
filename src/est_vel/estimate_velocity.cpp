@@ -45,10 +45,10 @@ estimate_velocity::estimate_velocity()
 	sig_ut(0,0)=0.25;//ax
 	sig_ut(1,1)=0.25;//az
 	
-	del_t(0,0)=0.04;//x
-	del_t(1,1)=0.04;//z
-	del_t(2,2)=0.2;//0.25;//vx
-	del_t(3,3)=0.2;//0.25;//vz
+	del_t(0,0)=0.01;//x
+	del_t(1,1)=0.01;//z
+	del_t(2,2)=0.16;//0.25;//vx
+	del_t(3,3)=0.16;//0.25;//vz
 	
 	sig_x0(0,0)=1;//x
 	sig_x0(1,1)=1;//z
@@ -967,13 +967,8 @@ void estimate_velocity::publish_pointcloud(void)
 				}
 			}		
 	*/
-			/*
 			for(int k=0;k<cur_objs.obj[i].pt.size();k++)
 			{
-				if(k%10)
-				{
-					continue;
-				}
 				//cloud_temp.y=-(cur_cluster.clst[i].pt[k].x*ksize-width/2)*cur_cluster.clst[i].pt[k].z/f;
 				//cloud_temp.z=((height/2-cur_cluster.clst[i].pt[k].y*ksize)*cur_cluster.clst[i].pt[k].z)/f+0.4125;
 				//cloud_temp.y=-(cur_objs.obj[i].pt[k].x*ksize-width/2)*cur_objs.obj[i].pt[k].z/f;
@@ -991,10 +986,8 @@ void estimate_velocity::publish_pointcloud(void)
 		    cloud_temp.y+=10;		
 
 				clusted_cloud->points.push_back(cloud_temp);
-			}
-			*/	
+			}	
 		}
-		
 		for(int t=0;t<4;t++)
 		{
 			
@@ -1057,10 +1050,6 @@ void estimate_velocity::publish_pointcloud(void)
 			*/
 			for(int k=0;k<cur_objs.obj[i].pt.size();k++)
 			{
-				if(k%10)
-				{
-					continue;
-				}
 				//cloud_temp.y=-(cur_cluster.clst[i].pt[k].x*ksize-width/2)*cur_cluster.clst[i].pt[k].z/f;
 				//cloud_temp.z=((height/2-cur_cluster.clst[i].pt[k].y*ksize)*cur_cluster.clst[i].pt[k].z)/f+0.4125;
 				cv::Point3f temp;
