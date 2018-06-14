@@ -45,6 +45,7 @@ class culculate_centroid{
 		static const int height=376;
 		const float f=350.505;
 		int ksize=3;
+		int median_param=3;
 	//---cluster
 		::obst_avoid::cluster pre_cluster;
 		::obst_avoid::cluster cur_cluster;

@@ -30,6 +30,7 @@ class estimate_velocity{
 		obst_avoid::objects_info prepre_objs;
 
 
+		std::vector<cv::Point3f> vel_h;
 		std::vector<cv::Point3f> vel;
 		std::vector<cv::Point3f> pre_vel;
 		std::vector<cv::Point3f> prepre_vel;
