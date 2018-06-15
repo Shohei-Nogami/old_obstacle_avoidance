@@ -613,7 +613,7 @@ bool culculate_centroid::culculate_centroid_of_cluster(void)
 		culc_distance_3f(vel[i],temp0,dX);
 		if(dX>1.1)
 		{
-			if(track_n[i]>0)
+			/*if(track_n[i]>0)
 			{
 				//vel[i] = pre_vel[i]; 
 			vel[i] = pre_vel[match_num]; 
@@ -624,6 +624,11 @@ bool culculate_centroid::culculate_centroid_of_cluster(void)
 				vel[i].y = 0;
 				vel[i].z = 0;
 			}
+			*/
+				vel[i].x = 0;
+				vel[i].y = 0;
+				vel[i].z = 0;
+			
 		}
 		int k=0;
 		float T=cur_cluster.t/5;

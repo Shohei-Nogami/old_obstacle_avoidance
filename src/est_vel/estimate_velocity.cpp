@@ -37,24 +37,29 @@ estimate_velocity::estimate_velocity()
 	sig_x0(5,5)=1;
 	*/
 	sig_ut = Eigen::MatrixXd::Zero(2,2); 
-	del_t = Eigen::MatrixXd::Zero(2,2);//(4,4); 
-	sig_x0 = Eigen::MatrixXd::Zero(2,2);//(4,4); 
-	I = Eigen::MatrixXd::Identity(2,2);//(4,4);
+	del_t = Eigen::MatrixXd::Zero(4,4); 
+	sig_x0 = Eigen::MatrixXd::Zero(4,4); 
+	sig_wk = Eigen::MatrixXd::Zero(4,4);
+	I = Eigen::MatrixXd::Identity(4,4);
 	
 	//仮
-	sig_ut(0,0)=0.04;//v  0.25;//ax
-	sig_ut(1,1)=0.04;//v  0.25;//az
+	sig_ut(0,0)=0.16;//v  0.25;//ax
+	sig_ut(1,1)=0.16;//v  0.25;//az
 	
-	del_t(0,0)=0.01;//x
-	del_t(1,1)=0.01;//z
-	//del_t(2,2)=0.04;//0.25;//vx
-	//del_t(3,3)=0.04;//0.25;//vz
+	del_t(0,0)=0.05*0.05;//0.01;//x
+	del_t(1,1)=0.05*0.05;//0.01;//z
+	del_t(2,2)=0.09;//0.25;//vx
+	del_t(3,3)=0.09;//0.25;//vz
 	
-	sig_x0(0,0)=1;//x
-	sig_x0(1,1)=1;//z
-	//sig_x0(2,2)=1;//vx
-	//sig_x0(3,3)=1;//vz
+	sig_x0(0,0)=0.04;//x
+	sig_x0(1,1)=0.04;//z
+	sig_x0(2,2)=0.16;//vx
+	sig_x0(3,3)=0.16;//vz
 
+	sig_wk(0,0)=0.05*0.05;//x
+	sig_wk(1,1)=0.05*0.05;//z
+	sig_wk(2,2)=0.01;//vx
+	sig_wk(3,3)=0.01;//vz
 
 	//現在日時を取得する
 	time_t t = time(nullptr);
@@ -451,7 +456,8 @@ void estimate_velocity::record_odom_and_vel(void)
 
 void estimate_velocity::calmanfilter(void)
 {
-
+	
+	std::cout<<"calmanfilter\n";
 	//std::vector<Eigen::MatrixXd,Eigen::aligned_allocator<Eigen::MatrixXd> > xh_t;
 	//std::vector<Eigen::MatrixXd,Eigen::aligned_allocator<Eigen::MatrixXd> > sig_xh_t;
 	
@@ -477,82 +483,31 @@ void estimate_velocity::calmanfilter(void)
 	Eigen::MatrixXd sig_xt(6,6);
 	Eigen::MatrixXd u_t(3,1);
 	*/
-	Eigen::MatrixXd d_t(2,2);//(4,4);
-	Eigen::MatrixXd K_t(2,2);//(4,4);
+	Eigen::MatrixXd d_t(4,4);
+	Eigen::MatrixXd K_t(4,4);
 	
 	
 	//public
-	Eigen::MatrixXd xt_t(2,1);//(4,1);
+	Eigen::MatrixXd xt_t(4,1);
 	//Eigen::MatrixXd xh_t_1(6,1);
-	Eigen::MatrixXd z_t(2,1);//(4,1);
-	Eigen::MatrixXd F_t = Eigen::MatrixXd::Zero(2,2);//(4,4);
+	Eigen::MatrixXd z_t(4,1);
+	Eigen::MatrixXd F_t = Eigen::MatrixXd::Zero(4,4);
 	Eigen::MatrixXd B_t = Eigen::MatrixXd::Zero(2,2);//(4,2);
 	//Eigen::MatrixXd sig_xh_t_1(6,6);
-	Eigen::MatrixXd sig_xt(2,2);//(4,4);
-	Eigen::MatrixXd u_t(2,1);
+	Eigen::MatrixXd sig_xt(4,4);
+	Eigen::MatrixXd u_t(4,1);
 	
 
 	float dt = cur_objs.dt;
 	//set F
 	F_t(0,0)=1;
 	F_t(1,1)=1;
-	//F_t(2,2)=1;
-	//F_t(3,3)=1;
+	F_t(2,2)=1;
+	F_t(3,3)=1;
 	
-	//F_t(0,2)=dt;
-	//F_t(1,3)=dt;
+	F_t(0,2)=dt;
+	F_t(1,3)=dt;
 
-	//set B
-	B_t(0,0)=dt;//
-	B_t(1,1)=dt;
-	//B_t(2,0)=dt;
-	//B_t(3,1)=dt;
-
-
-
-
-	//const
-	/*
-	//Eigen::MatrixXd sig_ut(6,6);
-	sig_ut = Eigen::MatrixXd::Identity(6,6);
-	//Eigen::MatrixXd del_t(6,6);
-	//Eigen::MatrixXd sig_x0(6,6);
-	//Eigen::MatrixXd I = Eigen::MatrixXd::Identity(6,6);
-	//in constracter
-	//init
-	for(int l=0;l<6;l++)
-	{
-		for(int r=0;r<6;r++)
-		{
-			sig_ut(l,r)=0;
-			del_t(l,r)=0;
-			sig_x0(l,r)=0;
-		}
-	}
-	//仮
-	sig_ut(0,0)=1;
-	sig_ut(1,1)=1;
-	sig_ut(2,2)=1;
-	sig_ut(3,3)=1;
-	sig_ut(4,4)=1;
-	sig_ut(5,5)=1;
-	
-	del_t(0,0)=1;
-	del_t(1,1)=1;
-	del_t(2,2)=1;
-	del_t(3,3)=1;
-	del_t(4,4)=1;
-	del_t(5,5)=1;
-	
-	sig_x0(0,0)=1;
-	sig_x0(1,1)=1;
-	sig_x0(2,2)=1;
-	sig_x0(3,3)=1;
-	sig_x0(4,4)=1;
-	sig_x0(5,5)=1;
-	*/
-	//end
-	
 	//x : x,y,z,vx,vy,vz
 	//u : ax,ay,az
 
@@ -562,7 +517,7 @@ void estimate_velocity::calmanfilter(void)
 	sig_xh_t_1.resize(cur_objs.obj.size());
 	//std::cout<<"xh_t_1.size:"<<xh_t_1.size()<<"\n";
 	//std::cout<<"sig_xh_t_1.size:"<<sig_xh_t_1.size()<<"\n";
-	//std::cout<<"for init\n";
+	std::cout<<"for init\n";
 	std::vector<bool> skip;
 	skip.resize(cur_objs.obj.size());
 	for(int i=0;i<cur_objs.obj.size();i++)
@@ -580,8 +535,8 @@ void estimate_velocity::calmanfilter(void)
 		*/
 		z_t(0,0)=cur_objs.obj[i].pos.x;
 		z_t(1,0)=cur_objs.obj[i].pos.z;
-		//z_t(2,0)=vel[i].x;
-		//z_t(3,0)=vel[i].z;
+		z_t(2,0)=vel[i].x;
+		z_t(3,0)=vel[i].z;
 		//std::cout<<"observation \n";
 		
 		//can't do filter
@@ -605,9 +560,9 @@ void estimate_velocity::calmanfilter(void)
 		}
 		else
 		{
-			xh_t_1[i]=z_t;
+			//xh_t_1[i]=z_t;
 			
-			sig_xh_t_1[i]=sig_x0;
+			//sig_xh_t_1[i]=sig_x0;
 			skip[i]=true;
 		}
 	}
@@ -621,25 +576,27 @@ void estimate_velocity::calmanfilter(void)
 	std::cout<<"for filter\n";
 	for(int i=0;i<cur_objs.obj.size();i++)
 	{
-		//can't do filter
-		if(track_n[i]<2)//||cur_objs.obj[i].pos.x==xh_t_1[i](0,0))//z_t==xh_t_1[i](0,0) -> skip
-		{	
-			xh_t[i]=xh_t_1[i];
-			sig_xh_t[i]=sig_xh_t_1[i];
-			continue;
-		}
-		if(skip[i])
-		{
-			xh_t[i]=xh_t_1[i];
-			sig_xh_t[i]=sig_xh_t_1[i];
-			continue;
-		}
 
 		//set z
 		z_t(0,0)=cur_objs.obj[i].pos.x;
 		z_t(1,0)=cur_objs.obj[i].pos.z;
-		//z_t(2,0)=vel[i].x;
-		//z_t(3,0)=vel[i].z;
+		z_t(2,0)=vel[i].x;
+		z_t(3,0)=vel[i].z;
+
+		//can't do filter
+		if(track_n[i]<2)//||cur_objs.obj[i].pos.x==xh_t_1[i](0,0))//z_t==xh_t_1[i](0,0) -> skip
+		{	
+			xh_t[i]=z_t;
+			sig_xh_t[i]=sig_x0;
+			continue;
+		}
+		if(skip[i])
+		{
+			xh_t[i]=z_t;
+			sig_xh_t[i]=sig_x0;
+			continue;
+		}
+
 
 
 		//filtering
@@ -647,45 +604,12 @@ void estimate_velocity::calmanfilter(void)
 		//std::cout<<"filtering\n";
 		float dt = cur_objs.dt;
 		
-		//set F,B
-		/*
-		for(int l=0;l<6;l++)
-		{
-			//set F
-			for(int r=0;r<6;r++)
-			{
-				if(l==r)
-				{
-					F_t(l,r)=1;
-				}
-				else if((l+3)==r)
-				{
-					F_t(l,r)=dt;
-				}
-			}
-			//set B
-			for(int r=0;r<3;r++)
-			{
-				if(l==r)
-				{
-					B_t(l,r)=2*dt*dt;
-				}
-				else if((r+3)==l)
-				{
-					B_t(l,r)=dt;
-				}
-			}
-		}
-		*/
-		//std::cout<<"set F,B\n";
-		//
-		
 		//set ut
 		
 		//u_t(0,0)=acc[i].x;
 		//u_t(1,0)=acc[i].z;
-		u_t(0,0)=vel[i].x;
-		u_t(1,0)=vel[i].z;
+		u_t(0,0)=pre_vel[ cur_objs.obj[i].match ].x;//vel[i].x;
+		u_t(1,0)=pre_vel[ cur_objs.obj[i].match ].z;//vel[i].z;
 		
 		//std::cout<<"set ut\n";
 		//predict
@@ -697,10 +621,10 @@ void estimate_velocity::calmanfilter(void)
 		//std::cout<<"xh_t_1["<<i<<"]:"<<xh_t_1[i]<<"\n";
 		//std::cout<<"u_t:"<<u_t<<"\n";
 		
-		xt_t = F_t*xh_t_1[i] + B_t*u_t ;
+		xt_t = F_t*xh_t_1[i];// + B_t*u_t ;
 		//std::cout<<"xt_t:"<<xt_t<<"\n";
 		//std::cout<<"xt_t = F_t*xh_t_1[i] + B_t*u_t ;\n";
-		sig_xt = F_t * sig_xh_t_1[i] * F_t.transpose() + B_t * sig_ut * B_t.transpose() ;
+		sig_xt = F_t * sig_xh_t_1[i] * F_t.transpose()+sig_wk;// + B_t * sig_ut * B_t.transpose() ;
 		//std::cout<<"sig_xt = F_t * sig_xh_t_1[i] * F_t.transpose() + B_t * sig_ut * B_t.transpose()\n";
 		
 		//std::cout<<"sig_xt:"<<sig_xt<<"\n";
@@ -747,8 +671,8 @@ void estimate_velocity::calmanfilter(void)
 			//std::cout<<"size_dif:("<< cur_objs.obj[i].size<<" to "<< pre_objs.obj[cur_objs.obj[i].match].size <<")\n";
 		}
 		//std::cout<<"xh_t,z_t:"<<xh_t[i]<<","<<z_t[i]<<"\n";
-		vel_h[i].x=(xh_t[i](0,0)-xh_t_1[ cur_objs.obj[i].match ](0,0))/cur_objs.dt-cur_objs.dX.z/cur_objs.dt;
-		vel_h[i].z = (xh_t[i](1,0)-xh_t_1[ cur_objs.obj[i].match ](1,0))/cur_objs.dt-cur_objs.dX.z/cur_objs.dt;
+		vel_h[i].x=xh_t[i](2,0);
+		vel_h[i].z = xh_t[i](3,0);
 		//vel_h[i].x=(xh_t[i](0,0)-pre_objs.obj[ cur_objs.obj[i].match ].pos.x)/cur_objs.dt-cur_objs.dX.x/cur_objs.dt;
 		//vel_h[i].z = (xh_t[i](1,0)-pre_objs.obj[ cur_objs.obj[i].match ].pos.z)/cur_objs.dt-cur_objs.dX.z/cur_objs.dt;
 		vel_h[i].y=0;
@@ -756,6 +680,7 @@ void estimate_velocity::calmanfilter(void)
 		std::cout<<"vel_h["<<i<<"]:"<<vel_h[i]<<"\n";
 		std::cout<<"xh_t[i]:"<<xh_t[i]<<"\n";
 		std::cout<<" cur_objs.obj[i].pos:"<< cur_objs.obj[i].pos<<"\n";
+		std::cout<<" sig_xh_t[i]:"<< sig_xh_t[i] <<"\n";
 	}
 }
 
@@ -800,10 +725,10 @@ void estimate_velocity::publish_pointcloud(void)
 			}
 			if(t>0)
 			{
-				if(std::sqrt(sig_xh_t[i](0, 0) + sig_xh_t[i](1, 1) ) /cur_objs.dt
+				if(std::sqrt(sig_xh_t[i](2, 2) + sig_xh_t[i](3, 3) ) 
 					//> std::sqrt(std::pow(vel_h[i].x, 2.0) + std::pow(vel_h[i].z, 2.0))
 					> std::sqrt(std::pow(vel[i].x, 2.0) + std::pow(vel[i].z, 2.0))&&
-					std::sqrt(std::pow(vel[i].x, 2.0) + std::pow(vel[i].z, 2.0))>0.1
+					std::sqrt(std::pow(vel[i].x, 2.0) + std::pow(vel[i].z, 2.0))>0.2
 					)
 					{
 						continue;
@@ -879,8 +804,8 @@ void estimate_velocity::publish_pointcloud(void)
 					> std::sqrt(std::pow(xh_t[i](2, 0), 2.0) + std::pow(xh_t[i](3, 0), 2.0))/2
 					*/
 					
-					std::sqrt(sig_xh_t[i](0, 0) + sig_xh_t[i](1, 1) ) /cur_objs.dt
-					> std::sqrt(std::pow(vel_h[i].x, 2.0) + std::pow(vel_h[i].z, 2.0))
+					std::sqrt(sig_xh_t[i](2, 2) + sig_xh_t[i](3, 3) ) 
+					> std::sqrt(std::pow(vel_h[i].x, 2.0) + std::pow(vel_h[i].z, 2.0))/2
 					//> std::sqrt(std::pow(vel[i].x, 2.0) + std::pow(vel[i].z, 2.0))
 					//|| std::sqrt(std::pow(xh_t[i](2, 0), 2.0) + std::pow(xh_t[i](3, 0), 2.0)) < 0.1
 			
@@ -914,7 +839,7 @@ void estimate_velocity::publish_pointcloud(void)
 			*/
 			for(int k=0;k<cur_objs.obj[i].pt.size();k++)
 			{
-				if(k%30)
+				if(k%10)//30)
 				{
 					continue;
 				}

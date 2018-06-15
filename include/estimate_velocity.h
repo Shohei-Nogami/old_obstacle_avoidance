@@ -58,6 +58,7 @@ class estimate_velocity{
 		Eigen::MatrixXd sig_ut;
 		Eigen::MatrixXd del_t;
 		Eigen::MatrixXd sig_x0;
+		Eigen::MatrixXd sig_wk;
 		Eigen::MatrixXd I;
 
 		time_class tm_cls;
