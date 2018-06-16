@@ -88,6 +88,7 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 	//int ksize=1;
 	int search_range=1;
 	double depth_threshold=0.02;//0.02;
+	double depth_threshold0=0.02;//0.02;
 	int min_pn0=6;//8;
 	double eps=0.02;
 	bool searched_flag[height/ksize][width/ksize];
@@ -143,10 +144,12 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 				{
 					//min_pn=depth_0*(-1)+8;
 					min_pn=depth_0*(-1)+min_pn0;
+					depth_threshold=depth_0*0.01+depth_threshold0;
 				}
 				else
 				{
 					min_pn=min_pn0;
+					depth_threshold=depth_threshold0;
 				}
 				for(int l=-search_range;l<=search_range;l++){
 					for(int m=-search_range;m<=search_range;m++){
