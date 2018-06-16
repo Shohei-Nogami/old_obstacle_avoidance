@@ -37,14 +37,14 @@ bool avoid::dicriminate_obstacle(void)
 	{
 
 
-		if (obj_info.objs[i].size > 1.0*1.0 || obj_info.objs[i].size < 0.2*0.2
+		if (obj_info.objs[i].size > 0.7*0.7 || obj_info.objs[i].size < 0.2*0.2
 			|| std::sqrt(std::pow(obj_info.objs[i].vel.x, 2.0) + std::pow(obj_info.objs[i].vel.z, 2.0)) < 0.1
 			)
 		{
 			obstacle_status[i] = STATIC_OBSTACLE;
 		}
 		else if (std::sqrt(std::pow(obj_info.objs[i].vel.x, 2.0) + std::pow(obj_info.objs[i].vel.z, 2.0)) > 1.1
-			|| std::sqrt(obj_info.objs[i].dsp.x + obj_info.objs[i].dsp.z) 
+			|| std::sqrt(obj_info.objs[i].vdsp.x + obj_info.objs[i].vdsp.z) 
 				> std::sqrt(std::pow(obj_info.objs[i].vel.x, 2.0) + std::pow(obj_info.objs[i].vel.z, 2.0)) )
 		{
 			obstacle_status[i] = DYNAMIC_OBSTACLE;

@@ -897,18 +897,20 @@ void estimate_velocity::publish_filted_objects_info(void)
 
 	for (int i = 0; i < obj_info.objs.size(); i++)
 	{
-		//obj_info.objs[i].pos = cur_objs.obj[i].pos;
-		obj_info.objs[i].pos.x = xh_t[i](0, 0);
+		obj_info.objs[i].pos.x = cur_objs.obj[i].pos.x;
 		obj_info.objs[i].pos.y = cur_objs.obj[i].pos.y;
-		obj_info.objs[i].pos.z = xh_t[i](1, 0);
+		obj_info.objs[i].pos.z = cur_objs.obj[i].pos.z;
+		obj_info.objs[i].fpos.x = xh_t[i](0, 0);
+		obj_info.objs[i].fpos.y = cur_objs.obj[i].pos.y;
+		obj_info.objs[i].fpos.z = xh_t[i](1, 0);
 		obj_info.objs[i].r = cur_objs.obj[i].r;
 		obj_info.objs[i].size = cur_objs.obj[i].size;
 		obj_info.objs[i].vel.x = vel_h[i].x;//xh_t[i](2, 0);
 		obj_info.objs[i].vel.y = 0;
 		obj_info.objs[i].vel.z = vel_h[i].z;//xh_t[i](3, 0);
-		obj_info.objs[i].dsp.x = sig_xh_t[i](0,0);//sig_xh_t[i](2, 0) + sig_xh_t[i](2, 2);
-		obj_info.objs[i].dsp.y = 0;
-		obj_info.objs[i].dsp.z = sig_xh_t[i](1,1);//sig_xh_t[i](3, 1) + sig_xh_t[i](3, 3);
+		obj_info.objs[i].vdsp.x = sig_xh_t[i](2, 0) + sig_xh_t[i](2, 2);
+		obj_info.objs[i].vdsp.y = 0;
+		obj_info.objs[i].vdsp.z = sig_xh_t[i](3, 1) + sig_xh_t[i](3, 3);
 		
 		obj_info.objs[i].pt = cur_objs.obj[i].pt;
 
