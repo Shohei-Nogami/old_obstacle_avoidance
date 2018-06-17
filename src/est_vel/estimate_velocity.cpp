@@ -284,9 +284,10 @@ bool estimate_velocity::culculate_velocity(void)
 	//cluster match[i]=j : i -> j
 	for(int i=0;i<vel.size();i++)
 	{
-		if(cur_objs.obj[i].match ==-1)
+		if(cur_objs.obj[i].match ==-1||cur_objs.obj[i].size>0.7*0.7||cur_objs.obj[i].size<0.1*0.1)
 		{
-			std::cout<<"cur_objs.obj[i].match is -1\n";
+			
+			continue;
 		}
 		//if(std::abs( cur_objs.obj[i].match )>  (int)pre_objs.obj.size() )
 		if(cur_objs.obj[i].match != -1)
@@ -353,6 +354,10 @@ void estimate_velocity::culculate_accelerate(void)
 	//cluster match[i]=j : i -> j
 	for(int i=0;i<acc.size();i++)
 	{
+		if(cur_objs.obj[i].size>0.7*0.7||cur_objs.obj[i].size<0.1*0.1)
+		{
+			continue;
+		}
 		//if(std::abs( cur_objs.obj[i].match ) <  (int)pre_objs.obj.size() )
 		if(cur_objs.obj[i].match!=-1)
 		{
@@ -570,18 +575,20 @@ void estimate_velocity::calmanfilter(void)
 		// i の値を cur,pre 間で揃える
 		//std::cout<<"i:"<<i<<"\n";
 		//std::cout<<"cur_objs.obj["<<i<<"].match:"<<cur_objs.obj[i].match<<"\n";
-		if(std::abs( cur_objs.obj[i].match ) <  (int)pre_objs.obj.size() &&cur_objs.obj[i].match !=-1)
+		if(std::abs( cur_objs.obj[i].match ) >  (int)pre_objs.obj.size() ||cur_objs.obj[i].match ==-1	|| cur_objs.obj[i].size>0.7*0.7||cur_objs.obj[i].size<0.1*0.1)
+
 		//if(cur_objs.obj[i].match !=-1)
-		{
-			xh_t_1[i]=xh_t[ cur_objs.obj[i].match ];
-			sig_xh_t_1[i]=sig_xh_t[ cur_objs.obj[i].match ];
-		}
-		else
 		{
 			//xh_t_1[i]=z_t;
 			
 			//sig_xh_t_1[i]=sig_x0;
 			skip[i]=true;
+			
+		}
+		else
+		{
+			xh_t_1[i]=xh_t[ cur_objs.obj[i].match ];
+			sig_xh_t_1[i]=sig_xh_t[ cur_objs.obj[i].match ];
 		}
 	}
 	
@@ -734,7 +741,7 @@ void estimate_velocity::publish_pointcloud(void)
 	*/
 			for(int k=0;k<cur_objs.obj[i].pt.size();k++)
 			{
-				if(k%30)
+				if(1)//k%30)
 				{
 					continue;
 				}
@@ -938,10 +945,13 @@ int main(int argc,char **argv)
 		est_vel_cls.culculate_accelerate();
 		std::cout<<"culculate_accelerate\n";
 		est_vel_cls.calmanfilter();
-		std::cout<<"calmanfilter\n";
+		std::cout<<"4:calmanfilter:"<<time_cls.get_time_now()<<"\n";
 //		est_vel_cls.record_odom_and_vel();
 //		std::cout<<"record_odom_and_vel\n";
 		est_vel_cls.publish_pointcloud();
+		std::cout<<"4:publish_pointcloud:"<<time_cls.get_time_now()<<"\n";
+		est_vel_cls.publish_filted_objects_info();
+		std::cout<<"4:publish_filted_objects_info:"<<time_cls.get_time_now()<<"\n";
 		std::cout<<"loop\n";
     std::cout<<"dt:"<<time_cls.get_delta_time()<<"\n";
 	}

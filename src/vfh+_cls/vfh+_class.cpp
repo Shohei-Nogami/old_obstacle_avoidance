@@ -1,7 +1,7 @@
 #include"vfh+_class.h"
 
 vfh_class::vfh_class()
-	:it_pub(nh_pub),it_pub2(nh_pub2),grid_resolution(201),grid_size(8.0),EXECUTED_CALLBACK(false),binary_threshold(90)
+	:it_pub(nh_pub),it_pub2(nh_pub2),grid_resolution(201),grid_size(12.0),EXECUTED_CALLBACK(false),binary_threshold(90)
 {
 	pub=it_pub.advertise("grid_image",1);
 	pub2=it_pub2.advertise("binary_grid_image",1);
@@ -19,10 +19,6 @@ vfh_class::vfh_class()
 	grid_cell_size=grid_size/grid_resolution;
 
 //set parameter of trajectory
-	temp_vl.reserve(vfh_resolution);
-	temp_vr.reserve(vfh_resolution);
-	temp_w.reserve(vfh_resolution);
-	temp_p.reserve(vfh_resolution);
 	max_process_n.reserve(vfh_resolution);
 	rank_trajectory.resize(vfh_resolution);
 	//float delta_vel_dif=temp_v_dif_max/(vel_resolution-1);
@@ -503,16 +499,57 @@ void vfh_class::publish_velocity(void)
 
 }
 
+void vfh_class::publish_velocity(float& vel,float& angvel)
+{
+
+	float dif;
+	
+	float w=angvel*(length/vel);
+	dif=w*d;
+	
+	if(max_dif<std::abs(dif))
+	{
+		if(dif>0)
+		{
+			dif=max_dif;
+		}
+		else
+		{
+			dif=-max_dif;			
+		}	
+	}
+	wheelMsg.vel_l=(int)( (vel-dif)*1000);
+	wheelMsg.vel_r=(int)( (vel+dif)*1000);
+	pub_wheel.publish(wheelMsg);
+
+}
+
+void vfh_class::set_param(const int& min_ang,const int& max_ang,const int& reso,
+							const float& rob_r,const float& mrg_r,const float& mv_length,
+							const float& max_vdif)
+{
+							min_angle=min_ang;
+							max_angle=max_ang;
+							vfh_resolution=reso;
+							R=rob_r;
+							d_r=mrg_r;
+							length=mv_length;
+							max_dif=max_vdif;
+							not_select_angle.resize(max_angle-min_angle);
+}
 
 void vfh_class::set_grid_map(const std::vector<obst_avoid::point3d>& pt) {
 	int grid_x, grid_z;
 
-	
+
+	//std::cout<<"set_grid_map\n";
 	for (int k = 0; k<pt.size(); k++)
 	{
-		float x = (pt[k].x*ksize + ksize / 2 - width / 2)*pt[k].z / f;
-		float y = (height / 2 - pt[k].y*ksize + ksize / 2)*pt[k].z / f;
+		float x = (pt[k].x- width / 2)*pt[k].z / f;//(pt[k].x*ksize + ksize / 2 - width / 2)*pt[k].z / f;
+		float y = (height / 2 - pt[k].y)*pt[k].z / f;//(height / 2 - pt[k].y*ksize + ksize / 2)*pt[k].z / f;
 		float z = pt[k].z;
+		//std::cout<<"pt["<<k<<"]:"<<pt[k]<<"\n";
+		//std::cout<<"x,y,z:"<<x<<","<<y<<","<<z<<"\n";
 		if (z < grid_size / 2) {
 			grid_z = (int)((grid_size / 2 - z) / grid_cell_size);
 			if (std::abs(x)<grid_size / 2) {
@@ -533,7 +570,7 @@ void  vfh_class::clear_grid_map(void)
 	grid_map = m.clone();
 }
 
-float vfh_class::select_best_trajectory(const cv::Point2f& x0,const float& theta0,const cv::Point2f& xp,
+int vfh_class::select_best_trajectory(const cv::Point2f& x0,const float& theta0,const cv::Point2f& xp,
 		const float w_target,const float w_angle) {
 
 	double xr;
@@ -575,23 +612,51 @@ float vfh_class::select_best_trajectory(const cv::Point2f& x0,const float& theta
 	//float w_angle = 0.5;
 	//float xp = 0;//purpose
 	//float yp = 5;
-	float xc = 0;//current
-	float yc = 0;
+	float xc = x0.x;//current
+	float yc = x0.y;
+	//std::cout<<"x0,xp:"<<x0<<","<<xp<<"\n";
+	//std::cout<<"std::atan(-(xp.x - xc) / (xp.y - yc)):"<<std::atan(-(xp.x - xc) / (xp.y - yc))<<"\n";
+	
 	//float w_target = 0.8;
 	for (int i = 0; i<vfh_resolution; i++) {
+		if(not_select_angle[i])
+		{
+			std::cout<<"i:"<<i<<"\n";
+			continue;
+		}
+
 		float theta = (min_angle + (float)i * (max_angle - min_angle) / ( vfh_resolution ))*M_PI / 180;
-		float theta_half = vfh_resolution / 2 * std::abs((max_angle - min_angle) / (vfh_resolution))*M_PI / 180;
+		float theta_half = (float)vfh_resolution / 2 * std::abs((float)(max_angle - min_angle) / (vfh_resolution))*M_PI / 180;
 		evaluation_formula = (max_search_n - rank_trajectory[i])
 			+ (std::abs(i - vfh_resolution / 2) / (vfh_resolution / 2))*max_search_n*w_angle
 			+ std::abs(std::atan(-(xp.x - xc) / (xp.y - yc)) - theta) / theta_half * max_search_n*w_target;
-		if (good_trajectory_value > evaluation_formula) {
+		//std::cout<<"aa:"<<theta_half<<"\n";
+		//std::cout<<"evaluation_formula:"<<evaluation_formula<<"\n";
+		if (good_trajectory_value > evaluation_formula)
+		{
 			good_trajectory_value = evaluation_formula;
 			good_trajectory_num = i;
 		}
 	}
-
-	return ((min_angle + good_trajectory_num * (max_angle - min_angle) / (vfh_resolution))*M_PI / 180);
+	return good_trajectory_num;
+	//return ((min_angle + good_trajectory_num * (max_angle - min_angle) / (vfh_resolution))*M_PI / 180);
 }
+
+void vfh_class::set_not_select_angle(std::vector<bool>& not_select_angle_temp)
+{
+	std::cout<<"not_select_angle.size():"<<not_select_angle.size()<<"\n";
+	for(int i=0;i<not_select_angle.size();i++)
+	{
+		not_select_angle[i]=not_select_angle_temp[i];
+		
+		if(not_select_angle[i])
+		{
+			std::cout<<"i:"<<i<<"\n";
+		}
+		
+	}
+}
+
 /*
 int main(int argc,char **argv){
 	ros::init(argc,argv,"vfh_class_test");

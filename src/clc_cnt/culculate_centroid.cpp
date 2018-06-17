@@ -251,7 +251,7 @@ bool culculate_centroid::matching_cluster(void)
 	matched.resize(cur_cluster.clst.size());
 	for(int i=0;i<cur_cluster.clst.size();i++)
 	{
-		if(cur_cluster.clst[i].size>1.0*1.0
+		if(cur_cluster.clst[i].size>0.7*0.7
 			||cur_cluster.clst[i].size<0.1*0.1)
 		{
 			matched[i]=true;			

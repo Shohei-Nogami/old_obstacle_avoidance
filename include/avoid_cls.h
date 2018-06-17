@@ -1,3 +1,4 @@
+
 #include"ros/ros.h"
 #include <ros/callback_queue.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -24,21 +25,83 @@ private:
 	ros::CallbackQueue queue;
 
 	obst_avoid::filted_objects_info obj_info;
-
+	
+	std::vector<float> temp_vel;//vel list 
+  	std::vector<bool> not_select_angle;
+	
+	
+	float selected_vel;
+	
+	int ROBOT_STATUS;
+	
+	//dicriminate_obstacle
 	std::vector<int> obstacle_status;
 	vfh_class vfh;
+	//vfh parameter
+	int min_angle=-45;
+	int max_angle=45;
+	int vfh_resolution=90;
+	float w_target = 0.7;
+	float w_angle = 0.5;
+	float robot_r=0.2;
+	float d_r=0.1;
+	float mv_length=0.2;
+	float max_vel_dif=0.2;
 
+	//set_equation
 	std::vector<float> obj_eq_a;//ŒX‚«
-
-	float selected_angle_i;
-
+	//select_route
+	int selected_angle_i;
+	float selected_angle;
+	//set_intersection
+	std::vector<cv::Point2f> x_c;
+	//set_intersection_time
+	std::vector<double> t_c;
+	//set_dengerous_time_range
+	std::vector<double> t_c_min;
+	std::vector<double> t_c_max;
+	//check_collision
+	std::vector<std::vector<float>> t_c_min_angle;//[angle][vel_num]
+	//select_safety_vel
+  	int selected_vel_num;
+  	//set_safety_vel
+	float safety_vel;
+	float safety_angle;
+  	
 public:
 	avoid();
 	~avoid();
+	void set_param_vfh(void);
 	void subscribe_objects(void);
 	void objects_callback(const obst_avoid::filted_objects_info::ConstPtr& msg);
 	bool dicriminate_obstacle(void);
-	void culculate_equation(void);
-	float select_route(void);
-	void culculate_intersection(void);
+	void set_equation(void);
+	void set_grid_map(void);
+
+	void set_not_select_angle_to_vfh(void);
+
+	void select_route(void);
+	void set_intersection(void);
+	void set_intersection_time(void);
+	void labeling_dangerous_obstacle(void);
+	void set_dengerous_time_range(void);
+	bool check_collision(void);
+	bool is_collision(cv::Point2f& xr,cv::Point2f& xo,double& objs_r);
+	
+	
+	bool change_selected_vel(void);
+	void set_selected_vel(void);
+	void set_default_vel_num(void);
+	
+	bool select_safety_vel(void);
+	bool set_dangerous_angle(void);
+	void clear_not_select_angle(void);
+	void set_safety_vel(void);
+	void set_stop_vel(void);
+
+	void publish_velocity(void);
+	void init_data(void);
+	
+	void publish_grid_map(void);
 };
+

@@ -47,20 +47,21 @@ class vfh_class{
 		uint8_t/*uchar*/ binary_threshold;
 
 //parameter of trajectory
-		const int vfh_resolution=90+1;
-		const float temp_v=0.2;
-		const float temp_v_dif_max=0.2;
-		const float d=0.138;
+		int vfh_resolution=90+1;
+		float temp_v=0.2;
+		float temp_v_dif_max=0.2;
+		float d=0.138;
 		int good_trajectory_num;
 //		float temp_vl[vel_patern],temp_vr[vel_patern];
-		std::vector<float> temp_vl,temp_vr;
-		std::vector<double> temp_w;
-		std::vector<double> temp_p;
 		std::vector<double> delta_theta;
 		std::vector<int> max_process_n;
 		std::vector<int> rank_trajectory;
-		const int max_angle=45;
-		const int min_angle=-45;
+		int max_angle=45;
+		int min_angle=-45;
+		
+		
+	  	std::vector<bool> not_select_angle;
+		
 //parameter of collision avoidanace 
 		float R=0.2;
 		float d_r=0.1;
@@ -103,10 +104,14 @@ class vfh_class{
 		void simulate_obstacle(void);
 
 		void publish_velocity(void);
-
+		
+		
+		void publish_velocity(float& vel,float& angvel);
+		void set_param(const int& min_ang,const int& max_ang,const int& reso,const float& rob_r,const float& mrg_r,const float& mv_length,const float& max_vdif);
 		void clear_grid_map(void);
 		void set_grid_map(const std::vector<obst_avoid::point3d>& pt);
-		float select_best_trajectory(const cv::Point2f& x0, const float& theta0, const cv::Point2f& xp,
-			const float w_target, const float w_angle);
+		int select_best_trajectory(const cv::Point2f& x0, const float& theta0, const cv::Point2f& xp,const float w_target, const float w_angle);
+
+		void set_not_select_angle(std::vector<bool>& not_select_angle_temp);
 };
 
