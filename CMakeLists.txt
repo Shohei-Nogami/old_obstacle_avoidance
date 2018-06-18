@@ -81,6 +81,8 @@ find_package(OpenCV REQUIRED)
    objects_info.msg
    filted_objects_info.msg
    filted_object_info.msg
+   point2d.msg
+   robot_odm.msg
 #   Message1.msg
 #   Message2.msg
  )
@@ -266,6 +268,10 @@ target_link_libraries(estimate_velocity_class_test ${catkin_LIBRARIES} ${OpenCV_
 
 add_executable(avoid_class_test src/avoid_cls/avoid_cls.cpp src/vfh+_cls/vfh+_class.cpp src/tm_cls/time_class.cpp )
 target_link_libraries(avoid_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(pub_odm src/odm_cls/pub_odm.cpp src/tm_cls/time_class.cpp src/odm_cls/odometry_class.cpp src/odm_cls/wheel_odometry_class.cpp src/odm_cls/visual_odometry_class.cpp)
+target_link_libraries(pub_odm ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 
 #add_executable(img_prc src/main.cpp src/img_prc_cls.cpp src/prcs_fnc.cpp src/image_function.cpp src/depth_function.cpp src/odom_function.cpp src/time_function.cpp src/cvArrow_function.cpp src/vector_function.cpp src/debug_function.cpp src/tracking_fp_function.cpp src/prd_prc.cpp src/wheel_control.cpp)
 #target_link_libraries(img_prc ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})

@@ -36,6 +36,7 @@ private:
 	
 	//dicriminate_obstacle
 	std::vector<int> obstacle_status;
+	std::vector<int> obstacle_safety_status;
 	vfh_class vfh;
 	//vfh parameter
 	int min_angle=-45;
@@ -75,6 +76,7 @@ public:
 	void subscribe_objects(void);
 	void objects_callback(const obst_avoid::filted_objects_info::ConstPtr& msg);
 	bool dicriminate_obstacle(void);
+	void clear_safety_status(void);
 	void set_equation(void);
 	void set_grid_map(void);
 

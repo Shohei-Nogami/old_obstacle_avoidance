@@ -69,6 +69,8 @@ bool avoid::dicriminate_obstacle(void)
 		return false;
 	}	
 	obstacle_status.resize(obj_info.objs.size());
+	obstacle_safety_status.resize(obj_info.objs.size());
+	clear_safety_status();
 	for (int i = 0; i < obj_info.objs.size(); i++)
 	{
 
@@ -186,12 +188,12 @@ void avoid::set_intersection(void)
 
 		  if(vel_dif-selected_vel>0)
 		  {
-		  	obstacle_status[i]=SAFETY_OBSTACLE;//NO COLLISSION
+		  	obstacle_safety_status[i]=SAFETY_OBSTACLE;//NO COLLISSION
 		  }
 		  else
 		  {
 		    //COLLISSION
-		    obstacle_status[i]=DANGER_OBSTACLE;
+		    obstacle_safety_status[i]=DANGER_OBSTACLE;
 		    
 		  }
 		  continue;
@@ -231,7 +233,7 @@ void avoid::set_intersection_time(void)
 			float length=std::sqrt(std::pow(x_c[i].x,2.0)+std::pow(x_c[i].y,2.0));
 			t_c[i]= length/selected_vel;
 		}
-		else if(obstacle_status[i]==DANGER_OBSTACLE)
+		else if(obstacle_safety_status[i]==DANGER_OBSTACLE)
 		{
 			float obstacle_vel=std::sqrt(std::pow(obj_info.objs[i].vel.x,2.0)+std::pow(obj_info.objs[i].vel.z,2.0));
 		  
@@ -242,24 +244,32 @@ void avoid::set_intersection_time(void)
 	}
 	
 }
+void avoid::clear_safety_status(void)
+{
+	for(int i = 0; i < obj_info.objs.size(); i++)
+	{
+    obstacle_safety_status[i]=SAFETY_OBSTACLE; 
+	}
+}
 void avoid::labeling_dangerous_obstacle(void)
 {
 	
 	for(int i = 0; i < obj_info.objs.size(); i++)
 	{
-		if(obstacle_status[i]==MOVING_OBSTACLE||obstacle_status[i]==DANGER_OBSTACLE)
+		if(obstacle_status[i]==MOVING_OBSTACLE||obstacle_safety_status[i]==DANGER_OBSTACLE)
 	  {
 			std::cout<<"t_c["<<i<<"]:"<<t_c[i]<<"\n";
+			std::cout<<"obj_info.objs["<<i<<"]:"<<obj_info.objs[i].vel<<"\n";
 		}
 	  if(obstacle_status[i]==MOVING_OBSTACLE)
 	  {
 	    if(t_c[i]<0||t_c[i]>10)
 	    {
-	      obstacle_status[i]=SAFETY_OBSTACLE;
+	      obstacle_safety_status[i]=SAFETY_OBSTACLE;
 	    }
 	    else
 	    {
-	      obstacle_status[i]=WARNING_OBSTACLE;
+	      obstacle_safety_status[i]=WARNING_OBSTACLE;
 	    }
 	  }
 	}
@@ -277,21 +287,21 @@ void avoid::set_dengerous_time_range(void)
   
   for(int i = 0; i < obj_info.objs.size(); i++)
   {
-  	if(obstacle_status[i]!=WARNING_OBSTACLE)
+  	if(obstacle_safety_status[i]!=WARNING_OBSTACLE)
   	{
   		continue;
   	}
   	
     double obstacle_r=obj_info.objs[i].r;
-	
-		double l=(obstacle_r+robot_r)/(tan(selected_angle));
-	
-		double delta_t=l/selected_vel;
-	
+		//double obstacle_vel=std::sqrt(std::pow(obj_info.objs[i].vel.x,2.0)+std::pow(obj_info.objs[i].vel.z,2.0));
+		double delta_t=std::sqrt( (std::pow(robot_r,2.0)+std::pow(obstacle_r,2.0))
+															/(std::pow(selected_vel,2.0)+std::pow(obj_info.objs[i].vel.x,2.0)+std::pow(obj_info.objs[i].vel.z,2.0)) );
+		
 		t_c_min[i]=t_c[i]-delta_t;
 		t_c_max[i]=t_c[i]+delta_t;
 		std::cout<<"t_c_min["<<i<<"]:"<<t_c_min[i]<<"\n";
 		std::cout<<"t_c_max["<<i<<"]:"<<t_c_max[i]<<"\n";
+		std::cout<<"selected_angle,tan:"<<selected_angle<<","<<tan(selected_angle)<<"\n";
   }
 }
 /*
@@ -317,9 +327,9 @@ bool avoid::check_collision(void)//any collision -> true; no collision -> false
   
   for(int i = 0; i < obj_info.objs.size(); i++)
 	{
-	  if(obstacle_status[i]!=WARNING_OBSTACLE)
+	  if(obstacle_safety_status[i]!=WARNING_OBSTACLE)
 	  {
-			if(obstacle_status[i]==DANGER_OBSTACLE)
+			if(obstacle_safety_status[i]==DANGER_OBSTACLE)
 			{
 				if(t_c_min_all>t_c[i])
 				{
@@ -417,22 +427,24 @@ bool avoid::check_collision(void)//any collision -> true; no collision -> false
 
 	  if(status==COLLISION)
 	  {
-	    obstacle_status[i]=DANGER_OBSTACLE;
+	    obstacle_safety_status[i]=DANGER_OBSTACLE;
 	  }
 	  else
 	  {
-	    obstacle_status[i]=SAFETY_OBSTACLE;
+	    obstacle_safety_status[i]=SAFETY_OBSTACLE;
 	  }
 	}
 	//std::cout<<"t_c_min_angle.size:"<<t_c_min_angle.size()<<"\n";
 	//std::cout<<"selected_angle_i:"<<selected_angle_i<<"\n";
 	//std::cout<<"t_c_min_angle[selected_angle_i].size():"<<t_c_min_angle[selected_angle_i].size()<<"\n";
 	//std::cout<<"selected_vel_num:"<<selected_vel_num<<"\n";
-	if(t_c_min_all!=100)
+	if(t_c_min_all>0&&t_c_min_all!=100)
 	{
+		std::cout<<"return true::t_c_min_all:"<<t_c_min_all<<"\n";
 		t_c_min_angle[selected_angle_i][selected_vel_num]=t_c_min_all;
 		return true;
 	}
+	std::cout<<"return true::t_c_min_all:"<<t_c_min_all<<"\n";
 	return false;
 }
 bool avoid::is_collision(cv::Point2f& xr,cv::Point2f& xo,double& objs_r)
@@ -547,7 +559,8 @@ void avoid::init_data(void)
 void avoid::set_safety_vel(void)
 {
 	safety_vel=selected_vel;
-	safety_angle=selected_angle;	
+	safety_angle=selected_angle;
+	std::cout<<"safetyVel:"<<	safety_vel<<","<<safety_angle<<"\n";
 }
 void avoid::set_stop_vel(void)
 {
@@ -570,7 +583,6 @@ int main(int argc,char **argv)
  
   avoid avoid_cls;
   time_class time_cls;
-	
 	int ROBOT_STATUS=ROBOT_GO;
 	avoid_cls.set_param_vfh();
   while(ros::ok())
@@ -579,6 +591,7 @@ int main(int argc,char **argv)
 		std::cout<<"begin\n";
 		avoid_cls.subscribe_objects();
 		std::cout<<"subscribed\n";
+		//avoid_cls.clear_safety_status();
 		if(!avoid_cls.dicriminate_obstacle())
 		{
 			continue;
