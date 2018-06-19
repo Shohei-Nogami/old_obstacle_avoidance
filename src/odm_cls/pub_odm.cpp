@@ -8,10 +8,10 @@ int main(int argc,char **argv){
 	time_class t;
 	double t_now=t.get_time_now();
 
-	obst_avoid::point2d robot_odm;
+	obst_avoid::robot_odm robot_odm;
 	ros::NodeHandle nh;
 	ros::Publisher pub;
-	pub=nh.advertise<obst_avoid::point2d>("robot_odm",1);
+	pub=nh.advertise<obst_avoid::robot_odm>("robot_odm",1);
 	while(ros::ok()){
 		odom_cls.subscribe_msgs();
 		std::cout<<"subscribed:"<<t.get_time_now()-t_now<<"\n";
@@ -32,6 +32,7 @@ int main(int argc,char **argv){
 
 		robot_odm.x=odom_cls.get_odometry_x();
 		robot_odm.y=odom_cls.get_odometry_z();
+		robot_odm.th=odom_cls.get_odometry_yw();
 		pub.publish(robot_odm);
 	}
 	

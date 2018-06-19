@@ -25,6 +25,9 @@ avoid::avoid()
 	nh_sub.setCallbackQueue(&queue);
 	sub = nh_sub.subscribe("filted_objects_info", 1, &avoid::objects_callback, this);
 
+	nh_sub2.setCallbackQueue(&queue2);
+	sub2 = nh_sub2.subscribe("robot_odm", 1, &avoid::odometry_callback, this);
+
 	//vfh.vfh_class();
 	
 	//set vel temp
@@ -60,6 +63,21 @@ void avoid::subscribe_objects(void)
 void avoid::objects_callback(const obst_avoid::filted_objects_info::ConstPtr& msg)
 {
 	obj_info.objs = msg->objs;
+}
+
+void avoid::subscribe_odometry(void)
+{
+	queue2.callOne(ros::WallDuration(1));
+}
+
+void avoid::odometry_callback(const obst_avoid::robot_odm::ConstPtr& msg)
+{
+	robot_odm.x=msg->x;
+	robot_odm.y=msg->y;
+	robot_odm.th=msg->th;
+	x0.x = msg->x;
+	x0.y = msg->y;
+	theta0 = msg->th;
 }
 
 bool avoid::dicriminate_obstacle(void)
@@ -130,10 +148,13 @@ void avoid::select_route(void)
 {
 	
 	//select_route
-	cv::Point2f x0 = cv::Point2f(0, 0);
-	cv::Point2f xp = cv::Point2f(0, 5);
-	float theta0 = 0;
+	//cv::Point2f x0 = cv::Point2f(0, 0);
+	cv::Point2f xp = cv::Point2f(0, 10);
+	//float theta0 = 0;
 	
+	std::cout<<"x0,xp:"<<x0<<","<<xp<<"\n";
+	std::cout<<"robot_odm:"<<robot_odm<<"\n";
+
 	//修正が必要
 	selected_angle_i = vfh.select_best_trajectory(x0, theta0, xp, w_target, w_angle);
 	
@@ -590,6 +611,7 @@ int main(int argc,char **argv)
 		ROBOT_STATUS=ROBOT_GO;
 		std::cout<<"begin\n";
 		avoid_cls.subscribe_objects();
+		avoid_cls.subscribe_odometry();
 		std::cout<<"subscribed\n";
 		//avoid_cls.clear_safety_status();
 		if(!avoid_cls.dicriminate_obstacle())

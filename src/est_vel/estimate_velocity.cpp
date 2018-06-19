@@ -786,8 +786,8 @@ void estimate_velocity::publish_pointcloud(void)
 					cloud_temp.g=colors[i%12][1];
 					cloud_temp.b=colors[i%12][2];
 				
-					cloud_temp.y+=10;		
-					cloud_temp.z+=4;
+					//cloud_temp.y+=10;		
+					//cloud_temp.z+=4;
 					clusted_cloud->points.push_back(cloud_temp);
 				}	
 				continue;
@@ -876,8 +876,8 @@ void estimate_velocity::publish_pointcloud(void)
 		    cloud_temp.y+=-vel_h[i].x*t-temp.x;	
 		    cloud_temp.z+=0;
 				
-			  cloud_temp.y+=10;		
-				cloud_temp.z+=4;
+			  //cloud_temp.y+=10;		
+				//cloud_temp.z+=4;
 				clusted_cloud->points.push_back(cloud_temp);
 			}	
 		}

@@ -333,11 +333,17 @@ void detect_objects::publish_cluster(double& v,double& w,double& dt)
 	std::cout<<"Q.clst.size():"<<Q.clst.size()<<"\n";
 	for(int i=0;i<Q.clst.size();i++)
 	{
-		/*if(Q.clst[i].size<0.1*0.1||Q.clst[i].size>1.0*1.0)
+		//add 180619
+		if(Q.clst[i].size<0.1*0.1)//||Q.clst[i].size>1.0*1.0)
 		{
 			continue;
 		}
-		*/
+		
+		//add 180618
+		/*if((int)Q.clst[i].fpt.size()<10)
+		{
+			continue;
+		}*/
 		pub_Q.clst[i].size=Q.clst[i].size;
 		pub_Q.clst.push_back(Q.clst[i]);
 		/*

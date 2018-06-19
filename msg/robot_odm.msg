@@ -1,3 +1,5 @@
 #robot odometry
 
-point2d robot_odm
+float64 x
+float64 y
+float64 th

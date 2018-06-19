@@ -51,25 +51,59 @@ void odometry_class::set_velocity(void){
 	//y=0.5 -> angle==th_angle/2
 	//double P=exp(-0.8326*( dif_angle/(th_angle/2) ) );			
 	double P=1/(1+ exp(-(dif_angle - th_angle) ) );			
+	if(std::isnan(P))
+	{
+		P=0;
+	}
+	
+	wv=wocls.get_velocity();
+	ww=wocls.get_angular_velocity();
 	
 	vv=vocls.get_velocity();
 	vw=vocls.get_velocity_wy();
 	
-	wv=wocls.get_velocity();
-	ww=wocls.get_angular_velocity();
-	std::cout<<"P:"<<P<<"\n";
-	v=vv*P+wv*(1-P);
-	w=vw*P+ww*(1-P);
+	double dir=vocls.get_velocity_z();
 	
+	if(wv<0)
+	{
+		vv=-vv;
+	}
+	
+	//std::cout<<"P:"<<P<<"\n";
+	//std::cout<<"vv,wv:"<<vv<<","<<wv<<"\n";
+	if(std::abs(wv)>0.01)
+	{
+		v=vv*P+wv*(1-P);
+		w=vw*P+ww*(1-P);
+	}
+	else
+	{
+		v=wv;
+		w=ww;
+	}
+	/*
+	if(std::isnan(w))
+	{
+		int kk=1;
+		while(ros::ok()&&kk){
+		std::cout<<"isnan w";std::cin>>kk;
+		}
+	}
+	*/
 }
 void odometry_class::set_odometry(void){
 	tm_odm.set_time();
-	x+=v*sin(-w*tm_odm.get_delta_time());
-	y+=0;
-	z+=v*cos(-w*tm_odm.get_delta_time());
+
+	yw+=w*tm_odm.get_delta_time();
 	r+=0;
 	p+=0;
-	yw+=w*tm_odm.get_delta_time();
+	//x+=v*sin(-w*tm_odm.get_delta_time())*tm_odm.get_delta_time();
+	x+=v*sin(-yw)*tm_odm.get_delta_time();
+	y+=0;
+	//z+=v*cos(-w*tm_odm.get_delta_time())*tm_odm.get_delta_time();
+	z+=v*cos(-yw)*tm_odm.get_delta_time();
+
+	std::cout<<"x,y,z,r,p,yw:"<<x<<","<<y<<","<<z<<","<<r<<","<<p<<","<<yw<<"\n";
 }
 double& odometry_class::get_dif_angle(void){
 	return dif_angle;

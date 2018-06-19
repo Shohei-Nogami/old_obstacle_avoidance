@@ -585,17 +585,18 @@ int vfh_class::select_best_trajectory(const cv::Point2f& x0,const float& theta0,
 	//float x0 = x0.x;
 	//float y0 = x0.y;
 	//float theta0 = 0;
+	cv::Point2f xt0 = cv::Point2f(0,0);
 	int max_search_n = 20;
 	for (int i = 0; i<vfh_resolution; i++)
 	{
-		float x = x0.x;
-		float y = x0.y;
+		float x = xt0.x;
+		float y = xt0.y;
 		float theta = (min_angle + (float)i * (max_angle - min_angle) / ( vfh_resolution ) )*M_PI / 180;
 		float mv_length = R;
 		for (int n = 0; n < max_search_n; n++)
 		{
-			x = x0.x + mv_length * (-sin(theta))*n;
-			y = x0.y + mv_length * (cos(theta))*n;
+			x = xt0.x + mv_length * (-sin(theta))*n;
+			y = xt0.y + mv_length * (cos(theta))*n;
 			transport_robot_to_gridn(x, y, nx, ny);
 
 			if (is_obstacle(nx, ny) || n == max_search_n - 1) {
@@ -629,7 +630,7 @@ int vfh_class::select_best_trajectory(const cv::Point2f& x0,const float& theta0,
 		float theta_half = (float)vfh_resolution / 2 * std::abs((float)(max_angle - min_angle) / (vfh_resolution))*M_PI / 180;
 		evaluation_formula = (max_search_n - rank_trajectory[i])
 			+ (std::abs(i - vfh_resolution / 2) / (vfh_resolution / 2))*max_search_n*w_angle
-			+ std::abs(std::atan(-(xp.x - xc) / (xp.y - yc)) - theta) / theta_half * max_search_n*w_target;
+			+ std::abs(std::atan(-(xp.x - xc) / (xp.y - yc))-theta0 - theta ) / theta_half * max_search_n*w_target;
 		//std::cout<<"aa:"<<theta_half<<"\n";
 		//std::cout<<"evaluation_formula:"<<evaluation_formula<<"\n";
 		if (good_trajectory_value > evaluation_formula)

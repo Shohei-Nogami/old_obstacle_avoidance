@@ -15,17 +15,22 @@
 //#include<Eigen/Dense>
 #include<fstream>//file input output
 #include"vfh+_class.h"
+#include"obst_avoid/point2d.h"
+#include"obst_avoid/robot_odm.h"
 
 class avoid {
 private:
-	ros::NodeHandle nh_sub, nh_pub;
+	ros::NodeHandle nh_sub,nh_sub2, nh_pub;
 
 	ros::Publisher pub, pub_pcl;
-	ros::Subscriber sub;
-	ros::CallbackQueue queue;
+	ros::Subscriber sub,sub2;
+	ros::CallbackQueue queue,queue2;
 
 	obst_avoid::filted_objects_info obj_info;
-	
+	obst_avoid::robot_odm robot_odm;
+	cv::Point2f x0 ;
+	double theta0;
+
 	std::vector<float> temp_vel;//vel list 
   	std::vector<bool> not_select_angle;
 	
@@ -75,6 +80,8 @@ public:
 	void set_param_vfh(void);
 	void subscribe_objects(void);
 	void objects_callback(const obst_avoid::filted_objects_info::ConstPtr& msg);
+	void subscribe_odometry(void);
+	void odometry_callback(const obst_avoid::robot_odm::ConstPtr& msg);
 	bool dicriminate_obstacle(void);
 	void clear_safety_status(void);
 	void set_equation(void);
