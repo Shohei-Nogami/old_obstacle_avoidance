@@ -55,16 +55,27 @@ estimate_velocity::estimate_velocity()
 	sig_x0(2,2)=0.09;//vx
 	sig_x0(3,3)=0.09;//vz
 	
-	sig_x0(0,2)=sig_x0(2,2)*(0.2*0.2);
-	sig_x0(2,0)=sig_x0(0,2);//sig_x0(0,0)/(0.2*0.2);
-	sig_x0(1,3)=sig_x0(3,3)*(0.2*0.2);
-	sig_x0(3,1)=sig_x0(1,3);//sig_x0(1,1)/(0.2*0.2);
+	sig_x0(0,2)=0;//sig_x0(2,2)*(0.2*0.2);
+	sig_x0(2,0)=0;//sig_x0(0,2);//sig_x0(0,0)/(0.2*0.2);
+	sig_x0(1,3)=0;//sig_x0(3,3)*(0.2*0.2);
+	sig_x0(3,1)=0;//sig_x0(1,3);//sig_x0(1,1)/(0.2*0.2);
 	
 
 	sig_wk(0,0)=0.05*0.05;//x
 	sig_wk(1,1)=0.05*0.05;//z
 	sig_wk(2,2)=0.02;//0.01;//vx
 	sig_wk(3,3)=0.02;//0.01;//vz
+
+	sig_wk(0,2)=0;//sig_wk(0,0)*sig_wk(2,2)/2;
+	sig_wk(1,3)=0;//sig_wk(3,3)*ig_wk(1,1)/2;
+	sig_wk(2,0)=0;//sig_wk(0,2);//sig_wk(0,0)/(dt*dt);
+	sig_wk(3,1)=0;//sig_wk(1,3);//sig_wk(1,1)/(dt*dt);
+
+	//set Q
+	del_t(0,2)=0;//del_t(0,0)*del_t(2,2)/2;
+	del_t(1,3)=0;//del_t(1,1)*del_t(3,3)/2;
+	del_t(2,0)=0;//del_t(0,2);//del_t(0,0)/(dt*dt);
+	del_t(3,1)=0;//del_t(1,3);//del_t(1,1)/(dt*dt);
 
 	//現在日時を取得する
 	time_t t = time(nullptr);
@@ -522,7 +533,7 @@ void estimate_velocity::calmanfilter(void)
 	//u : ax,ay,az
 
 	//set R,Q
-	
+	/*
 	sig_wk(0,2)=sig_wk(2,2)*(dt*dt);
 	sig_wk(1,3)=sig_wk(3,3)*(dt*dt);
 	sig_wk(2,0)=sig_wk(0,2);//sig_wk(0,0)/(dt*dt);
@@ -533,7 +544,7 @@ void estimate_velocity::calmanfilter(void)
 	del_t(1,3)=del_t(3,3)*(dt*dt);
 	del_t(2,0)=del_t(0,2);//del_t(0,0)/(dt*dt);
 	del_t(3,1)=del_t(1,3);//del_t(1,1)/(dt*dt);
-	
+	*/
 	xh_t_1.resize(xh_t.size());
 	sig_xh_t_1.resize(sig_xh_t.size());
 	xh_t_1.resize(cur_objs.obj.size());
