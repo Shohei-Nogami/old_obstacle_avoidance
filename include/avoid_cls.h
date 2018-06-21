@@ -16,13 +16,15 @@
 #include<fstream>//file input output
 #include"vfh+_class.h"
 #include"obst_avoid/point2d.h"
+#include"obst_avoid/select_theta.h"
 #include"obst_avoid/robot_odm.h"
-
+#include<geometry_msgs/Twist.h>
+#include<std_msgs/Empty.h>
 class avoid {
 private:
-	ros::NodeHandle nh_sub,nh_sub2, nh_pub;
+	ros::NodeHandle nh_sub,nh_sub2, nh_pub,nh_pub2;
 
-	ros::Publisher pub, pub_pcl;
+	ros::Publisher pub,pub2, pub_pcl;
 	ros::Subscriber sub,sub2;
 	ros::CallbackQueue queue,queue2;
 

@@ -5,6 +5,7 @@
 <!--  <node pkg="obst_avoid" name="estimate_velocity_class_test" type="estimate_velocity_class_test"/> -->
   <node pkg="obst_avoid" name="avoid_class_test" type="avoid_class_test" output="screen"/>
   <node pkg="obst_avoid" name="pub_odm" type="pub_odm"/>
+  <node pkg="obst_avoid" name="wheel_control_class_test" type="wheel_control_class_test"/>
 
 </launch>
 

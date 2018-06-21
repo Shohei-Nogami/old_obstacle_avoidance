@@ -17,6 +17,7 @@ find_package(catkin REQUIRED
     tf
     nav_msgs
     pcl_ros
+    geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -83,6 +84,7 @@ find_package(OpenCV REQUIRED)
    filted_object_info.msg
    point2d.msg
    robot_odm.msg
+   select_theta.msg
 #   Message1.msg
 #   Message2.msg
  )
@@ -278,6 +280,8 @@ target_link_libraries(pub_odm ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #add_executable(data_processing_v_and_w src/data_processing_dv_dw.cpp)
 #target_link_libraries(data_processing_v_and_w ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(data_prcessing_xrt_and_xot src/data_processing_xrt_xot.cpp)
+target_link_libraries(data_prcessing_xrt_and_xot ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(detect_objects_median src/detect_objects_median.cpp)
 target_link_libraries(detect_objects_median ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})

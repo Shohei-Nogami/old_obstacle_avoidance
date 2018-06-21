@@ -28,6 +28,8 @@ avoid::avoid()
 	nh_sub2.setCallbackQueue(&queue2);
 	sub2 = nh_sub2.subscribe("robot_odm", 1, &avoid::odometry_callback, this);
 
+	pub2 = nh_pub2.advertise<obst_avoid::select_theta>("select_theta", 1);
+	
 	//vfh.vfh_class();
 	
 	//set vel temp
@@ -591,6 +593,10 @@ void avoid::set_stop_vel(void)
 
 void avoid::publish_velocity(void)
 {
+	obst_avoid::select_theta pub_data;
+	pub_data.select_theta=safety_angle;
+	pub_data.select_vel=safety_vel;
+	pub2.publish(pub_data);
 	vfh.draw_best_trajectory(selected_angle_i);
 	vfh.publish_velocity(safety_vel,safety_angle);
 }
@@ -606,8 +612,34 @@ int main(int argc,char **argv)
   time_class time_cls;
 	int ROBOT_STATUS=ROBOT_GO;
 	avoid_cls.set_param_vfh();
+
+	geometry_msgs::Twist turtlebot_vel;
+	std_msgs::Empty empty_msg;
+	ros::NodeHandle nh,nh2;
+	ros::Publisher pub,pub2;
+	pub = nh.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1);
+	pub2 = nh.advertise<std_msgs::Empty>("mobile_base/commands/reset_odometry", 1);
+	
+	turtlebot_vel.linear.x=0.2;
+	turtlebot_vel.linear.y=0;
+	turtlebot_vel.linear.z=0;
+	turtlebot_vel.angular.x=0;
+	turtlebot_vel.angular.y=0;
+	turtlebot_vel.angular.z=0;
+
+	int i=0;
+	ros::Rate r=1;
+	
+	while(ros::ok()&&i++<2)
+	{		
+		pub2.publish(empty_msg);
+		r.sleep();
+	}
+	
   while(ros::ok())
 	{
+		
+		pub.publish(turtlebot_vel);
 		ROBOT_STATUS=ROBOT_GO;
 		std::cout<<"begin\n";
 		avoid_cls.subscribe_objects();
@@ -654,8 +686,8 @@ int main(int argc,char **argv)
 			}
 			*/
 		}while(ros::ok());
-
-
+		
+		
 		if(ROBOT_STATUS==ROBOT_STOP)
 		{
 			avoid_cls.set_stop_vel();
@@ -673,5 +705,9 @@ int main(int argc,char **argv)
 		std::cout<<"loop\n";
 		
 	}
+
+	turtlebot_vel.linear.x=0;
+	pub.publish(turtlebot_vel);
+
 }
 
