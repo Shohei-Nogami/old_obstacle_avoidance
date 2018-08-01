@@ -31,6 +31,7 @@ avoid::avoid()
 	pub2 = nh_pub2.advertise<obst_avoid::select_theta>("select_theta", 1);
 	
 	//vfh.vfh_class();
+
 	
 	//set vel temp
 	temp_vel.resize(3);
@@ -171,10 +172,13 @@ void avoid::select_route(void)
 void avoid::set_intersection(void)
 {
 	float a_r;
+	float a_x,a_y;
 	//float selected_angle=(min_angle+selected_angle_i*(max_angle-min_angle)/vfh_resolution)*M_PI/180;
 	if(selected_angle!=0)
 	{
 		a_r=1.0/tan(selected_angle);
+		a_y=selected_vel*std::cos(selected_angle);
+		a_x=selected_vel*std::sin(selected_angle);
 	}
 	else
 	{
@@ -192,11 +196,11 @@ void avoid::set_intersection(void)
 		{
 			continue;
 		}
-		if(std::abs(a_r-obj_eq_a[i])<M_PI/180*5)//+-5度
+		if(std::abs( atan2(obj_info.objs[i].vel.x-a_x,obj_info.objs[i].vel.z-a_y))<M_PI/180*5)//+-5度
 		{
 			
-		  float selected_vel_x=selected_vel*sin(selected_angle);
-		  float selected_vel_z=selected_vel*cos(selected_angle);
+		  //float selected_vel_x=selected_vel*sin(selected_angle);
+		  //float selected_vel_z=selected_vel*cos(selected_angle);
 		  //std::cout<<"vx,vz:"<<selected_vel_x<<","<<selected_vel_z<<"\n";
 		  float vel_dif=std::sqrt(std::pow(obj_info.objs[i].vel.x+selected_vel_x,2.0)+std::pow(obj_info.objs[i].vel.z+selected_vel_z,2.0));
 		  //std::cout<<"vel_dif:"<<vel_dif<<"\n";
@@ -221,14 +225,14 @@ void avoid::set_intersection(void)
 		  }
 		  continue;
 		}
-		else if(obj_eq_a[i]==0)//not && a_r==0  -> std::abs(a_r-obj_eq_a[i])<M_PI/180*5)
+		else if(obj_info.objs[i].vel.x==0)//not && a_r==0  -> std::abs(a_r-obj_eq_a[i])<M_PI/180*5)
 		{
 			//float obj_vel=std::sqrt(std::pow(obj_info.objs[i].vel.x, 2.0) + std::pow(obj_info.objs[i].vel.z, 2.0));
 			x_c[i].x=obj_info.objs[i].pos.x;
 			x_c[i].y=a_r*obj_info.objs[i].pos.x;
 
 		}
-		else if(a_r==0)
+		else if(a_x==0)
 		{
 			x_c[i].x=0;
 			x_c[i].y=(0-obj_info.objs[i].pos.x)*obj_eq_a[i]+obj_info.objs[i].pos.z;
@@ -317,9 +321,13 @@ void avoid::set_dengerous_time_range(void)
   	
     double obstacle_r=obj_info.objs[i].r;
 		//double obstacle_vel=std::sqrt(std::pow(obj_info.objs[i].vel.x,2.0)+std::pow(obj_info.objs[i].vel.z,2.0));
+		/*
 		double delta_t=std::sqrt( (std::pow(robot_r,2.0)+std::pow(obstacle_r,2.0))
 															/(std::pow(selected_vel,2.0)+std::pow(obj_info.objs[i].vel.x,2.0)+std::pow(obj_info.objs[i].vel.z,2.0)) );
-		
+		*/
+		double delta_t=std::sqrt( (std::pow(robot_r,2.0)+std::pow(obstacle_r,2.0))
+															/(std::pow(selected_vel,2.0)+std::pow(obj_info.objs[i].vel.x,2.0)+std::pow(obj_info.objs[i].vel.z,2.0)) -2*selected_vel*std::sqrt(std::pow(obj_info.objs[i].vel.x,2.0)+std::pow(obj_info.objs[i].vel.z,2.0))*selected_vel*sin( atan2(obj_info.objs[i].vel.z,obj_info.objs[i].vel.x)-(-selected_angle) ) );
+
 		t_c_min[i]=t_c[i]-delta_t;
 		t_c_max[i]=t_c[i]+delta_t;
 		std::cout<<"t_c_min["<<i<<"]:"<<t_c_min[i]<<"\n";
@@ -665,7 +673,7 @@ int main(int argc,char **argv)
 		
 			std::cout<<"select_route\n";
 			
-			if(avoid_cls.select_safety_vel())//if found safety_vel <- exist bag 
+			if(avoid_cls.select_safety_vel())//if found safety_vel <- exist bag
 			{
 				std::cout<<"select_safety_vel\n";
 				break;

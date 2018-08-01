@@ -75,7 +75,9 @@ bool culculate_optical_flow::obtain_feature_points(const cv::Mat& pre_depth_imag
   //nh=nw=16 -> fp.size:987
   int clp_max_points=max_points/(cnh*cnw)*4;
   //auto detector = cv::ORB(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
-  auto detector = cv::FastFeatureDetector(20,false);
+  //auto detector = cv::ORB::create(clp_max_points, 1.25f, 4, 7, 0, 2, 0, 7);
+  //auto detector = cv::FastFeatureDetector(20,false);
+  auto detector = cv::FastFeatureDetector::create(20,false);
   cv::Point2i ppts;
 	float ppre_z;
 	float y;
@@ -83,7 +85,8 @@ bool culculate_optical_flow::obtain_feature_points(const cv::Mat& pre_depth_imag
   //METHOD1
   for(int i=0;i<cnh-cnh/5;i++){
     for(int j=0;j<cnw;j++){
-      detector.detect(clp_img[i][j], keypoints);
+      //detector.detect(clp_img[i][j], keypoints);
+      detector->detect(clp_img[i][j], keypoints);
       for(std::vector<cv::KeyPoint>::iterator itk = keypoints.begin();
         itk != keypoints.end(); ++itk){
         ppts.x=j*width/cnw+itk->pt.x;
