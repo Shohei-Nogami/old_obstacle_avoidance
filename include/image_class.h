@@ -17,6 +17,9 @@ class image_class{
 	private:
 		cv::Mat cur_image;
 		cv::Mat pre_image;
+		ros::Time cur_time;
+		ros::Time pre_time;
+		ros::Duration delta_time;
 	public:
 
 		image_class();
@@ -24,10 +27,13 @@ class image_class{
 		bool is_pre_image(void);
 		void subscribe_image(void);
 		void set_cur_image(void);
+		void set_pre_image(void);
 		void set_image(void);
+		void set_delta_time(void);
 //		void set_debug_image(cv::Mat& temp_image);
 		cv::Mat& get_cur_image_by_ref(void);
 		cv::Mat& get_pre_image_by_ref(void);
+		double& get_delta_time(void);
 		virtual ~image_class();
 		virtual void publish_debug_image(cv::Mat& temp_image);
 		virtual void define_variable(void);
@@ -40,9 +46,8 @@ class image_class{
 		image_transport::ImageTransport it;
 		ros::CallbackQueue queue;
 		cv_bridge::CvImagePtr cvbridge_image;
-		
-		void set_pre_image(void);
+
 		virtual void image_callback(const sensor_msgs::ImageConstPtr& msg);
 };
 
-#endif 
+#endif

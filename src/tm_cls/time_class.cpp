@@ -10,8 +10,9 @@ time_class::~time_class()
 }
 
 void time_class::set_cur_time(void){
-	temp_time = ros::Time::now()-start_time;
-	cur_time=temp_time.toSec();
+	//temp_time = ros::Time::now()-start_time;
+	//cur_time=temp_time.toSec();
+	cur_time=ros::Time::now();
 	first_process_flag=false;
 }
 void time_class::set_pre_time(void){
@@ -22,7 +23,8 @@ void time_class::set_delta_time(void){
 }
 double& time_class::get_delta_time(/*double& dt*/void){
 	// dt=delta_time;
-	return delta_time;
+	//return delta_time;
+	return delta_time.toSec();
 }
 double& time_class::get_time_now(void){
 	temp_time = ros::Time::now()-start_time;
@@ -56,4 +58,3 @@ int main(int argc,char **argv){
 	return 0;
 }
 */
-

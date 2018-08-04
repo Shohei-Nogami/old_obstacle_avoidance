@@ -38,7 +38,7 @@ class vfh_class{
 		int grid_resolution;//
 		float grid_size;
 		float grid_cell_size;
-		
+
 		const int width=672;
 		const int height=376;
 		const float f=350.505;
@@ -58,11 +58,11 @@ class vfh_class{
 		std::vector<int> rank_trajectory;
 		int max_angle=45;
 		int min_angle=-45;
-		
-		
+
+
 	  	std::vector<bool> not_select_angle;
-		
-//parameter of collision avoidanace 
+
+//parameter of collision avoidanace
 		float R=0.2;
 		float d_r=0.1;
 		int jn_Rd;
@@ -70,7 +70,7 @@ class vfh_class{
 		float target_x;
 		float target_y;
 		int process_n;
-//wheel msg			
+//wheel msg
 		float vel;
 		float ang_vel;
 		float max_dif=0.2;
@@ -98,14 +98,14 @@ class vfh_class{
 		void publish_binary_grid_map_view(void);
 
 		void draw_all_trajectory(void);
-			
+
 		void publish_cloud(void);
 
 		void simulate_obstacle(void);
 
 		void publish_velocity(void);
-		
-		
+
+
 		void publish_velocity(float& vel,float& angvel);
 		void set_param(const int& min_ang,const int& max_ang,const int& reso,const float& rob_r,const float& mrg_r,const float& mv_length,const float& max_vdif);
 		void clear_grid_map(void);
@@ -113,5 +113,6 @@ class vfh_class{
 		int select_best_trajectory(const cv::Point2f& x0, const float& theta0, const cv::Point2f& xp,const float w_target, const float w_angle);
 
 		void set_not_select_angle(std::vector<bool>& not_select_angle_temp);
-};
-
+		bool draw_line(float& x0,float& y0,float& x1,float& y1);
+		void vfh_class::draw_circle(float& x0,float& y0)
+	};

@@ -13,7 +13,7 @@ vfh_class::vfh_class()
 	sub=nh_sub.subscribe("/cluster_with_vel",1,&vfh_class::cluster_callback,this);
 	cv::Mat m = cv::Mat::zeros(cv::Size(grid_resolution,grid_resolution), CV_8UC1);
 	grid_map=m.clone();
-	cv::Mat m_view = cv::Mat::zeros(cv::Size(grid_resolution,grid_resolution), CV_8UC3);	
+	cv::Mat m_view = cv::Mat::zeros(cv::Size(grid_resolution,grid_resolution), CV_8UC3);
 	grid_map_view=m_view.clone();
 	binary_grid_map_view=m_view.clone();
 	grid_cell_size=grid_size/grid_resolution;
@@ -33,7 +33,7 @@ vfh_class::vfh_class()
 			if(temptemp_p<0)
 				temp_p.push_back(-temptemp_p);
 			else
-				temp_p.push_back(temptemp_p);				
+				temp_p.push_back(temptemp_p);
 		}
 		else{
 			temp_p.push_back(0);
@@ -43,13 +43,13 @@ vfh_class::vfh_class()
 //		max_process_n.push_back((int)(M_PI/delta_theta[i]));
 //	}
 //set parameter of collision avoidance
-	int n_circle_size=2*(int)( 2*(R+d_r)/grid_cell_size / 2 ) + ( (int)(2*(R+d_r)/grid_cell_size) / 2 ) % 2; 
+	int n_circle_size=2*(int)( 2*(R+d_r)/grid_cell_size / 2 ) + ( (int)(2*(R+d_r)/grid_cell_size) / 2 ) % 2;
 	jn_Rd=n_circle_size;
 	in_Rd.reserve(n_circle_size);
 	double temp_x;
 	for(int j=0;j<jn_Rd;j++){
 		temp_x=sqrt( (R+d_r)*(R+d_r) - ((j-jn_Rd/2)*grid_cell_size)*((j-jn_Rd/2)*grid_cell_size) );
-		in_Rd.push_back( 
+		in_Rd.push_back(
 			(int)( 2*(temp_x)/grid_cell_size / 2 ) + ( (int)(2*(temp_x)/grid_cell_size)  ) % 2 );
 	}
 //debug
@@ -137,7 +137,7 @@ void vfh_class::simulate_obstacle(void)
 		for(int w=nx-range_i;w<nx+range;w++)
 		{
 			grid_map.at<uint8_t>(h,w)=255;
-					
+
 		}
 	}
 }
@@ -180,7 +180,7 @@ void vfh_class::select_best_trajectory(void){
 			}
 		}
 		if(!LOOP_OUT)
-			rank_trajectory.push_back(j);		
+			rank_trajectory.push_back(j);
 	}
 */
 	float x0=0;
@@ -236,7 +236,7 @@ void vfh_class::select_best_trajectory(void){
 			good_trajectory_num=i;
 		}
 	}
-	
+
 	std::cout<<"good tarjectory is "<<good_trajectory_num<<"\n";
 	std::cout<<"good tarjectory value is "<<good_trajectory_value<<"\n";
 	draw_best_trajectory(good_trajectory_num);
@@ -268,7 +268,7 @@ bool vfh_class::is_obstacle(const int nx,const int ny){
 void vfh_class::draw_best_trajectory(const int& num){
 
 	std::cout<<"draw_best_trajectory_start\n";
-	
+
 //	double good_p=temp_p[num];
 //	double good_delta_theta=delta_theta[num];
 //	double good_w=temp_w[num];
@@ -282,7 +282,7 @@ void vfh_class::draw_best_trajectory(const int& num){
 	float y=y0;
 	std::cout<<"nun:"<<num<<"\n";
 	//std::cout<<"rank_trajectory[num]:"<<rank_trajectory[num]<<"\n";
-	
+
 	transport_robot_to_gridn(x,y,nx_1,ny_1);
 
 	for(int j=0;j<rank_trajectory[num] ;j++){
@@ -294,7 +294,7 @@ void vfh_class::draw_best_trajectory(const int& num){
 		y=x0+mv_length*(cos(theta))*j;
 		transport_robot_to_gridn(x,y,nx,ny);
 		if(j>0&&!(nx_1==nx&&ny_1==ny) ){
-			cv::line(grid_map_view, cv::Point(nx_1, ny_1), cv::Point(nx, ny), cv::Scalar(0,255,255), 1, 4);	
+			cv::line(grid_map_view, cv::Point(nx_1, ny_1), cv::Point(nx, ny), cv::Scalar(0,255,255), 1, 4);
 		}
 		nx_1=nx;
 		ny_1=ny;
@@ -308,19 +308,19 @@ void vfh_class::draw_all_trajectory(void){
 	int ny;
 	int nx_1;
 	int ny_1;
-	
+
 	nx_1=0;
 	ny_1=0;
 	nx=0;
 	ny=0;
-	
+
 	float x0=0;
 	float y0=0;
 	float theta0=0;
 	int max_search_n=20;
 	for(int i=0;i<vfh_resolution;i++)
 	{
-		
+
 		float x=x0;
 		float y=y0;
 		float theta=(min_angle+i*(max_angle-min_angle)/(vfh_resolution-1))*M_PI/180;
@@ -329,7 +329,7 @@ void vfh_class::draw_all_trajectory(void){
 		if(i==45){
 			std::cout<<theta<<":("<<-sin(theta)<<","<<cos(theta)<<")\n";
 		}
-		
+
 		for(int n=0;n<max_search_n;n++)
 		{
 			x=x0+mv_length*(-sin(theta))*n;
@@ -339,21 +339,21 @@ void vfh_class::draw_all_trajectory(void){
 			if( is_obstacle(nx,ny)||n==max_search_n-1 ){
 				break;
 			}
-			cv::line(grid_map_view, cv::Point(nx_1, ny_1), cv::Point(nx, ny), cv::Scalar(0,255,255), 1, 4);	
+			cv::line(grid_map_view, cv::Point(nx_1, ny_1), cv::Point(nx, ny), cv::Scalar(0,255,255), 1, 4);
 			nx_1=nx;
 			ny_1=ny;
 		}
 	}
-	
+
 }
 
 
 void vfh_class::set_grid_map_view(void){
 	for(int h=0;h<grid_resolution;h++){
 		for(int w=0;w<grid_resolution;w++){
-			grid_map_view.at<cv::Vec3b>(h,w)[1]=grid_map.at<uchar>(h,w);	
-			grid_map_view.at<cv::Vec3b>(h,w)[0]=0;	
-			grid_map_view.at<cv::Vec3b>(h,w)[2]=0;	
+			grid_map_view.at<cv::Vec3b>(h,w)[1]=grid_map.at<uchar>(h,w);
+			grid_map_view.at<cv::Vec3b>(h,w)[0]=0;
+			grid_map_view.at<cv::Vec3b>(h,w)[2]=0;
 
 		}
 	}
@@ -367,7 +367,7 @@ void vfh_class::set_binary_grid_map_view(void){
 				binary_grid_map_view.at<cv::Vec3b>(h,w)[1]=0;
 		}
 	}
-} 
+}
 void vfh_class::publish_grid_map_view(void){
 
 	float robot_r=R;
@@ -376,7 +376,7 @@ void vfh_class::publish_grid_map_view(void){
 //	transport_gridx_to_gridn(robot_r,robot_r,robot_cell_size,temp);
 	for(int h=grid_resolution/2-robot_cell_size;h<grid_resolution/2+robot_cell_size;h++){
 		for(int w=grid_resolution/2-robot_cell_size;w<grid_resolution/2+robot_cell_size;w++){
-			grid_map_view.at<cv::Vec3b>(h,w)[2]=255;			
+			grid_map_view.at<cv::Vec3b>(h,w)[2]=255;
 		}
 	}
 
@@ -387,7 +387,7 @@ void vfh_class::publish_grid_map_view(void){
 	cv_bridge::CvImagePtr publish_cvimage(new cv_bridge::CvImage);
 	publish_cvimage->encoding=sensor_msgs::image_encodings::BGR8;
 	publish_cvimage->image=grid_map_view.clone();
-	pub.publish(publish_cvimage->toImageMsg());	
+	pub.publish(publish_cvimage->toImageMsg());
 }
 void vfh_class::publish_binary_grid_map_view(void){
 
@@ -399,27 +399,27 @@ void vfh_class::publish_binary_grid_map_view(void){
 /*
 	for(int h=grid_resolution/2-robot_cell_size/2;h<grid_resolution/2+robot_cell_size/2;h++){
 		for(int w=grid_resolution/2-robot_cell_size/2;w<grid_resolution/2+robot_cell_size/2;w++){
-			binary_grid_map_view.at<cv::Vec3b>(h,w)[2]=255;			
+			binary_grid_map_view.at<cv::Vec3b>(h,w)[2]=255;
 		}
 	}
 */
 	int cp_grid_map=grid_resolution/2;
 	for(int j=0;j<jn_Rd;j++){
 		for(int i=-in_Rd[j]+cp_grid_map;i<=in_Rd[j]+cp_grid_map;i++){
-			binary_grid_map_view.at<cv::Vec3b>((j-jn_Rd/2)+grid_resolution/2,i)[2]=255;	
+			binary_grid_map_view.at<cv::Vec3b>((j-jn_Rd/2)+grid_resolution/2,i)[2]=255;
 		}
-	} 
+	}
 	for(int h=cp_grid_map-robot_cell_size;h<cp_grid_map+robot_cell_size;h++){
 		for(int w=grid_resolution/2-robot_cell_size;w<grid_resolution/2+robot_cell_size;w++){
 			binary_grid_map_view.at<cv::Vec3b>(h,w)[0]=255;
-			binary_grid_map_view.at<cv::Vec3b>(h,w)[2]=0;		
+			binary_grid_map_view.at<cv::Vec3b>(h,w)[2]=0;
 		}
 	}
 
 	cv_bridge::CvImagePtr publish_cvimage(new cv_bridge::CvImage);
 	publish_cvimage->encoding=sensor_msgs::image_encodings::BGR8;
 	publish_cvimage->image=binary_grid_map_view.clone();
-	pub2.publish(publish_cvimage->toImageMsg());	
+	pub2.publish(publish_cvimage->toImageMsg());
 }
 
 void vfh_class::publish_cloud(void)
@@ -435,7 +435,7 @@ void vfh_class::publish_cloud(void)
 		for(int t=0;t<4;t++)
 		{
 			if(std::sqrt(std::pow(cluster.vel[i].x,2.0)+std::pow(cluster.vel[i].z,2.0))>1.1
-			//|| 
+			//||
 			)
 			{
 				//continue;
@@ -451,7 +451,7 @@ void vfh_class::publish_cloud(void)
 				cloud_temp.g=colors[i%12][1];
 				cloud_temp.b=colors[i%12][2];
 				//cloud_temp.x+=cluster.vel[i].z*t;
-		    //cloud_temp.y+=-cluster.vel[i].x*t;			
+		    //cloud_temp.y+=-cluster.vel[i].x*t;
 		    //cloud_temp.z+=cluster.vel[i].y*t;
 
 				cloud->points.push_back(cloud_temp);
@@ -472,7 +472,7 @@ void vfh_class::publish_velocity(void)
 	vel=0.2;
 	float w=theta*(length/vel);
 	dif=w*d;
-	
+
 	if(max_dif<std::abs(dif))
 	{
 		if(dif>0)
@@ -481,17 +481,17 @@ void vfh_class::publish_velocity(void)
 		}
 		else
 		{
-			dif=-max_dif;			
+			dif=-max_dif;
 		}
 		//hold on
 		if(rank_trajectory[theta_i]<z_th)
 		{
-			
+
 		}
 		else
 		{
-			
-		}		
+
+		}
 	}
 	wheelMsg.vel_l=(int)( (vel-dif)*1000);
 	wheelMsg.vel_r=(int)( (vel+dif)*1000);
@@ -503,10 +503,10 @@ void vfh_class::publish_velocity(float& vel,float& angvel)
 {
 
 	float dif;
-	
+
 	float w=angvel*(length/vel);
 	dif=w*d;
-	
+
 	if(max_dif<std::abs(dif))
 	{
 		if(dif>0)
@@ -515,15 +515,15 @@ void vfh_class::publish_velocity(float& vel,float& angvel)
 		}
 		else
 		{
-			dif=-max_dif;			
-		}	
+			dif=-max_dif;
+		}
 	}
 	wheelMsg.vel_l=(int)( (vel-dif)*1000);
 	wheelMsg.vel_r=(int)( (vel+dif)*1000);
 	pub_wheel.publish(wheelMsg);
 
 }
-
+//-----
 void vfh_class::set_param(const int& min_ang,const int& max_ang,const int& reso,
 							const float& rob_r,const float& mrg_r,const float& mv_length,
 							const float& max_vdif)
@@ -617,15 +617,20 @@ int vfh_class::select_best_trajectory(const cv::Point2f& x0,const float& theta0,
 	float yc = x0.y;
 	//std::cout<<"x0,xp:"<<x0<<","<<xp<<"\n";
 	//std::cout<<"std::atan(-(xp.x - xc) / (xp.y - yc)):"<<std::atan(-(xp.x - xc) / (xp.y - yc))<<"\n";
-	
-	//float w_target = 0.8;
+
+	//threshold length
+	float th_ln=1.0;
+	int th_ln_i=(int)(th_ln/mv_length)+1;
 	for (int i = 0; i<vfh_resolution; i++) {
 		if(not_select_angle[i])
 		{
 			std::cout<<"i:"<<i<<"\n";
 			continue;
 		}
-
+		if(th_ln_i>rank_trajectory[i])
+		{
+			continue;
+		}
 		float theta = (min_angle + (float)i * (max_angle - min_angle) / ( vfh_resolution ))*M_PI / 180;
 		float theta_half = (float)vfh_resolution / 2 * std::abs((float)(max_angle - min_angle) / (vfh_resolution))*M_PI / 180;
 		evaluation_formula = (max_search_n - rank_trajectory[i])
@@ -649,15 +654,36 @@ void vfh_class::set_not_select_angle(std::vector<bool>& not_select_angle_temp)
 	for(int i=0;i<not_select_angle.size();i++)
 	{
 		not_select_angle[i]=not_select_angle_temp[i];
-		
+
 		if(not_select_angle[i])
 		{
 			std::cout<<"i:"<<i<<"\n";
 		}
-		
+
 	}
 }
-
+bool vfh_class::draw_line(float& x0,float& y0,float& x1,float& y1)
+{
+	int nx0,ny0,nx1,ny1;
+	transport_gridx_to_gridn(x0,y0,nx0,ny0);
+	transport_gridx_to_gridn(x1,y1,nx1,ny1);
+	if(nx0>vfh_resolution||nx0<0 || ny0>vfh_resolution||ny0<0){
+		std::cout<<"x0>vfh_resolution||x0<0 || y0>vfh_resolution||y0<0 is true. \n";
+		return false;
+	}
+	if(nx1>vfh_resolution||nx1<0 || ny1>vfh_resolution||ny1<0){
+		std::cout<<"x1>vfh_resolution||x1<0 || y1>vfh_resolution||y1<0 is true. \n";
+		return false;
+	}
+	cv::line(grid_map_view, cv::Point(nx0, ny0), cv::Point(nx1, ny1), cv::Scalar(0,255,255), 1, 4);
+	return true;
+}
+void vfh_class::draw_circle(float& x0,float& y0)
+{
+	int nx0,ny0;
+	transport_gridx_to_gridn(x0,y0,nx0,ny0);
+	cv::circle(grid_map_view,cv::Point(nx0, ny0),3,Scalar(0,0,200), -1, CV_AA)
+}
 /*
 int main(int argc,char **argv){
 	ros::init(argc,argv,"vfh_class_test");

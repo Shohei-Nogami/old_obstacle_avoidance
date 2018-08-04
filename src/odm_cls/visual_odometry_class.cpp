@@ -31,7 +31,7 @@ void visual_odometry_class::subscribe_odometry(void){
 //		void set_cur_image(void);
 void visual_odometry_class::set_odometry(void){
 	if(is_cur_odometry()){
-		set_pre_odometry();	
+		set_pre_odometry();
 	}
 	subscribe_odometry();
 	turn_first_process_flag();
@@ -65,6 +65,7 @@ double& visual_odometry_class::get_delta_yaw(void){
 	return dyaw;
 }
 void visual_odometry_class::set_pre_odometry(void){
+	pre_time=cur_time;
 	pre_position_x=position_x;
 	pre_position_y=position_y;
 	pre_position_z=position_z;
@@ -89,6 +90,7 @@ void visual_odometry_class::define_variable(void){
 }
 void visual_odometry_class::odometry_callback(const nav_msgs::Odometry::ConstPtr& msg){
 	tm_vsodm.set_time();
+	cur_time=msg->header.stamp;
 	//現在のodometryを取得
 	double r,p,y;//一時的に格納するための変数
 	tf::Quaternion quat(
@@ -126,6 +128,7 @@ void visual_odometry_class::set_pre_delta_odometry(void){
 	pre_dyaw=dyaw;
 }
 void visual_odometry_class::set_delta_position(void){
+	delta_time=cur_time-pre_time;
 	dr=sqrt((position_x*position_x
 		-2*position_x*pre_position_x
 		+pre_position_x*pre_position_x)
@@ -188,7 +191,7 @@ bool visual_odometry_class::pose_detection()
 }
 void visual_odometry_class::set_delta_odometry(void){
 	if(is_delta_odometry()){
-		set_pre_delta_odometry();		
+		set_pre_delta_odometry();
 	}
 	set_delta_orientetion();
 	set_delta_position();
@@ -202,7 +205,7 @@ bool visual_odometry_class::set_dt(void)
 	{
 		pre_dt=dt;
 		rflag=true;
-		
+
 	}
 	dt=tm_vsodm.get_delta_time();
 	return rflag;
@@ -236,6 +239,9 @@ double& visual_odometry_class::get_velocity_wy(void){
 }
 double& visual_odometry_class::get_velocity(void){
 	return v;
+}
+double& visual_odometry_class::get_delta_time(void){
+	return delta_time.toSec();
 }
 /*
 int main(int argc,char **argv){

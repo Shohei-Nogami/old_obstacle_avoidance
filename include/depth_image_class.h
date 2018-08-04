@@ -6,7 +6,7 @@ class depth_image_class : public image_class
 {
   private:
 		cv::Mat filted_cur_image;
-		cv::Mat filted_pre_image;  
+		cv::Mat filted_pre_image;
 
 		const int ksize=5;
 		const int median_param=5;
@@ -22,7 +22,7 @@ class depth_image_class : public image_class
 
 		depth_image_class();
 		virtual ~depth_image_class();
-		void set_pre_image(void);
+		void set_pre_filted_image(void);
 
 		cv::Mat& get_filted_cur_image(void);
 		cv::Mat& get_filted_pre_image(void);

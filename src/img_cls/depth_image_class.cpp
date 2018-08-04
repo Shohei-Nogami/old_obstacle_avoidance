@@ -16,11 +16,11 @@ depth_image_class::~depth_image_class(){
 	filted_pre_image.release();
 }
 
-/*
-void depth_image_class::set_pre_image(void){
+
+void depth_image_class::set_pre_filted_image(void){
 	filted_pre_image=filted_cur_image.clone();
 }
-*/
+
 
 void depth_image_class::define_variable(void){
 	pub=it.advertise("depth_image",1);
@@ -47,6 +47,7 @@ void depth_image_class::image_callback(const sensor_msgs::ImageConstPtr& msg)
 	try{
 		std::cout<<"depth_image_callback \n";
 		cvbridge_image=cv_bridge::toCvCopy(msg,sensor_msgs::image_encodings::TYPE_32FC1);
+		cur_time=msg->header.stamp;
 		PROCESS_ONCE=false;
 	}
   catch(cv_bridge::Exception& e) {
@@ -77,7 +78,7 @@ void depth_image_class::filtering_depth_image(void){
 				for(int l=-median_param/2;l<=median_param/2;l++){
 					for(int m=-median_param/2;m<=median_param/2;m++){
 						if(std::isnan(depth_img.at<float>(h*ksize+l,w*ksize+m))
-							||std::isinf(depth_img.at<float>(h*ksize+l,w*ksize+m)) 
+							||std::isinf(depth_img.at<float>(h*ksize+l,w*ksize+m))
 							||h+l<0||height/ksize<=h+l
 							||w+m<0||width/ksize<=w+m ){
 							continue;
@@ -90,7 +91,7 @@ void depth_image_class::filtering_depth_image(void){
 					filted_cur_image.at<float>(h,w)=depth_median[(int)depth_median.size()/2];
 				}
 				else{
-					filted_cur_image.at<float>(h,w)=0;						
+					filted_cur_image.at<float>(h,w)=0;
 				}
 				depth_median.clear();
 			}
@@ -113,7 +114,7 @@ void depth_image_class::filtering_depth_image(void){
 						depth_element_num++;
 					}
 				}
-				filted_cur_image.at<float>(h,w)=depth_sum/depth_element_num;						
+				filted_cur_image.at<float>(h,w)=depth_sum/depth_element_num;
 			}
 		}
 	}
@@ -122,7 +123,7 @@ void depth_image_class::filtering_depth_image(void){
 			for(int w=0;w<width/ksize;w++){
 				if(std::isnan(depth_img.at<float>(h*ksize,w*ksize))
 					||std::isinf(depth_img.at<float>(h*ksize,w*ksize)) ){
-					filted_cur_image.at<float>(h,w)=0;						
+					filted_cur_image.at<float>(h,w)=0;
 				}
 				else{
 					filted_cur_image.at<float>(h,w)=depth_img.at<float>(h*ksize,w*ksize);
@@ -150,5 +151,3 @@ int main(int argc,char **argv){
 	return 0;
 }
 */
-
-

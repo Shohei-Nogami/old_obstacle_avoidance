@@ -18,7 +18,7 @@
 #define TC_MAX 2
 
 #define ROBOT_STOP -1
-#define ROBOT_GO 1 
+#define ROBOT_GO 1
 
 avoid::avoid()
 {
@@ -29,24 +29,24 @@ avoid::avoid()
 	sub2 = nh_sub2.subscribe("robot_odm", 1, &avoid::odometry_callback, this);
 
 	pub2 = nh_pub2.advertise<obst_avoid::select_theta>("select_theta", 1);
-	
+
 	//vfh.vfh_class();
 
-	
+
 	//set vel temp
 	temp_vel.resize(3);
 	temp_vel[DEFAULT_SPEED]=0.2;
 	temp_vel[MIN_SPEED]=0.1;
 	temp_vel[MAX_SPEED]=0.3;
 
-	//check_collision 
+	//check_collision
 	t_c_min_angle.resize(max_angle-min_angle);//max_angle-min_angle);//min:-45,max:+45
 	for(int i=0;i<t_c_min_angle.size();i++)
 	{
 		t_c_min_angle[i].resize(3);
 	}
 	not_select_angle.resize(max_angle-min_angle);
-	
+
 }
 avoid::~avoid()
 {
@@ -88,7 +88,7 @@ bool avoid::dicriminate_obstacle(void)
 	if(!obj_info.objs.size())
 	{
 		return false;
-	}	
+	}
 	obstacle_status.resize(obj_info.objs.size());
 	obstacle_safety_status.resize(obj_info.objs.size());
 	clear_safety_status();
@@ -103,7 +103,7 @@ bool avoid::dicriminate_obstacle(void)
 			obstacle_status[i] = STATIC_OBSTACLE;
 		}
 		else if (std::sqrt(std::pow(obj_info.objs[i].vel.x, 2.0) + std::pow(obj_info.objs[i].vel.z, 2.0)) > 1.1
-			|| std::sqrt(obj_info.objs[i].vdsp.x + obj_info.objs[i].vdsp.z) 
+			|| std::sqrt(obj_info.objs[i].vdsp.x + obj_info.objs[i].vdsp.z)
 				> std::sqrt(std::pow(obj_info.objs[i].vel.x, 2.0) + std::pow(obj_info.objs[i].vel.z, 2.0)) )
 		{
 			obstacle_status[i] = DYNAMIC_OBSTACLE;
@@ -112,7 +112,7 @@ bool avoid::dicriminate_obstacle(void)
 		{
 			obstacle_status[i] = MOVING_OBSTACLE;
 		}
-		
+
 	}
 	return true;
 }
@@ -137,30 +137,35 @@ void avoid::set_equation(void)
 void avoid::set_grid_map(void)
 {
 	vfh.clear_grid_map();
+	const int th_pt_size=10;
 	//set grid map
 	for (int i = 0; i < obj_info.objs.size(); i++)
 	{
-		if(obstacle_status[i] != MOVING_OBSTACLE)
+		if(th_pt_size>(int)obj_info.objs.size())
 		{
-			vfh.set_grid_map(obj_info.objs[i].pt);
+			continue;
 		}
+		if(obstacle_status[i] == MOVING_OBSTACLE)
+		{
+			continue;
+		}
+		vfh.set_grid_map(obj_info.objs[i].pt);
 	}
-	vfh.set_grid_map_view();
 }
 void avoid::select_route(void)
 {
-	
+
 	//select_route
 	//cv::Point2f x0 = cv::Point2f(0, 0);
 	cv::Point2f xp = cv::Point2f(0, 10);
 	//float theta0 = 0;
-	
+
 	std::cout<<"x0,xp:"<<x0<<","<<xp<<"\n";
 	std::cout<<"robot_odm:"<<robot_odm<<"\n";
 
 	//修正が必要
 	selected_angle_i = vfh.select_best_trajectory(x0, theta0, xp, w_target, w_angle);
-	
+
 	selected_angle=((min_angle + selected_angle_i * (max_angle - min_angle) / (vfh_resolution))*M_PI / 180);
 }
 //selected_angle：float
@@ -198,7 +203,7 @@ void avoid::set_intersection(void)
 		}
 		if(std::abs( atan2(obj_info.objs[i].vel.x-a_x,obj_info.objs[i].vel.z-a_y))<M_PI/180*5)//+-5度
 		{
-			
+
 		  //float selected_vel_x=selected_vel*sin(selected_angle);
 		  //float selected_vel_z=selected_vel*cos(selected_angle);
 		  //std::cout<<"vx,vz:"<<selected_vel_x<<","<<selected_vel_z<<"\n";
@@ -207,7 +212,7 @@ void avoid::set_intersection(void)
 
 		  /*
 			while(ros::ok())
-			{  
+			{
 				std::cout<<"vel_dif:"<<std::sqrt(std::pow(obj_info.objs[i].vel.x+selected_vel_x,2.0)+std::pow(obj_info.objs[i].vel.z+selected_vel_z,2.0))<<"\n";
 				std::cout<<"vel_dif-selected_vel:"<<vel_dif-selected_vel<<"\n";
 			}
@@ -221,7 +226,7 @@ void avoid::set_intersection(void)
 		  {
 		    //COLLISSION
 		    obstacle_safety_status[i]=DANGER_OBSTACLE;
-		    
+
 		  }
 		  continue;
 		}
@@ -252,7 +257,7 @@ void avoid::set_intersection_time(void)
 {
 	t_c.clear();
 	t_c.resize(obj_info.objs.size());
-	
+
 	for(int i = 0; i < obj_info.objs.size(); i++)
 	{
 		if(obstacle_status[i]==MOVING_OBSTACLE)
@@ -263,24 +268,24 @@ void avoid::set_intersection_time(void)
 		else if(obstacle_safety_status[i]==DANGER_OBSTACLE)
 		{
 			float obstacle_vel=std::sqrt(std::pow(obj_info.objs[i].vel.x,2.0)+std::pow(obj_info.objs[i].vel.z,2.0));
-		  
+
 		    float length=std::sqrt(std::pow(obj_info.objs[i].pos.x,2.0)+std::pow(obj_info.objs[i].pos.z,2.0));
 		    t_c[i] = length/(selected_vel-obstacle_vel);
-		    
+
 		}
 	}
-	
+
 }
 void avoid::clear_safety_status(void)
 {
 	for(int i = 0; i < obj_info.objs.size(); i++)
 	{
-    obstacle_safety_status[i]=SAFETY_OBSTACLE; 
+    obstacle_safety_status[i]=SAFETY_OBSTACLE;
 	}
 }
 void avoid::labeling_dangerous_obstacle(void)
 {
-	
+
 	for(int i = 0; i < obj_info.objs.size(); i++)
 	{
 		if(obstacle_status[i]==MOVING_OBSTACLE||obstacle_safety_status[i]==DANGER_OBSTACLE)
@@ -301,24 +306,24 @@ void avoid::labeling_dangerous_obstacle(void)
 	  }
 	}
 }
-  
+
 void avoid::set_dengerous_time_range(void)
 {
   t_c_min.clear();
   t_c_max.clear();
   t_c_min.resize(obj_info.objs.size());
   t_c_max.resize(obj_info.objs.size());
-  
+
   const double robot_r=0.2;
-  
-  
+
+
   for(int i = 0; i < obj_info.objs.size(); i++)
   {
   	if(obstacle_safety_status[i]!=WARNING_OBSTACLE)
   	{
   		continue;
   	}
-  	
+
     double obstacle_r=obj_info.objs[i].r;
 		//double obstacle_vel=std::sqrt(std::pow(obj_info.objs[i].vel.x,2.0)+std::pow(obj_info.objs[i].vel.z,2.0));
 		/*
@@ -347,15 +352,15 @@ selected_vel=temp_vel[selected_vel_num];
 */
 bool avoid::check_collision(void)//any collision -> true; no collision -> false
 {
-  
-  
+
+
   float t_c_min_all=100;
-  
-  
+
+
   float selected_vel_x=selected_vel*sin(selected_angle);
   float selected_vel_z=selected_vel*cos(selected_angle);
-  
-  
+
+
   for(int i = 0; i < obj_info.objs.size(); i++)
 	{
 	  if(obstacle_safety_status[i]!=WARNING_OBSTACLE)
@@ -365,14 +370,14 @@ bool avoid::check_collision(void)//any collision -> true; no collision -> false
 				if(t_c_min_all>t_c[i])
 				{
 					t_c_min_all=t_c[i];
-					
+
 				}
 			}
 	    continue;
 	  }
-	  
+
 	  cv::Point2f xr,xo;
-	  
+
 	  bool COLLISION=true;
 
 	  float collision_t;
@@ -387,10 +392,10 @@ bool avoid::check_collision(void)//any collision -> true; no collision -> false
 				//tc min
 				xr.x=0+selected_vel_x*t_c_min[i];
 				xr.y=0+selected_vel_z*t_c_min[i];
-		
+
 				xo.x=obj_info.objs[i].pos.x+obj_info.objs[i].vel.x*t_c_min[i];
 				xo.y=obj_info.objs[i].pos.z+obj_info.objs[i].vel.z*t_c_min[i];
-				
+
 				///---hold on
 				status=is_collision(xr,xo,obj_info.objs[i].r);
 				///-----------
@@ -408,10 +413,10 @@ bool avoid::check_collision(void)//any collision -> true; no collision -> false
 			case TC:
 			{
 				//std::cout<<"tc\n";
-				//tc 
+				//tc
 				xr.x=0+selected_vel_x*t_c[i];
 				xr.y=0+selected_vel_z*t_c[i];
-		
+
 				xo.x=obj_info.objs[i].pos.x+obj_info.objs[i].vel.x*t_c[i];
 				xo.y=obj_info.objs[i].pos.z+obj_info.objs[i].vel.z*t_c[i];
 
@@ -435,7 +440,7 @@ bool avoid::check_collision(void)//any collision -> true; no collision -> false
 				//tc max
 				xr.x=0+selected_vel_x*t_c_max[i];
 				xr.y=0+selected_vel_z*t_c_max[i];
-		
+
 				xo.x=obj_info.objs[i].pos.x+obj_info.objs[i].vel.x*t_c_max[i];
 				xo.y=obj_info.objs[i].pos.z+obj_info.objs[i].vel.z*t_c_max[i];
 
@@ -451,10 +456,10 @@ bool avoid::check_collision(void)//any collision -> true; no collision -> false
 						break;
 					}
 					PROCESS_TC=TC_MAX;
-				} 
+				}
 			}
 		}
-				
+
 
 	  if(status==COLLISION)
 	  {
@@ -509,7 +514,7 @@ void avoid::set_default_vel_num(void)
 {
 	selected_vel_num=DEFAULT_SPEED;
 }
-bool avoid::select_safety_vel(void)//if safety vel is discovered -> true ,is not -> flase 
+bool avoid::select_safety_vel(void)//if safety vel is discovered -> true ,is not -> flase
 {
 	set_default_vel_num();
 	do
@@ -529,7 +534,7 @@ bool avoid::select_safety_vel(void)//if safety vel is discovered -> true ,is not
 		}
 		std::cout<<"selected_vel_num:"<<selected_vel_num<<"\n";
 	}while(change_selected_vel());
-	
+
 	return false;
 }
 /*
@@ -547,7 +552,7 @@ for(int i=0;i<not_select_angle.size();i++)
 
 bool avoid::set_dangerous_angle(void)
 {
-	
+
 	int dangerous_angle=selected_angle_i;
 	int angle_range_i=5;//+-5度
 	std::cout<<"dangerous_angle:"<<dangerous_angle<<"\n";
@@ -596,7 +601,7 @@ void avoid::set_safety_vel(void)
 void avoid::set_stop_vel(void)
 {
 	safety_vel=0;
-	safety_angle=0;	
+	safety_angle=0;
 }
 
 void avoid::publish_velocity(void)
@@ -610,12 +615,52 @@ void avoid::publish_velocity(void)
 }
 void avoid::publish_grid_map(void)
 {
+	draw_dangerous_line();
+	vfh.set_grid_map_view();
 	vfh.publish_grid_map_view();
+}
+//check intersection and intersection_time
+void avoid::draw_dangerous_line(void)
+{
+	selected_vel=0;
+	selected_angle=0;
+	set_intersection();
+	set_intersection_time();
+
+	float x0,y0,x1,y1,xc,yc;
+	float vx,vy;
+	float vsize;
+	float vxi,vyi;
+	float w=0.2;
+	for(int i = 0; i < obj_info.objs.size(); i++)
+	{
+		x0=y0=x1=y1=xc=yc=vx=vy=0;
+		if(obstacle_status[i]!=MOVING_OBSTACLE)
+		{
+			continue;
+		}
+		xc=x_c[i].x;
+		xy=x_c[i].y;
+		x0=x_c[i].x-t_c[i]*obj_info.objs[i].vel.x;
+		y0=x_c[i].y-t_c[i]*obj_info.objs[i].vel.y;
+		x1=x_c[i].x+t_c[i]*obj_info.objs[i].vel.x;
+		y1=x_c[i].y+t_c[i]*obj_info.objs[i].vel.y;
+		vx=obj_info.objs[i].vel.x;
+		vy=obj_info.objs[i].vel.y;
+		vsize=std::sqrt(std::pow(obj_info.objs[i].vel.x,2.0)+std::pow(obj_info.objs[i].vel.y,2.0));
+		vxi=vx/vsize;
+		vyi=vy/vsize;
+		vfh.draw_line(x0,y0,x1,y1);
+		vfh.draw_circle(xc,yc);
+		vfh.draw_circle(obj_info.objs[i].pos.x,obj_info.objs[i].pos.z);
+		vfh.draw_line(obj_info.objs[i].pos.x,obj_info.objs[i].pos.z,obj_info.objs[i].pos.x+vxi*w,obj_info.objs[i].pos.z+vyi*w);
+	}
+
 }
 int main(int argc,char **argv)
 {
   ros::init(argc,argv,"avoid_class_test");
- 
+
   avoid avoid_cls;
   time_class time_cls;
 	int ROBOT_STATUS=ROBOT_GO;
@@ -627,7 +672,7 @@ int main(int argc,char **argv)
 	ros::Publisher pub,pub2;
 	pub = nh.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1);
 	pub2 = nh.advertise<std_msgs::Empty>("mobile_base/commands/reset_odometry", 1);
-	
+
 	turtlebot_vel.linear.x=0.2;
 	turtlebot_vel.linear.y=0;
 	turtlebot_vel.linear.z=0;
@@ -637,16 +682,16 @@ int main(int argc,char **argv)
 
 	int i=0;
 	ros::Rate r=1;
-	
+
 	while(ros::ok()&&i++<2)
-	{		
+	{
 		pub2.publish(empty_msg);
 		r.sleep();
 	}
-	
+
   while(ros::ok())
 	{
-		
+
 		pub.publish(turtlebot_vel);
 		ROBOT_STATUS=ROBOT_GO;
 		std::cout<<"begin\n";
@@ -670,9 +715,9 @@ int main(int argc,char **argv)
 		do{
 
 			avoid_cls.select_route();
-		
+
 			std::cout<<"select_route\n";
-			
+
 			if(avoid_cls.select_safety_vel())//if found safety_vel <- exist bag
 			{
 				std::cout<<"select_safety_vel\n";
@@ -683,19 +728,19 @@ int main(int argc,char **argv)
 				ROBOT_STATUS=ROBOT_STOP;
 				break;
 			}
-			
+
 			/*
 			else
 			{
 				while(ros::ok())
 				{
-					std::cout<<"Now searching\n"; 
+					std::cout<<"Now searching\n";
 				}
 			}
 			*/
 		}while(ros::ok());
-		
-		
+
+
 		if(ROBOT_STATUS==ROBOT_STOP)
 		{
 			avoid_cls.set_stop_vel();
@@ -711,11 +756,10 @@ int main(int argc,char **argv)
 
 
 		std::cout<<"loop\n";
-		
+
 	}
 
 	turtlebot_vel.linear.x=0;
 	pub.publish(turtlebot_vel);
 
 }
-

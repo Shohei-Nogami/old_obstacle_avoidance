@@ -31,6 +31,9 @@ class visual_odometry_class{
 		bool first_process_flag;
 		bool first_delta_process_flag;
 		time_class tm_vsodm;
+		ros::Time cur_time;
+		ros::Time cur_time;
+		ros::Duration delta_time;
 	public:
 		visual_odometry_class();
 		bool is_cur_odometry(void);
@@ -48,6 +51,7 @@ class visual_odometry_class{
 		double& get_velocity_z(void);
 		double& get_velocity_wy(void);
 		double& get_velocity(void);
+		double& get_delta_time(void);
 		
 		virtual ~visual_odometry_class();
 		double& get_delta_yaw(void);
@@ -84,4 +88,4 @@ class visual_odometry_class{
 
 };
 
-#endif 
+#endif

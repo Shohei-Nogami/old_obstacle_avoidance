@@ -7,9 +7,11 @@
 
 class time_class{
 	private:
-		double cur_time,pre_time;
-		double delta_time;
+		//double cur_time,pre_time;
+		ros::Time cur_time,pre_time;
+		//double delta_time;
 		ros::Duration temp_time;
+		ros::Duration delta_time;
 		ros::Time start_time;
 		bool first_process_flag;
 		ros::NodeHandle nh;
@@ -27,4 +29,4 @@ class time_class{
 		bool is_delta_time(void);
 };
 
-#endif 
+#endif
