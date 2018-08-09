@@ -30,6 +30,8 @@ avoid::avoid()
 
 	pub2 = nh_pub2.advertise<obst_avoid::select_theta>("select_theta", 1);
 
+	pub_pcl = nh_pub.advertise<sensor_msgs::PointCloud2>("intersection_cloud", 1);
+	
 	//vfh.vfh_class();
 
 
@@ -655,7 +657,144 @@ void avoid::draw_dangerous_line(void)
 		vfh.draw_circle(obj_info.objs[i].pos.x,obj_info.objs[i].pos.z);
 		vfh.draw_line(obj_info.objs[i].pos.x,obj_info.objs[i].pos.z,obj_info.objs[i].pos.x+vxi*w,obj_info.objs[i].pos.z+vyi*w);
 	}
+	//pcl
+	show_cross_cloud();
+}
+void avoid::show_cross_cloud(void)
+{
+	
+	float x0,y0,x1,y1,xc,yc;
+	float vx,vy;
+	float vsize;
+	float vxi,vyi;
+	float w=0.2;
+	
+	//pointcloud
+	float colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr clusted_cloud(new  pcl::PointCloud<pcl::PointXYZRGB>);
+	clusted_cloud->points.clear();
+	clusted_cloud->points.reserve(673*376*5);
+	pcl::PointXYZRGB cloud_temp;
+	
+	for(int i = 0; i < obj_info.objs.size(); i++)
+	{
+		x0=y0=x1=y1=xc=yc=vx=vy=0;
+		if(obstacle_status[i]!=MOVING_OBSTACLE)
+		{
+			continue;
+		}
+		xc=x_c[i].x;
+		yc=x_c[i].y;
+		x0=x_c[i].x-t_c[i]*obj_info.objs[i].vel.z;
+		y0=x_c[i].y-t_c[i]*(-obj_info.objs[i].vel.x);
+		x1=x_c[i].x+t_c[i]*obj_info.objs[i].vel.z;
+		y1=x_c[i].y+t_c[i]*(-obj_info.objs[i].vel.x);
+		vx=obj_info.objs[i].vel.z;
+		vy=(-obj_info.objs[i].vel.x);
+		vsize=std::sqrt(std::pow(obj_info.objs[i].vel.x,2.0)+std::pow(obj_info.objs[i].vel.y,2.0));
+		vxi=vx/vsize;
+		vyi=vy/vsize;
+		//vfh.draw_line(x0,y0,x1,y1);
+		//vfh.draw_circle(xc,yc);
+		//vfh.draw_circle(obj_info.objs[i].pos.x,obj_info.objs[i].pos.z);
+		//vfh.draw_line(obj_info.objs[i].pos.x,obj_info.objs[i].pos.z,obj_info.objs[i].pos.x+vxi*w,obj_info.objs[i].pos.z+vyi*w);
+		
+//--------point cloud------------------------------------------------
 
+		for(int k = 0; k < obj_info.objs[i].pt.size(); k++)
+		{
+			double t=0;
+			//t=0
+			cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
+			cloud_temp.z=((height/2-obj_info.objs[i].pt[k].y)*obj_info.objs[i].pt[k].z)/f+0.4125;
+			cloud_temp.x=obj_info.objs[i].pt[k].z;
+			cloud_temp.r=colors[i%12][0];
+			cloud_temp.g=colors[i%12][1];
+			cloud_temp.b=colors[i%12][2];
+			cloud_temp.x+=obj_info.objs[i].vel.z*t;
+		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;			
+		    cloud_temp.z+=obj_info.objs[i].vel.y*t;
+		    
+			clusted_cloud->points.push_back(cloud_temp);
+			//t=1
+			t=1;
+			cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
+			cloud_temp.z=((height/2-obj_info.objs[i].pt[k].y)*obj_info.objs[i].pt[k].z)/f+0.4125;
+			cloud_temp.x=obj_info.objs[i].pt[k].z;
+			cloud_temp.r=colors[i%12][0];
+			cloud_temp.g=colors[i%12][1];
+			cloud_temp.b=colors[i%12][2];
+			cloud_temp.x+=obj_info.objs[i].vel.z*t;
+		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;			
+		    cloud_temp.z+=obj_info.objs[i].vel.y*t;
+		    
+			clusted_cloud->points.push_back(cloud_temp);
+		    
+		    //t=1
+			t=1;
+			cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
+			cloud_temp.z=((height/2-obj_info.objs[i].pt[k].y)*obj_info.objs[i].pt[k].z)/f+0.4125;
+			cloud_temp.x=obj_info.objs[i].pt[k].z;
+			cloud_temp.r=colors[i%12][0];
+			cloud_temp.g=colors[i%12][1];
+			cloud_temp.b=colors[i%12][2];
+			cloud_temp.x+=obj_info.objs[i].vel.z*t;
+		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;			
+		    cloud_temp.z+=obj_info.objs[i].vel.y*t;
+		    
+			clusted_cloud->points.push_back(cloud_temp);
+		    
+		    //t=t_c_min
+			t=t_c_min[i];
+			cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
+			cloud_temp.z=((height/2-obj_info.objs[i].pt[k].y)*obj_info.objs[i].pt[k].z)/f+0.4125;
+			cloud_temp.x=obj_info.objs[i].pt[k].z;
+			cloud_temp.r=colors[i%12][0];
+			cloud_temp.g=colors[i%12][1];
+			cloud_temp.b=colors[i%12][2];
+			cloud_temp.x+=obj_info.objs[i].vel.z*t;
+		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;			
+		    cloud_temp.z+=obj_info.objs[i].vel.y*t;
+		    
+			clusted_cloud->points.push_back(cloud_temp);
+		    
+		    //t=t_c
+			t=t_c[i];
+			cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
+			cloud_temp.z=((height/2-obj_info.objs[i].pt[k].y)*obj_info.objs[i].pt[k].z)/f+0.4125;
+			cloud_temp.x=obj_info.objs[i].pt[k].z;
+			cloud_temp.r=colors[i%12][0];
+			cloud_temp.g=colors[i%12][1];
+			cloud_temp.b=colors[i%12][2];
+			cloud_temp.x+=obj_info.objs[i].vel.z*t;
+		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;			
+		    cloud_temp.z+=obj_info.objs[i].vel.y*t;
+		    
+			clusted_cloud->points.push_back(cloud_temp);
+		    
+		    //t=t_c
+			t=t_c_max[i];
+			cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
+			cloud_temp.z=((height/2-obj_info.objs[i].pt[k].y)*obj_info.objs[i].pt[k].z)/f+0.4125;
+			cloud_temp.x=obj_info.objs[i].pt[k].z;
+			cloud_temp.r=colors[i%12][0];
+			cloud_temp.g=colors[i%12][1];
+			cloud_temp.b=colors[i%12][2];
+			cloud_temp.x+=obj_info.objs[i].vel.z*t;
+		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;			
+		    cloud_temp.z+=obj_info.objs[i].vel.y*t;
+		    
+			clusted_cloud->points.push_back(cloud_temp);
+		    
+		}		
+//---------------------------------------------------------
+	}
+	
+	sensor_msgs::PointCloud2 edit_cloud;
+	pcl::toROSMsg (*clusted_cloud, edit_cloud);
+	edit_cloud.header.frame_id="/zed_current_frame";
+	pub_pcl.publish(edit_cloud);
+	
 }
 int main(int argc,char **argv)
 {
