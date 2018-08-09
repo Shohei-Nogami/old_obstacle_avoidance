@@ -41,7 +41,7 @@ cv::Mat& image_class::get_cur_image_by_ref(void){
 cv::Mat& image_class::get_pre_image_by_ref(void){
 	return pre_image;
 }
-double& image_class::get_delta_time(void){
+double image_class::get_delta_time(void){
 	return delta_time.toSec();
 }
 

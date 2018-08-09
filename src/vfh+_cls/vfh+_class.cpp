@@ -587,12 +587,12 @@ int vfh_class::select_best_trajectory(const cv::Point2f& x0,const float& theta0,
 	//float theta0 = 0;
 	cv::Point2f xt0 = cv::Point2f(0,0);
 	int max_search_n = 20;
+	float mv_length = R;
 	for (int i = 0; i<vfh_resolution; i++)
 	{
 		float x = xt0.x;
 		float y = xt0.y;
 		float theta = (min_angle + (float)i * (max_angle - min_angle) / ( vfh_resolution ) )*M_PI / 180;
-		float mv_length = R;
 		for (int n = 0; n < max_search_n; n++)
 		{
 			x = xt0.x + mv_length * (-sin(theta))*n;
@@ -662,7 +662,7 @@ void vfh_class::set_not_select_angle(std::vector<bool>& not_select_angle_temp)
 
 	}
 }
-bool vfh_class::draw_line(float& x0,float& y0,float& x1,float& y1)
+bool vfh_class::draw_line(float x0,float y0,float x1,float y1)
 {
 	int nx0,ny0,nx1,ny1;
 	transport_gridx_to_gridn(x0,y0,nx0,ny0);
@@ -678,11 +678,11 @@ bool vfh_class::draw_line(float& x0,float& y0,float& x1,float& y1)
 	cv::line(grid_map_view, cv::Point(nx0, ny0), cv::Point(nx1, ny1), cv::Scalar(0,255,255), 1, 4);
 	return true;
 }
-void vfh_class::draw_circle(float& x0,float& y0)
+void vfh_class::draw_circle(const float& x0,const float& y0)
 {
 	int nx0,ny0;
 	transport_gridx_to_gridn(x0,y0,nx0,ny0);
-	cv::circle(grid_map_view,cv::Point(nx0, ny0),3,Scalar(0,0,200), -1, CV_AA)
+	cv::circle(grid_map_view,cv::Point(nx0, ny0),3,cv::Scalar(0,0,200), -1, CV_AA);
 }
 /*
 int main(int argc,char **argv){

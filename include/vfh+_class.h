@@ -113,6 +113,7 @@ class vfh_class{
 		int select_best_trajectory(const cv::Point2f& x0, const float& theta0, const cv::Point2f& xp,const float w_target, const float w_angle);
 
 		void set_not_select_angle(std::vector<bool>& not_select_angle_temp);
-		bool draw_line(float& x0,float& y0,float& x1,float& y1);
-		void vfh_class::draw_circle(float& x0,float& y0)
+		bool draw_line(float x0,float y0,float x1,float y1);
+		void draw_circle(const float& x0,const float& y0);
+		void draw_dangerous_line(void);
 	};

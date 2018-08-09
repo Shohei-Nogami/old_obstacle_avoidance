@@ -16,6 +16,7 @@ class time_class{
 		bool first_process_flag;
 		ros::NodeHandle nh;
 		double nowtime;
+		double delta_time_d;
 	public:
 		time_class();
 		virtual ~time_class();

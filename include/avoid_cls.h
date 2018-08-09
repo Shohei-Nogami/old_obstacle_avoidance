@@ -114,5 +114,7 @@ public:
 	void init_data(void);
 	
 	void publish_grid_map(void);
+	
+	void draw_dangerous_line(void);
 };
 

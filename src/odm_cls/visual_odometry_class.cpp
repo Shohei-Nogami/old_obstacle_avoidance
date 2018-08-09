@@ -89,7 +89,7 @@ void visual_odometry_class::define_variable(void){
 	sub=nh_sub.subscribe("/zed/odom",1,&visual_odometry_class::odometry_callback,this);
 }
 void visual_odometry_class::odometry_callback(const nav_msgs::Odometry::ConstPtr& msg){
-	tm_vsodm.set_time();
+	//tm_vsodm.set_time();
 	cur_time=msg->header.stamp;
 	//現在のodometryを取得
 	double r,p,y;//一時的に格納するための変数
@@ -207,7 +207,7 @@ bool visual_odometry_class::set_dt(void)
 		rflag=true;
 
 	}
-	dt=tm_vsodm.get_delta_time();
+	dt=get_delta_time();
 	return rflag;
 }
 
@@ -240,7 +240,7 @@ double& visual_odometry_class::get_velocity_wy(void){
 double& visual_odometry_class::get_velocity(void){
 	return v;
 }
-double& visual_odometry_class::get_delta_time(void){
+double visual_odometry_class::get_delta_time(void){
 	return delta_time.toSec();
 }
 /*

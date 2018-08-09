@@ -33,7 +33,8 @@ class image_class{
 //		void set_debug_image(cv::Mat& temp_image);
 		cv::Mat& get_cur_image_by_ref(void);
 		cv::Mat& get_pre_image_by_ref(void);
-		double& get_delta_time(void);
+		double get_delta_time(void);
+		
 		virtual ~image_class();
 		virtual void publish_debug_image(cv::Mat& temp_image);
 		virtual void define_variable(void);

@@ -640,7 +640,7 @@ void avoid::draw_dangerous_line(void)
 			continue;
 		}
 		xc=x_c[i].x;
-		xy=x_c[i].y;
+		yc=x_c[i].y;
 		x0=x_c[i].x-t_c[i]*obj_info.objs[i].vel.x;
 		y0=x_c[i].y-t_c[i]*obj_info.objs[i].vel.y;
 		x1=x_c[i].x+t_c[i]*obj_info.objs[i].vel.x;

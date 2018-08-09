@@ -1,7 +1,7 @@
 #include"time_class.h"
 
 time_class::time_class()
-	:first_process_flag(true),delta_time(0)
+	:first_process_flag(true),delta_time_d(0)
 {
 	start_time = ros::Time::now();
 }
@@ -24,7 +24,8 @@ void time_class::set_delta_time(void){
 double& time_class::get_delta_time(/*double& dt*/void){
 	// dt=delta_time;
 	//return delta_time;
-	return delta_time.toSec();
+	delta_time_d=delta_time.toSec();
+	return delta_time_d;
 }
 double& time_class::get_time_now(void){
 	temp_time = ros::Time::now()-start_time;
@@ -43,7 +44,7 @@ void time_class::set_time(void){
 	set_delta_time();
 }
 bool time_class::is_delta_time(void){
-	if(delta_time){
+	if(delta_time_d){
 		return true;
 	}
 	else{
