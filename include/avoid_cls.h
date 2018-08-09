@@ -55,6 +55,10 @@ private:
 	float d_r=0.1;
 	float mv_length=0.2;
 	float max_vel_dif=0.2;
+	//camera param
+	static const int width=672;
+	static const int height=376;
+	const float f=350.505;
 
 	//set_equation
 	std::vector<float> obj_eq_a;//ŒX‚«
@@ -116,5 +120,6 @@ public:
 	void publish_grid_map(void);
 	
 	void draw_dangerous_line(void);
+	void show_cross_cloud(void);
 };
 
