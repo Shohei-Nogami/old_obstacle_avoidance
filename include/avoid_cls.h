@@ -1,3 +1,5 @@
+#ifndef INCLUDE_AVOID_CLASS
+#define INCLUDE_AVOID_CLASS
 
 #include"ros/ros.h"
 #include <ros/callback_queue.h>
@@ -123,3 +125,4 @@ public:
 	void show_cross_cloud(void);
 };
 
+#endif
