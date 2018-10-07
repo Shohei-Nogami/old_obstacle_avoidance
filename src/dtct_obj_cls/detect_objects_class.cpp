@@ -9,18 +9,19 @@ detect_objects::detect_objects()
 	//publisher and subscriber
 	pub1=it_pub1.advertise("detected_objects_image",1);//test string
 	pub2=it_pub2.advertise("depth_image_for_synchro",1);//test string
-	
+
 	nh_sub.setCallbackQueue(&queue);
 	sub=nh_sub.subscribe("depth_by_optflw_node",1,&detect_objects::image_callback,this);
 	//sub=nh_sub.subscribe("/zed/depth/depth_registered",1,&detect_objects::image_callback,this);
-	
+
 
 	pub_empty = nh_pub3.advertise<std_msgs::Empty>("response", 1);
   pub_cluster = nh_pub4.advertise<obst_avoid::cluster>("cluster", 1);
-	pc_pub = nh_pubpcl.advertise<sensor_msgs::PointCloud2>("DBSCAN_only_z", 1);
+	pc_pub1 = nh_pubpcl1.advertise<sensor_msgs::PointCloud2>("filted_pcl", 1);
+	pc_pub2 = nh_pubpcl2.advertise<sensor_msgs::PointCloud2>("clusted_pcl", 1);
 
-  
-  
+
+
 //  cloud->width  = width;
 //  cloud->height = height;
 //  cloud->points.resize (cloud->width * cloud->height);
@@ -80,10 +81,10 @@ void detect_objects::ground_estimation_from_image(const float& y_th,const float&
       if(z_temp>0.5&&!std::isinf(z_temp)){
         y_temp=(height/2-h)*z_temp/f;
 	//std::cout<<"y_temp:"<<y_temp<<"\n";
-	
+
         if(std::abs(y_temp+cam_y)<y_th){
           x_temp=-( ((float)w-(float)width/2)*z_temp/f-cam_y );
-          
+
           p_temp.x=z_temp;
           p_temp.y=x_temp;
           p_temp.z=y_temp;
@@ -98,14 +99,14 @@ void detect_objects::ground_estimation_from_image(const float& y_th,const float&
   seg.setInputCloud (ground_points);
 
 	seg.segment (*inliers, *coefficients);
-	std::cout << "Model coefficients: " << coefficients->values[0] << " " 
+	std::cout << "Model coefficients: " << coefficients->values[0] << " "
                                       << coefficients->values[1] << " "
-                                      << coefficients->values[2] << " " 
+                                      << coefficients->values[2] << " "
                                       << coefficients->values[3] << std::endl;
    a=coefficients->values[0];
    b=coefficients->values[1];
 	c=coefficients->values[2];
-	d=coefficients->values[3];  
+	d=coefficients->values[3];
 
 }
 
@@ -129,7 +130,7 @@ int main(int argc,char **argv){
 		std::cout<<"process_start:"<<time_cls.get_time_now()<<"\n";
 
     img_cls.set_image();
-		
+
 		std::cout<<"2:set_image:"<<time_cls.get_time_now()<<"\n";
 
 
@@ -161,7 +162,7 @@ int main(int argc,char **argv){
 		dtct_obj.subscribe_opticalflow();
 
 		std::cout<<"3:subscribe_depth_image:"<<time_cls.get_time_now()<<"\n";
-		
+
 		dtct_obj.subsuctibe_matching();
 
 		std::cout<<"3.5:subscribe_opticalflow:"<<time_cls.get_time_now()<<"\n";
@@ -170,7 +171,7 @@ int main(int argc,char **argv){
 		dtct_obj.set_depth_image();
 
 		std::cout<<"4:set_depth_image:"<<time_cls.get_time_now()<<"\n";
-	
+
 		dtct_obj.filter_process();//0.09
 
 		std::cout<<"9:filter_process:"<<time_cls.get_time_now()<<"\n";
@@ -180,8 +181,8 @@ int main(int argc,char **argv){
 		std::cout<<"9:clusterig_by_density_based:"<<time_cls.get_time_now()<<"\n";
 
 		//img_cls.publish_debug_image( dtct_obj.draw_cluster(img_cls.get_cur_image_by_ref() ) );
+		dtct_obj.draw_cluster();
 
-		
 
 		std::cout<<"dt:"<<time_cls.get_delta_time()<<"\n";
 		dtct_obj.publish_cluster(odm_cls.get_velocity(),odm_cls.get_angular_velocity(),time_cls.get_delta_time());
@@ -190,4 +191,3 @@ int main(int argc,char **argv){
 
 	return 0;
 }
-

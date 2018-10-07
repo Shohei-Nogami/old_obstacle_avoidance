@@ -71,7 +71,7 @@ find_package(OpenCV REQUIRED)
    rectangle.msg
    detected_objects.msg
    vel3d.msg
-   img_point.msg 
+   img_point.msg
    matching.msg
    point2i.msg
    cluster_element.msg
@@ -244,20 +244,11 @@ include_directories(
 #add_executable(NodeName src/sourcecode.cpp )
 #target_link_libraries(NodeName ${catkin_LIBRARIES} )
 
-#add_executable(odometry_class_test src/odm_cls/odometry_class.cpp src/odm_cls/wheel_odometry_class.cpp src/odm_cls/visual_odometry_class.cpp  src/tm_cls/time_class.cpp)
-#target_link_libraries(odometry_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-
-#add_executable(vfh_class_test src/vfh+_cls/vfh+_class.cpp )
-#target_link_libraries(vfh_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-
 add_executable(wheel_control_class_test src/wheel_control/whl_cntrl.cpp )
 target_link_libraries(wheel_control_class_test  ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-#add_executable(point_cloud_test src/point_cloud_test.cpp src/tm_cls/time_class.cpp)
-#target_link_libraries(point_cloud_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-
-#add_executable(culculating_opticalflow_class_test src/clc_optflw_cls/culculating_opticalflow_class.cpp src/img_cls/image_class.cpp src/img_cls/depth_image_class.cpp src/odm_cls/wheel_odometry_class.cpp src/odm_cls/visual_odometry_class.cpp  src/tm_cls/time_class.cpp)
-#target_link_libraries(culculating_opticalflow_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(culculating_opticalflow_class_test src/clc_optflw_cls/culculating_opticalflow_class.cpp src/img_cls/image_class.cpp src/img_cls/depth_image_class.cpp src/odm_cls/wheel_odometry_class.cpp src/odm_cls/visual_odometry_class.cpp  src/tm_cls/time_class.cpp)
+target_link_libraries(culculating_opticalflow_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(detect_objects_class_test src/dtct_obj_cls/detect_objects_class.cpp src/dtct_obj_cls/density_based_clustering.cpp src/tm_cls/time_class.cpp src/img_cls/image_class.cpp src/odm_cls/odometry_class.cpp src/odm_cls/wheel_odometry_class.cpp src/odm_cls/visual_odometry_class.cpp)
 target_link_libraries(detect_objects_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
@@ -274,18 +265,6 @@ target_link_libraries(avoid_class_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 add_executable(pub_odm src/odm_cls/pub_odm.cpp src/tm_cls/time_class.cpp src/odm_cls/odometry_class.cpp src/odm_cls/wheel_odometry_class.cpp src/odm_cls/visual_odometry_class.cpp)
 target_link_libraries(pub_odm ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-
-#add_executable(img_prc src/main.cpp src/img_prc_cls.cpp src/prcs_fnc.cpp src/image_function.cpp src/depth_function.cpp src/odom_function.cpp src/time_function.cpp src/cvArrow_function.cpp src/vector_function.cpp src/debug_function.cpp src/tracking_fp_function.cpp src/prd_prc.cpp src/wheel_control.cpp)
-#target_link_libraries(img_prc ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-
-#add_executable(data_processing_v_and_w src/data_processing_dv_dw.cpp)
-#target_link_libraries(data_processing_v_and_w ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-#add_executable(data_prcessing_xrt_and_xot src/data_processing_xrt_xot.cpp)
-#target_link_libraries(data_prcessing_xrt_and_xot ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-
-#add_executable(detect_objects_median src/detect_objects_median.cpp)
-#target_link_libraries(detect_objects_median ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-
 add_executable(beego_teleop_key src/beego_teleop/beego_teleop_key.cpp)
 target_link_libraries(beego_teleop_key ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
@@ -295,7 +274,7 @@ target_link_libraries(udpipreceiver ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 #add_executable(apf_test src/apf/apf.cpp src/apf/gradient_map.cpp src/apf/path_planning.cpp src/apf/coordinate_transform.cpp src/apf/grid_map.cpp src/apf/potential_map.cpp src/apf/set_param.cpp src/apf/apf_test.cpp src/apf/debug.cpp)
 #target_link_libraries(apf_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 ##
-#add_executable(apf_mpc_test src/apf_mpc/apf_mpc_test.cpp 
+#add_executable(apf_mpc_test src/apf_mpc/apf_mpc_test.cpp
 #
 #src/apf_mpc/apf_mpc.cpp src/apf_mpc/set_data.cpp src/apf_mpc/virtual_fnc.cpp src/apf_mpc/mv_pot_map.cpp  src/apf_mpc/mpc_func.cpp src/apf_mpc/debug.cpp
 #
@@ -305,4 +284,3 @@ target_link_libraries(udpipreceiver ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 ##
 #set(CMAKE_CXX_FLAGS “-std=c++0x ${CMAKE_CXX_FLAGS}”)
 add_definitions(-std=c++11)
-

@@ -35,14 +35,14 @@ private:
 	cv::Point2f x0 ;
 	double theta0;
 
-	std::vector<float> temp_vel;//vel list 
+	std::vector<float> temp_vel;//vel list
   	std::vector<bool> not_select_angle;
-	
-	
+
+
 	float selected_vel;
-	
+
 	int ROBOT_STATUS;
-	
+
 	//dicriminate_obstacle
 	std::vector<int> obstacle_status;
 	std::vector<int> obstacle_safety_status;
@@ -81,7 +81,7 @@ private:
   	//set_safety_vel
 	float safety_vel;
 	float safety_angle;
-  	
+
 public:
 	avoid();
 	~avoid();
@@ -97,19 +97,19 @@ public:
 
 	void set_not_select_angle_to_vfh(void);
 
-	void select_route(void);
+	bool select_route(void);
 	void set_intersection(void);
 	void set_intersection_time(void);
 	void labeling_dangerous_obstacle(void);
 	void set_dengerous_time_range(void);
 	bool check_collision(void);
 	bool is_collision(cv::Point2f& xr,cv::Point2f& xo,double& objs_r);
-	
-	
+
+
 	bool change_selected_vel(void);
 	void set_selected_vel(void);
 	void set_default_vel_num(void);
-	
+
 	bool select_safety_vel(void);
 	bool set_dangerous_angle(void);
 	void clear_not_select_angle(void);
@@ -118,9 +118,9 @@ public:
 
 	void publish_velocity(void);
 	void init_data(void);
-	
+
 	void publish_grid_map(void);
-	
+
 	void draw_dangerous_line(void);
 	void show_cross_cloud(void);
 };

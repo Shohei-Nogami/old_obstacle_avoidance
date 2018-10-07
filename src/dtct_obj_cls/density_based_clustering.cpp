@@ -21,7 +21,7 @@ void detect_objects::filter_process(void){
 					float depth_lm=pd[(w*ksize+m) * ch_d];
 					//if(std::isnan(depth_image.at<float>(h*ksize+l,w*ksize+m))
 					if(std::isnan(depth_lm)
-						||std::isinf(depth_lm) 
+						||std::isinf(depth_lm)
 						||h+l<0||height/ksize<=h+l
 						||w+m<0||width/ksize<=w+m )
 					{
@@ -33,13 +33,13 @@ void detect_objects::filter_process(void){
 			std::sort(depth_median.begin(),depth_median.end());
 			if((int)depth_median.size())
 			{
-				
+
 				//filted_image.at<float>(h,w)=depth_median[(int)depth_median.size()/2];
 				pf[w * ch_f]=depth_median[(int)depth_median.size()/2];
 			}
 			else{
-				//filted_image.at<float>(h,w)=0;						
-				pf[w * ch_f]=0;						
+				//filted_image.at<float>(h,w)=0;
+				pf[w * ch_f]=0;
 			}
 			depth_median.clear();
 		}
@@ -54,7 +54,7 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 	const float cam_y=0.4125;
 	float z_temp,x_temp,y_temp;
 	float a,b,c,d;
-	
+
 	pcl::PointXYZ voxel_element_temp;
 
 	//std::cout<<"aa\n";
@@ -111,7 +111,7 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 			searched_flag[h][w]=false;
 		}
 	}
-	
+
 	std::cout<<"1\n";
 	float height_th=1.0;//1.5;
 	//cv::Point2i temp;
@@ -163,7 +163,7 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 					min_pn=min_pn0;
 					depth_threshold=depth_threshold0;
 				}
-				
+
 				for(int l=-search_range;l<=search_range;l++){
 					float *pfi = filted_image.ptr<float>(task_objects.pt[i].y+l);
 					for(int m=-search_range;m<=search_range;m++){
@@ -227,15 +227,15 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 					//Q_p.fpt[(int)Q_p.fpt.size()+1]=task_objects.pt[i];
 					Q_p.fpt.push_back(task_objects.pt[i]);//add
 					//task_objects.pt.insert(task_objects.pt.end(),task_pt.pt.begin(),task_pt.pt.end());
-					
-					
+
+
 					//std::cout<<"task_objects.pt.size():"<<task_objects.pt.size()<<","<<"(int)task_pt.pt.size():"<<(int)task_pt.pt.size()<<"\n";
 					int k0=(int)task_objects.pt.size();
 					//int tk0=(int)task_pt.pt.size();
 					//task_objects.pt.resize(k0+tk0);
 					task_objects.pt.resize((int)task_objects.pt.size()+(int)task_pt.pt.size());
 					//std::cout<<"task_objects.pt.size():"<<task_objects.pt.size()<<"\n";
-					
+
 					for(int k=0;k<(int)task_pt.pt.size();k++)
 					{
 						task_objects.pt[k0+k].x=task_pt.pt[k].x;
@@ -243,10 +243,10 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 						task_objects.pt[k0+k].z=task_pt.pt[k].z;
 						//std::cout<<"task_objects.pt[k0+k],task_pt.pt[k]"<<task_objects.pt[k0+k]<<","<<task_pt.pt[k]<<"\n";
 					}
-					
+
 					size+=std::pow(ksize*task_objects.pt[i].z/f,2.0);
 					obst_avoid::cluster_point pt_temp;
-					
+
 					k0=(int)Q_p.pt.size();
 					Q_p.pt.resize(Q_p.pt.size()+ksize*ksize);
 					int k=0;
@@ -271,14 +271,14 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 							//std::cout<<"pt_temp,Q_p.pt[k0+k]:"<<pt_temp<<","<<Q_p.pt[k0+k]<<"\n";
 							k++;
 							//size+=std::pow(depth_temp/f,2.0);
-						}	
+						}
 					}
 					Q_p.pt.resize(k0+k);
-					
+
 					for(int i=0;i<task_pt.pt.size();i++)
 					{
 						searched_flag[task_pt.pt[i].y][task_pt.pt[i].x]=true;
-						
+
 					}
 				}
 			}//task
@@ -306,10 +306,10 @@ cv::Mat& detect_objects::draw_cluster(cv::Mat& image)
 	}
 	temp_image = image.clone();//cv::Mat::zeros(cv::Size(width,height), CV_8UC3);
 	//temp_image = cv::Mat::zeros(cv::Size(width,height), CV_8UC3);
-	
-	
+
+
 	int j = 0;
-	uint8_t colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト	
+	uint8_t colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト
 
 
 	for(int k=0;k<Q.clst.size();k++)
@@ -335,6 +335,102 @@ cv::Mat& detect_objects::draw_cluster(cv::Mat& image)
 	std::cout<<"return temp_image\n";
 	return temp_image;
 }
+void detect_objects::draw_cluster(void)
+{
+	float colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr clusted_cloud(new  pcl::PointCloud<pcl::PointXYZRGB>);
+	clusted_cloud->points.clear();
+	clusted_cloud->points.reserve(width*height);
+	pcl::PointXYZRGB cloud_temp;
+	std::cout<<"draw filted points\n";
+	//draw filted points
+	int ch_f = filted_image.channels();
+	int count=0;
+	for(int h=0;h<height/ksize;h++){
+		float *pf = filted_image.ptr<float>(h);
+		for(int w=0;w<width/ksize;w++){
+			if(count++%10)//30)
+			{
+				continue;
+			}
+			float z=pf[w*ch_f];
+			cloud_temp.y=-(w*ksize-width/2)*z/f;
+			cloud_temp.z=((height/2-h*ksize)*z)/f+0.4125;
+			cloud_temp.x=z;
+			cloud_temp.r=colors[1%12][0];
+			cloud_temp.g=colors[1%12][1];
+			cloud_temp.b=colors[1%12][2];
+			clusted_cloud->points.push_back(cloud_temp);
+		}
+	}
+	std::cout<<"clusted_cloud->points.size():"<<clusted_cloud->points.size()<<"\n";
+
+	clusted_cloud->height=1;
+	clusted_cloud->width=clusted_cloud->points.size();
+	if(!clusted_cloud->points.size())
+	{
+		return ;
+	}
+	sensor_msgs::PointCloud2 edit_cloud1;
+	pcl::toROSMsg (*clusted_cloud, edit_cloud1);
+	//edit_cloud.header.frame_id="/zed_current_frame";
+	edit_cloud1.header.frame_id="/zed_camera_center";
+	pc_pub1.publish(edit_cloud1);
+	std::cout<<"draw cluster points\n";
+
+
+	//draw cluster points
+	if(!Q.clst.size())
+	{
+		std::cout<<"!Q.clst.size()\n";
+		return;
+	}
+
+	int j = 0;
+
+	clusted_cloud->points.clear();
+	clusted_cloud->points.reserve(width*height);
+
+	for(int k=0;k<Q.clst.size();k++)
+	{
+		if(Q.clst[k].size<0.1*0.1)//||Q.clst[i].size>1.0*1.0)
+		{
+			continue;
+		}
+		for(int kn=0;kn<Q.clst[k].pt.size();kn++)
+		{
+			int u=Q.clst[k].pt[kn].x;
+			int v=Q.clst[k].pt[kn].y;
+			float z=Q.clst[k].pt[kn].z;
+			if(kn%10)//30)
+			{
+				continue;
+			}
+			cloud_temp.y=-(u-width/2)*z/f;
+			cloud_temp.z=((height/2-v)*z)/f+0.4125;
+			cloud_temp.x=z;
+			cloud_temp.r=colors[j%12][0];
+			cloud_temp.g=colors[j%12][1];
+			cloud_temp.b=colors[j%12][2];
+			// cloud_temp.z+=5;
+			clusted_cloud->points.push_back(cloud_temp);
+		}
+		j++;
+	}
+	std::cout<<"clusted_cloud->points.size():"<<clusted_cloud->points.size()<<"\n";
+	clusted_cloud->height=1;
+	clusted_cloud->width=clusted_cloud->points.size();
+	if(!clusted_cloud->points.size())
+	{
+		return ;
+	}
+	sensor_msgs::PointCloud2 edit_cloud2;
+	pcl::toROSMsg (*clusted_cloud, edit_cloud2);
+	//edit_cloud.header.frame_id="/zed_current_frame";
+	edit_cloud2.header.frame_id="/zed_camera_center";
+	pc_pub2.publish(edit_cloud2);
+}
+
 void detect_objects::publish_cluster(double& v,double& w,double& dt)
 {
 	obst_avoid::cluster pub_Q;
@@ -353,7 +449,7 @@ void detect_objects::publish_cluster(double& v,double& w,double& dt)
 		{
 			continue;
 		}
-		
+
 		//add 180618
 		/*if((int)Q.clst[i].fpt.size()<10)
 		{
@@ -367,7 +463,7 @@ void detect_objects::publish_cluster(double& v,double& w,double& dt)
 		{
 			continue;
 		}
-		
+
 		pub_Q.clst[i].pt.resize(Q.clst[i].pt.size());
 		for(int k=0;k<Q.clst[i].pt.size();k++)
 		{
@@ -375,8 +471,8 @@ void detect_objects::publish_cluster(double& v,double& w,double& dt)
 			pub_Q.clst[i].pt[k].y=Q.clst[i].pt[k].y;
 			pub_Q.clst[i].pt[k].z=Q.clst[i].pt[k].z;
 		}
-		
-		
+
+
 		count++;
 		*/
 	}
@@ -384,10 +480,9 @@ void detect_objects::publish_cluster(double& v,double& w,double& dt)
 	//std::cout<<"count:"<<count<<"\n";
 	std::cout<<"pub_Q.clst.size():"<<pub_Q.clst.size()<<"\n";
 	if(!Q.clst.size())
-	{	
+	{
 		std::cout<<"!Q.clst.size()\n";
 		return;
 	}
 	pub_cluster.publish(pub_Q);
 }
-

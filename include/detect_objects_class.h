@@ -32,15 +32,16 @@
 #include"odometry_class.h"
 
 //#include <pcl/visualization/cloud_viewer.h>
-//#include <pcl/io/pcd_io.h>  
-//#include <pcl/point_types.h> 
+//#include <pcl/io/pcd_io.h>
+//#include <pcl/point_types.h>
 //#include <iostream>
 class detect_objects{
 	private:
 		ros::NodeHandle nh_pub1,nh_pub2,nh_pub3,nh_pub4;
 		ros::NodeHandle nh_sub,nh_sub2;
-		ros::NodeHandle nh_pubpcl;
+		ros::NodeHandle nh_pubpcl1,nh_pubpcl2;
 		ros::Publisher pub_empty,pub_cluster;
+  	ros::Publisher pc_pub1,pc_pub2;
 		ros::Subscriber sub,sub2;
 		ros::CallbackQueue queue;
 		image_transport::ImageTransport it_pub1,it_pub2;
@@ -51,14 +52,13 @@ class detect_objects{
 		static const int width=672;
 		static const int height=376;
 		const float f=350.505;
-		
+
 		cv_bridge::CvImagePtr cvbridge_image;
 		cv::Mat depth_image;
 
 	//-----PCL
 		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
-  	ros::Publisher pc_pub;
-		
+
 		pcl::SACSegmentation<pcl::PointXYZ> seg;//の傾きラジアン
 		pcl::PointIndices::Ptr inliers;// (new pcl::PointIndices);
 		pcl::ModelCoefficients::Ptr coefficients;// (new pcl::ModelCoefficients);
@@ -68,7 +68,7 @@ class detect_objects{
 		std::vector<pcl::PointXYZ> cur_gp;
 		std::vector<pcl::PointXYZ> pre_gp;
 		std::vector<pcl::PointXYZ> cluster_vel_gp;
-	
+
 	//--density clustering
 		//std::vector< std::vector<cv::Point2i> > Q;
 		::obst_avoid::cluster Q;
@@ -90,11 +90,12 @@ class detect_objects{
 	//---DENSITY BASED COLUSTERING
 		void density_based_clustering(cv::Mat& image);
 		cv::Mat& draw_cluster(cv::Mat& image);
+		void draw_cluster(void);
 		void filter_process(void);
 
 	//---GROUND ESTIMATE
 		void ground_estimation_from_image(const float& y_th,const float& cam_y,float& a,float& b,float& c,float& d);
-		
+
 	//---RESPONSE CALLBACK
 		void empty_callback(const std_msgs::Empty& msg);
 	//---publish_cluster
@@ -102,4 +103,3 @@ class detect_objects{
 	//---publish response
 		void publish_response(void);
 };
-

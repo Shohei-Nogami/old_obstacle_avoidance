@@ -31,7 +31,7 @@ avoid::avoid()
 	pub2 = nh_pub2.advertise<obst_avoid::select_theta>("select_theta", 1);
 
 	pub_pcl = nh_pub.advertise<sensor_msgs::PointCloud2>("intersection_cloud", 1);
-	
+
 	//vfh.vfh_class();
 
 
@@ -143,10 +143,12 @@ void avoid::set_grid_map(void)
 	//set grid map
 	for (int i = 0; i < obj_info.objs.size(); i++)
 	{
+		/*
 		if(th_pt_size>(int)obj_info.objs.size())
 		{
 			continue;
 		}
+		*/
 		if(obstacle_status[i] == MOVING_OBSTACLE)
 		{
 			continue;
@@ -154,7 +156,7 @@ void avoid::set_grid_map(void)
 		vfh.set_grid_map(obj_info.objs[i].pt);
 	}
 }
-void avoid::select_route(void)
+bool avoid::select_route(void)
 {
 
 	//select_route
@@ -167,8 +169,12 @@ void avoid::select_route(void)
 
 	//修正が必要
 	selected_angle_i = vfh.select_best_trajectory(x0, theta0, xp, w_target, w_angle);
+	if(selected_angle_i==-1){
+		return false;
+	}
 
 	selected_angle=((min_angle + selected_angle_i * (max_angle - min_angle) / (vfh_resolution))*M_PI / 180);
+	return true;
 }
 //selected_angle：float
 //selected_agnle_i:int
@@ -662,27 +668,24 @@ void avoid::draw_dangerous_line(void)
 }
 void avoid::show_cross_cloud(void)
 {
-	
+
 	float x0,y0,x1,y1,xc,yc;
 	float vx,vy;
 	float vsize;
 	float vxi,vyi;
 	float w=0.2;
-	
+
 	//pointcloud
 	float colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr clusted_cloud(new  pcl::PointCloud<pcl::PointXYZRGB>);
 	clusted_cloud->points.clear();
 	clusted_cloud->points.reserve(673*376*5);
 	pcl::PointXYZRGB cloud_temp;
-	
+
 	for(int i = 0; i < obj_info.objs.size(); i++)
 	{
 		x0=y0=x1=y1=xc=yc=vx=vy=0;
-		if(obstacle_status[i]!=MOVING_OBSTACLE)
-		{
-			continue;
-		}
+
 		xc=x_c[i].x;
 		yc=x_c[i].y;
 		x0=x_c[i].x-t_c[i]*obj_info.objs[i].vel.z;
@@ -698,7 +701,7 @@ void avoid::show_cross_cloud(void)
 		//vfh.draw_circle(xc,yc);
 		//vfh.draw_circle(obj_info.objs[i].pos.x,obj_info.objs[i].pos.z);
 		//vfh.draw_line(obj_info.objs[i].pos.x,obj_info.objs[i].pos.z,obj_info.objs[i].pos.x+vxi*w,obj_info.objs[i].pos.z+vyi*w);
-		
+
 //--------point cloud------------------------------------------------
 
 		for(int k = 0; k < obj_info.objs[i].pt.size(); k++)
@@ -712,10 +715,16 @@ void avoid::show_cross_cloud(void)
 			cloud_temp.g=colors[i%12][1];
 			cloud_temp.b=colors[i%12][2];
 			cloud_temp.x+=obj_info.objs[i].vel.z*t;
-		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;			
-		    cloud_temp.z+=obj_info.objs[i].vel.y*t;
-		    
+	    cloud_temp.y+=-obj_info.objs[i].vel.x*t;
+	    cloud_temp.z+=obj_info.objs[i].vel.y*t;
+
 			clusted_cloud->points.push_back(cloud_temp);
+			//if(obstacle_status[i]!=MOVING_OBSTACLE)
+			if(obstacle_safety_status[i]==SAFETY_OBSTACLE)
+			{
+				continue;
+			}
+			/*
 			//t=1
 			t=1;
 			cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
@@ -725,11 +734,11 @@ void avoid::show_cross_cloud(void)
 			cloud_temp.g=colors[i%12][1];
 			cloud_temp.b=colors[i%12][2];
 			cloud_temp.x+=obj_info.objs[i].vel.z*t;
-		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;			
+		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;
 		    cloud_temp.z+=obj_info.objs[i].vel.y*t;
-		    
+
 			clusted_cloud->points.push_back(cloud_temp);
-		    
+
 		    //t=1
 			t=1;
 			cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
@@ -739,11 +748,11 @@ void avoid::show_cross_cloud(void)
 			cloud_temp.g=colors[i%12][1];
 			cloud_temp.b=colors[i%12][2];
 			cloud_temp.x+=obj_info.objs[i].vel.z*t;
-		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;			
+		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;
 		    cloud_temp.z+=obj_info.objs[i].vel.y*t;
-		    
+
 			clusted_cloud->points.push_back(cloud_temp);
-		    
+			*/
 		    //t=t_c_min
 			t=t_c_min[i];
 			cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
@@ -753,11 +762,11 @@ void avoid::show_cross_cloud(void)
 			cloud_temp.g=colors[i%12][1];
 			cloud_temp.b=colors[i%12][2];
 			cloud_temp.x+=obj_info.objs[i].vel.z*t;
-		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;			
+		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;
 		    cloud_temp.z+=obj_info.objs[i].vel.y*t;
-		    
+
 			clusted_cloud->points.push_back(cloud_temp);
-		    
+
 		    //t=t_c
 			t=t_c[i];
 			cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
@@ -767,12 +776,12 @@ void avoid::show_cross_cloud(void)
 			cloud_temp.g=colors[i%12][1];
 			cloud_temp.b=colors[i%12][2];
 			cloud_temp.x+=obj_info.objs[i].vel.z*t;
-		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;			
+		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;
 		    cloud_temp.z+=obj_info.objs[i].vel.y*t;
-		    
+
 			clusted_cloud->points.push_back(cloud_temp);
-		    
-		    //t=t_c
+
+		    //t=t_c_max
 			t=t_c_max[i];
 			cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
 			cloud_temp.z=((height/2-obj_info.objs[i].pt[k].y)*obj_info.objs[i].pt[k].z)/f+0.4125;
@@ -781,20 +790,20 @@ void avoid::show_cross_cloud(void)
 			cloud_temp.g=colors[i%12][1];
 			cloud_temp.b=colors[i%12][2];
 			cloud_temp.x+=obj_info.objs[i].vel.z*t;
-		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;			
+		    cloud_temp.y+=-obj_info.objs[i].vel.x*t;
 		    cloud_temp.z+=obj_info.objs[i].vel.y*t;
-		    
+
 			clusted_cloud->points.push_back(cloud_temp);
-		    
-		}		
+
+		}
 //---------------------------------------------------------
 	}
-	
+
 	sensor_msgs::PointCloud2 edit_cloud;
 	pcl::toROSMsg (*clusted_cloud, edit_cloud);
-	edit_cloud.header.frame_id="/zed_current_frame";
+	edit_cloud.header.frame_id="/zed_camera_center";
 	pub_pcl.publish(edit_cloud);
-	
+
 }
 int main(int argc,char **argv)
 {
@@ -853,7 +862,11 @@ int main(int argc,char **argv)
 
 		do{
 
-			avoid_cls.select_route();
+			if(!avoid_cls.select_route())
+			{
+				ROBOT_STATUS=ROBOT_STOP;
+				break;
+			}
 
 			std::cout<<"select_route\n";
 

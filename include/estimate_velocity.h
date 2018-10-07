@@ -19,7 +19,7 @@
 class estimate_velocity{
 	private:
 		ros::NodeHandle nh_sub,nh_pub,nh_pcl,nh_pub2;
-		ros::Publisher pub,pub_pcl,pub2;
+		ros::Publisher pub,pub_pcl,pub_pcl2,pub2;
 		ros::Subscriber sub;
 		ros::CallbackQueue queue;
 
@@ -42,19 +42,19 @@ class estimate_velocity{
 		static const int height=376;
 		const float f=350.505;
 		int ksize=3;
-		
+
 		//----tracking count
 		std::vector<int> track_n;
 		std::vector<int> pre_track_n;
 
-		
+
 		//---calmanfilter
 		std::vector<Eigen::MatrixXd,Eigen::aligned_allocator<Eigen::MatrixXd> > xh_t;
 		std::vector<Eigen::MatrixXd,Eigen::aligned_allocator<Eigen::MatrixXd> > sig_xh_t;
-	
+
 		std::vector<Eigen::MatrixXd,Eigen::aligned_allocator<Eigen::MatrixXd> > xh_t_1;
 		std::vector<Eigen::MatrixXd,Eigen::aligned_allocator<Eigen::MatrixXd> > sig_xh_t_1;
-	
+
 		Eigen::MatrixXd sig_ut;
 		Eigen::MatrixXd del_t;
 		Eigen::MatrixXd sig_x0;
@@ -74,7 +74,7 @@ class estimate_velocity{
 		void objects_callback(const obst_avoid::objects_info::ConstPtr& msg);
 		bool culculate_velocity(void);
 		void culculate_accelerate(void);
-	
+
 		void calmanfilter(void);
 
 		void LPF(float& x_t,const float& x_t_1,double& dt,const double& T);
@@ -85,4 +85,3 @@ class estimate_velocity{
 		void publish_pointcloud_ex(void);
 		void publish_filted_objects_info(void);
 };
-

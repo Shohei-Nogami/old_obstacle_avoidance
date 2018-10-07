@@ -621,21 +621,28 @@ int vfh_class::select_best_trajectory(const cv::Point2f& x0,const float& theta0,
 	//threshold length
 	float th_ln=1.0;
 	int th_ln_i=(int)(th_ln/mv_length)+1;
+	// std::cout<<"th i,ln, mvlength,"<<th_ln_i<<","<<th_ln<<","<<mv_length<<"\n";
 	for (int i = 0; i<vfh_resolution; i++) {
 		if(not_select_angle[i])
 		{
-			std::cout<<"i:"<<i<<"\n";
+			//std::cout<<"i:"<<i<<"\n";
 			continue;
 		}
-		if(th_ln_i>rank_trajectory[i])
-		{
-			continue;
-		}
+
 		float theta = (min_angle + (float)i * (max_angle - min_angle) / ( vfh_resolution ))*M_PI / 180;
 		float theta_half = (float)vfh_resolution / 2 * std::abs((float)(max_angle - min_angle) / (vfh_resolution))*M_PI / 180;
-		evaluation_formula = (max_search_n - rank_trajectory[i])
-			+ (std::abs(i - vfh_resolution / 2) / (vfh_resolution / 2))*max_search_n*w_angle
-			+ std::abs(std::atan(-(xp.x - xc) / (xp.y - yc))-theta0 - theta ) / theta_half * max_search_n*w_target;
+
+		// std::cout<<"i,rank_trajectory:"<<i<<","<<rank_trajectory[i]<<"\n";
+		if(th_ln_i>rank_trajectory[i])
+		{
+			// std::cout<<"i,rank_trajectory:"<<i<<","<<rank_trajectory[i]<<"\n";
+			continue;
+		}
+		else{
+			evaluation_formula = (max_search_n - rank_trajectory[i])
+				+ (std::abs(i - vfh_resolution / 2) / (vfh_resolution / 2))*max_search_n*w_angle
+				+ std::abs(std::atan(-(xp.x - xc) / (xp.y - yc))-theta0 - theta ) / theta_half * max_search_n*w_target;
+		}
 		//std::cout<<"aa:"<<theta_half<<"\n";
 		//std::cout<<"evaluation_formula:"<<evaluation_formula<<"\n";
 		if (good_trajectory_value > evaluation_formula)
@@ -644,6 +651,11 @@ int vfh_class::select_best_trajectory(const cv::Point2f& x0,const float& theta0,
 			good_trajectory_num = i;
 		}
 	}
+	//std::cout<<"good_trajectory_value:"<<good_trajectory_value<<"\n";
+	if(good_trajectory_value==100){
+		return -1;
+	}
+
 	return good_trajectory_num;
 	//return ((min_angle + good_trajectory_num * (max_angle - min_angle) / (vfh_resolution))*M_PI / 180);
 }
@@ -657,7 +669,7 @@ void vfh_class::set_not_select_angle(std::vector<bool>& not_select_angle_temp)
 
 		if(not_select_angle[i])
 		{
-			std::cout<<"i:"<<i<<"\n";
+			//std::cout<<"i:"<<i<<"\n";
 		}
 
 	}
