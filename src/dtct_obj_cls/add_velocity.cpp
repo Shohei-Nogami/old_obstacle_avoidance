@@ -15,7 +15,8 @@ bool detect_objects::add_velocity_to_cluster(void){
 	std::cout<<"vX.pt,vel:"<<vX.pt.size()<<","<<vX.vel.size()<<"\n";
 	//std::vector< std::vector<pcl::PointXYZ> > cluster_vel_elm;
 	pcl::PointXYZ vel_element;
-	cluster_vel_elm.resize(cur_cluster.size());
+	//cluster_vel_elm.resize(cur_cluster.size());
+	cluster_vel_elm.reserve(cur_cluster.size());
 	int h,w;
 	int nx,nz,ny;
 	int cn;

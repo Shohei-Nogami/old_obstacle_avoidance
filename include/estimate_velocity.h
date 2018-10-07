@@ -82,6 +82,7 @@ class estimate_velocity{
 		void culc_distance_3f(const cv::Point3f& x1,cv::Point3f& x2,float& dis);
 		void record_odom_and_vel(void);
 		void publish_pointcloud(void);
+		void publish_pointcloud_ex(void);
 		void publish_filted_objects_info(void);
 };
 

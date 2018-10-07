@@ -906,6 +906,89 @@ void estimate_velocity::publish_pointcloud(void)
 	edit_cloud.header.frame_id="/zed_current_frame";
 	pub_pcl.publish(edit_cloud);
 }
+void estimate_velocity::publish_pointcloud_ex(void)
+{
+	int j = 0;
+	float colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr clusted_cloud(new  pcl::PointCloud<pcl::PointXYZRGB>);
+	clusted_cloud->points.clear();
+	clusted_cloud->points.reserve(673*376);
+	
+	pcl::PointXYZRGB cloud_temp;
+	float resolution=0.05;
+	for(int i=0;i<cur_objs.obj.size();i++)
+	{
+		int color_n=0;
+		if(track_n[i]<1//||std::sqrt(std::pow(vel[i].x,2.0)+std::pow(vel[i].z,2.0))>1.1
+			||std::sqrt(std::pow(vel_h[i].x,2.0)+std::pow(vel_h[i].z,2.0))>1.1
+				//std::sqrt(std::pow(xh_t[i](2, 0),2.0)+std::pow(xh_t[i](3, 0),2.0))>1.1
+				||cur_objs.obj[i].size>0.7*0.7
+				||cur_objs.obj[i].size<0.2*0.2
+				
+				||std::sqrt(sig_xh_t[i](2, 0)+sig_xh_t[i](2, 2) + sig_xh_t[i](3, 1)+sig_xh_t[i](3, 3) ) 
+				> std::sqrt(std::pow(vel_h[i].x, 2.0) + std::pow(vel_h[i].z, 2.0))		
+		)
+		{
+			color_n=1;
+			
+			for(int k=0;k<cur_objs.obj[i].pt.size();k++)
+			{
+				if(k%10)//30)
+				{
+					continue;
+				}
+				cloud_temp.y=-(cur_objs.obj[i].pt[k].x-width/2)*cur_objs.obj[i].pt[k].z/f;
+				cloud_temp.z=((height/2-cur_objs.obj[i].pt[k].y)*cur_objs.obj[i].pt[k].z)/f+0.4125;
+				cloud_temp.x=cur_objs.obj[i].pt[k].z;
+				cloud_temp.r=colors[color_n%12][0];
+				cloud_temp.g=colors[color_n%12][1];
+				cloud_temp.b=colors[color_n%12][2];
+			
+				//cloud_temp.y+=10;		
+				//cloud_temp.z+=4;
+				clusted_cloud->points.push_back(cloud_temp);
+			}	
+			
+		}
+		else
+		{
+			color_n=2;
+			for(int k=0;k<cur_objs.obj[i].pt.size();k++)
+			{
+				if(k%10)//30)
+				{
+					continue;
+				}
+				cv::Point3f temp;
+				temp.x=xh_t[i](0, 0)-cur_objs.obj[i].pos.x;
+				temp.z=xh_t[i](1, 0)-cur_objs.obj[i].pos.z;
+
+				cloud_temp.y=-(cur_objs.obj[i].pt[k].x-width/2)*cur_objs.obj[i].pt[k].z/f;
+				cloud_temp.z=((height/2-cur_objs.obj[i].pt[k].y)*cur_objs.obj[i].pt[k].z)/f+0.4125;
+				cloud_temp.x=cur_objs.obj[i].pt[k].z;
+				cloud_temp.r=colors[color_n%12][0];
+				cloud_temp.g=colors[color_n%12][1];
+				cloud_temp.b=colors[color_n%12][2];
+				cloud_temp.x+=temp.z;
+				cloud_temp.y+=-temp.x;	
+				cloud_temp.z+=0;
+				clusted_cloud->points.push_back(cloud_temp);
+			}	
+		}
+	}
+	std::cout<<"clusted_cloud->points.size():"<<clusted_cloud->points.size()<<"\n";
+	clusted_cloud->height=1;
+	clusted_cloud->width=clusted_cloud->points.size();
+	std::cout<<"cloud->points.size():"<<clusted_cloud->points.size()<<"\n";
+	if(!clusted_cloud->points.size())
+	{
+		return ;
+	}
+	sensor_msgs::PointCloud2 edit_cloud;
+	pcl::toROSMsg (*clusted_cloud, edit_cloud);
+	edit_cloud.header.frame_id="/zed_left_camera";
+	pub_pcl.publish(edit_cloud);
+}
 
 void estimate_velocity::publish_filted_objects_info(void)
 {

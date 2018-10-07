@@ -295,13 +295,13 @@ target_link_libraries(udpipreceiver ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 #add_executable(apf_test src/apf/apf.cpp src/apf/gradient_map.cpp src/apf/path_planning.cpp src/apf/coordinate_transform.cpp src/apf/grid_map.cpp src/apf/potential_map.cpp src/apf/set_param.cpp src/apf/apf_test.cpp src/apf/debug.cpp)
 #target_link_libraries(apf_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 ##
-add_executable(apf_mpc_test src/apf_mpc/apf_mpc_test.cpp 
+#add_executable(apf_mpc_test src/apf_mpc/apf_mpc_test.cpp 
 #
-src/apf_mpc/apf_mpc.cpp src/apf_mpc/set_data.cpp src/apf_mpc/virtual_fnc.cpp src/apf_mpc/mv_pot_map.cpp  src/apf_mpc/mpc_func.cpp src/apf_mpc/debug.cpp
+#src/apf_mpc/apf_mpc.cpp src/apf_mpc/set_data.cpp src/apf_mpc/virtual_fnc.cpp src/apf_mpc/mv_pot_map.cpp  src/apf_mpc/mpc_func.cpp src/apf_mpc/debug.cpp
 #
-src/apf/apf.cpp src/apf/gradient_map.cpp src/apf/path_planning.cpp src/apf/coordinate_transform.cpp src/apf/grid_map.cpp src/apf/potential_map.cpp src/apf/set_param.cpp src/apf/debug.cpp)
+#src/apf/apf.cpp src/apf/gradient_map.cpp src/apf/path_planning.cpp src/apf/coordinate_transform.cpp src/apf/grid_map.cpp src/apf/potential_map.cpp src/apf/set_param.cpp src/apf/debug.cpp)
 #
-target_link_libraries(apf_mpc_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+#target_link_libraries(apf_mpc_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 ##
 #set(CMAKE_CXX_FLAGS “-std=c++0x ${CMAKE_CXX_FLAGS}”)
 add_definitions(-std=c++11)

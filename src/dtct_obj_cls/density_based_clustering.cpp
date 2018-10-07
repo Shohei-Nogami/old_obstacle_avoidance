@@ -6,31 +6,40 @@ void detect_objects::filter_process(void){
 	//	return ;
 	std::vector<float> depth_median;
 	depth_median.reserve((median_param/2+1)*(median_param/2+1));
-	filted_image=cv::Mat::zeros(cv::Size(width,height), CV_32FC1);
+	filted_image=cv::Mat::zeros(cv::Size(width/ksize,height/ksize), CV_32FC1);
 	//std::cout<<"aaa\n";
+	int ch_d = depth_image.channels();
+	int ch_f = filted_image.channels();
 	for(int h=0;h<height/ksize;h++){
+		float *pf = filted_image.ptr<float>(h);
 		for(int w=0;w<width/ksize;w++){
 			for(int l=-median_param/2;l<=median_param/2;l++)
 			{
+				float *pd = depth_image.ptr<float>(h*ksize+l);
 				for(int m=-median_param/2;m<=median_param/2;m++)
 				{
-					if(std::isnan(depth_image.at<float>(h*ksize+l,w*ksize+m))
-						||std::isinf(depth_image.at<float>(h*ksize+l,w*ksize+m)) 
+					float depth_lm=pd[(w*ksize+m) * ch_d];
+					//if(std::isnan(depth_image.at<float>(h*ksize+l,w*ksize+m))
+					if(std::isnan(depth_lm)
+						||std::isinf(depth_lm) 
 						||h+l<0||height/ksize<=h+l
 						||w+m<0||width/ksize<=w+m )
 					{
 						continue;
 					}
-					depth_median.push_back(depth_image.at<float>(h*ksize+l,w*ksize+m) );
+					depth_median.push_back(depth_lm);
 				}
 			}
 			std::sort(depth_median.begin(),depth_median.end());
 			if((int)depth_median.size())
 			{
-				filted_image.at<float>(h,w)=depth_median[(int)depth_median.size()/2];
+				
+				//filted_image.at<float>(h,w)=depth_median[(int)depth_median.size()/2];
+				pf[w * ch_f]=depth_median[(int)depth_median.size()/2];
 			}
 			else{
-				filted_image.at<float>(h,w)=0;						
+				//filted_image.at<float>(h,w)=0;						
+				pf[w * ch_f]=0;						
 			}
 			depth_median.clear();
 		}
@@ -107,9 +116,12 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 	float height_th=1.0;//1.5;
 	//cv::Point2i temp;
 	obst_avoid::cluster_point temp;
+	int ch_fi = filted_image.channels();
 	for(int h=0+search_range;h<height/ksize-search_range;h++){
+		float *pfi0 = filted_image.ptr<float>(h);
 		for(int w=0+search_range;w<width/ksize-search_range;w++){
-			double depth_0=filted_image.at<float>(h,w);
+			//double depth_0=filted_image.at<float>(h,w);
+			double depth_0=pfi0[w*ch_fi];
 			if(searched_flag[h][w]||std::isnan(depth_0)||depth_0==0){
 				continue;
 			}
@@ -151,7 +163,9 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 					min_pn=min_pn0;
 					depth_threshold=depth_threshold0;
 				}
+				
 				for(int l=-search_range;l<=search_range;l++){
+					float *pfi = filted_image.ptr<float>(task_objects.pt[i].y+l);
 					for(int m=-search_range;m<=search_range;m++){
 						if(searched_flag[task_objects.pt[i].y+l][task_objects.pt[i].x+m])
 						{
@@ -164,7 +178,8 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 							continue;
 						}
 						//std::cout<<"("<<task_objects.pt[i].y+l<<","<<task_objects.pt[i].x+m<<")\n";
-						float depth_i=filted_image.at<float>(task_objects.pt[i].y+l,task_objects.pt[i].x+m);
+						//float depth_i=filted_image.at<float>(task_objects.pt[i].y+l,task_objects.pt[i].x+m);
+						float depth_i=pfi[(task_objects.pt[i].x+m)*ch_fi];
 						//std::cout<<"depth_i:"<<depth_i<<"\n";
 						if(std::isnan(depth_i)||depth_i==0)
 							continue;
