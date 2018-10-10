@@ -76,6 +76,20 @@ class detect_objects{
 		cv::Mat filted_image;
 		const int ksize=3;
 		const int median_param=3;
+		//-with grid_map
+		float map_wf;//=10;
+		float map_hf;//=10;
+		float reso;//=0.1;
+		float cx;//=0;
+		float cy;//=0;
+		//
+		cv::Mat img_3d;
+		cv::Mat index_to_gm;
+		cv::Mat grid_map;
+		cv::Mat cluster_num;
+		int cluster_size;
+		std::vector<int> cluster_count;
+		//
 	//--time_cls
 		time_class tm_cls;
 	//--response msg
@@ -92,7 +106,17 @@ class detect_objects{
 		cv::Mat& draw_cluster(cv::Mat& image);
 		void draw_cluster(void);
 		void filter_process(void);
-
+	//------WITH GRIDMAP
+		void conv_depth_image(cv::Mat& tmp_img_dpt);
+		void conv_depth_image(void);
+		bool convert_xyz_to_grid(const float& x,const float& y,int& xg,int& yg);
+		void create_grid_map(cv::Mat& tmp_img_3d);
+		void create_grid_map(void);
+		void dbscan_with_gm(cv::Mat& tmp_grid_map);
+		void dbscan_with_gm(void);
+		cv::Mat& get_grid_map(void);
+		void set_cluster(void);
+		void draw_grid_map(cv::Mat& tmp_grid_map);
 	//---GROUND ESTIMATE
 		void ground_estimation_from_image(const float& y_th,const float& cam_y,float& a,float& b,float& c,float& d);
 

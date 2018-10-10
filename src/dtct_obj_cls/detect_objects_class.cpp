@@ -38,6 +38,19 @@ detect_objects::detect_objects()
 	seg.setEpsAngle(15.0f * (M_PI/180.0f));//許容出来る平面
 
 	filted_image=cv::Mat::zeros(cv::Size(width,height), CV_32FC1);
+
+	map_wf=10;
+	map_hf=10;
+	reso=0.1;
+	cx=0;
+	cy=0;
+
+	img_3d=cv::Mat::zeros(cv::Size(width,height), CV_32FC3);
+	index_to_gm=cv::Mat::zeros(cv::Size(width,height), CV_32SC2);
+	grid_map=cv::Mat::zeros(cv::Size((int)(map_wf/reso),(int)(map_hf/reso)), CV_32SC1);
+	cluster_num=cv::Mat::zeros(cv::Size((int)(map_wf/reso),(int)(map_hf/reso)), CV_32SC1);
+	cluster_size=0;
+	cluster_count.reserve((int)(map_wf/reso)*(int)(map_hf/reso));
 }
 detect_objects::~detect_objects(){
 }
@@ -125,6 +138,7 @@ int main(int argc,char **argv){
 	float x,z;
 	int nx,nz;
 	bool tf;
+	bool WITH_GRIDMAP=false;
 	while(ros::ok()){
 
 		std::cout<<"process_start:"<<time_cls.get_time_now()<<"\n";
@@ -171,15 +185,26 @@ int main(int argc,char **argv){
 		dtct_obj.set_depth_image();
 
 		std::cout<<"4:set_depth_image:"<<time_cls.get_time_now()<<"\n";
+		if(!WITH_GRIDMAP){
+			dtct_obj.filter_process();//0.09
 
-		dtct_obj.filter_process();//0.09
+			std::cout<<"9:filter_process:"<<time_cls.get_time_now()<<"\n";
 
-		std::cout<<"9:filter_process:"<<time_cls.get_time_now()<<"\n";
+			dtct_obj.density_based_clustering(img_cls.get_cur_image_by_ref());//0.27
 
-		dtct_obj.density_based_clustering(img_cls.get_cur_image_by_ref());//0.27
+			std::cout<<"9:clusterig_by_density_based:"<<time_cls.get_time_now()<<"\n";
+		}
+		else{
+			dtct_obj.conv_depth_image();
+			std::cout<<"9:conv_depth_image:"<<time_cls.get_time_now()<<"\n";
 
-		std::cout<<"9:clusterig_by_density_based:"<<time_cls.get_time_now()<<"\n";
-
+			dtct_obj.create_grid_map();
+			std::cout<<"9:create_grid_map:"<<time_cls.get_time_now()<<"\n";
+			dtct_obj.dbscan_with_gm();
+			std::cout<<"9:dbscan_with_gm:"<<time_cls.get_time_now()<<"\n";
+			dtct_obj.set_cluster();
+			std::cout<<"9:set_cluster:"<<time_cls.get_time_now()<<"\n";
+		}
 		//img_cls.publish_debug_image( dtct_obj.draw_cluster(img_cls.get_cur_image_by_ref() ) );
 		dtct_obj.draw_cluster();
 

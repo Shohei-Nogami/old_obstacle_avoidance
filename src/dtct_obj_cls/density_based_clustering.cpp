@@ -278,7 +278,6 @@ void detect_objects::density_based_clustering(cv::Mat& image)
 					for(int i=0;i<task_pt.pt.size();i++)
 					{
 						searched_flag[task_pt.pt[i].y][task_pt.pt[i].x]=true;
-
 					}
 				}
 			}//task

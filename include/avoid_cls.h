@@ -26,7 +26,7 @@ class avoid {
 private:
 	ros::NodeHandle nh_sub,nh_sub2, nh_pub,nh_pub2;
 
-	ros::Publisher pub,pub2, pub_pcl;
+	ros::Publisher pub,pub2, pub_pcl, pub_pcl2;
 	ros::Subscriber sub,sub2;
 	ros::CallbackQueue queue,queue2;
 
@@ -123,6 +123,8 @@ public:
 
 	void draw_dangerous_line(void);
 	void show_cross_cloud(void);
+	void debug_cloud(void);
+
 };
 
 #endif

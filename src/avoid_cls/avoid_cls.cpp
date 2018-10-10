@@ -31,6 +31,7 @@ avoid::avoid()
 	pub2 = nh_pub2.advertise<obst_avoid::select_theta>("select_theta", 1);
 
 	pub_pcl = nh_pub.advertise<sensor_msgs::PointCloud2>("intersection_cloud", 1);
+	pub_pcl2 = nh_pub.advertise<sensor_msgs::PointCloud2>("static_or_moving_obstalces", 1);
 
 	//vfh.vfh_class();
 
@@ -664,7 +665,84 @@ void avoid::draw_dangerous_line(void)
 		vfh.draw_line(obj_info.objs[i].pos.x,obj_info.objs[i].pos.z,obj_info.objs[i].pos.x+vxi*w,obj_info.objs[i].pos.z+vyi*w);
 	}
 	//pcl
-	show_cross_cloud();
+	//show_cross_cloud();
+	debug_cloud();
+}
+void avoid::debug_cloud(void){
+	float colors[12][3] ={{255,0,0},{0,255,0},{0,0,255},{255,255,0},{0,255,255},{255,0,255},{127,255,0},{0,127,255},{127,0,255},{255,127,0},{0,255,127},{255,0,127}};//色リスト
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr clusted_cloud(new  pcl::PointCloud<pcl::PointXYZRGB>);
+	clusted_cloud->points.clear();
+	clusted_cloud->points.reserve(673*376*5);
+	pcl::PointXYZRGB cloud_temp;
+	int debug_num=1;
+	if(debug_num==0){
+		for(int i = 0; i < obj_info.objs.size(); i++)
+		{
+			for(int k = 0; k < obj_info.objs[i].pt.size(); k++)
+			{
+				double t=0;
+				cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
+				cloud_temp.z=((height/2-obj_info.objs[i].pt[k].y)*obj_info.objs[i].pt[k].z)/f+0.4125;
+				cloud_temp.x=obj_info.objs[i].pt[k].z;
+				//cloud_temp.x+=obj_info.objs[i].vel.z*t;
+				//cloud_temp.y+=-obj_info.objs[i].vel.x*t;
+				//cloud_temp.z+=obj_info.objs[i].vel.y*t;
+				if(obstacle_status[i]!=MOVING_OBSTACLE)
+				//if(obstacle_safety_status[i]==SAFETY_OBSTACLE)
+				{
+					cloud_temp.r=colors[1%12][0];
+					cloud_temp.g=colors[1%12][1];
+					cloud_temp.b=colors[1%12][2];
+				}
+				else{
+					cloud_temp.r=colors[0%12][0];
+					cloud_temp.g=colors[0%12][1];
+					cloud_temp.b=colors[0%12][2];
+				}
+				clusted_cloud->points.push_back(cloud_temp);
+			}	
+		}
+	}
+	else if(debug_num==1){
+		for(int i = 0; i < obj_info.objs.size(); i++)
+		{
+			for(int k = 0; k < obj_info.objs[i].pt.size(); k++)
+			{
+				double t=0;
+				cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
+				cloud_temp.z=((height/2-obj_info.objs[i].pt[k].y)*obj_info.objs[i].pt[k].z)/f+0.4125;
+				cloud_temp.x=obj_info.objs[i].pt[k].z;
+				//cloud_temp.x+=obj_info.objs[i].vel.z*t;
+				//cloud_temp.y+=-obj_info.objs[i].vel.x*t;
+				//cloud_temp.z+=obj_info.objs[i].vel.y*t;
+				if(obstacle_status[i]!=MOVING_OBSTACLE)
+				//if(obstacle_safety_status[i]==SAFETY_OBSTACLE)
+				{
+					cloud_temp.r=colors[1%12][0];
+					cloud_temp.g=colors[1%12][1];
+					cloud_temp.b=colors[1%12][2];
+					clusted_cloud->points.push_back(cloud_temp);
+				}
+				else{					
+					cloud_temp.r=colors[0%12][0];
+					cloud_temp.g=colors[0%12][1];
+					cloud_temp.b=colors[0%12][2];
+					clusted_cloud->points.push_back(cloud_temp);
+					int tm=5;
+					for(int t=1;t<tm;t++){
+						cloud_temp.x+=obj_info.objs[i].vel.z*1;
+						cloud_temp.y+=-obj_info.objs[i].vel.x*1;
+						cloud_temp.z+=obj_info.objs[i].vel.y*1;
+						clusted_cloud->points.push_back(cloud_temp);
+					}
+				}
+			}	
+		}
+	}
+	sensor_msgs::PointCloud2 edit_cloud;
+	pcl::toROSMsg (*clusted_cloud, edit_cloud);
+	edit_cloud.header.frame_id="/zed_camera_center";
+	pub_pcl2.publish(edit_cloud);
 }
 void avoid::show_cross_cloud(void)
 {
@@ -840,7 +918,7 @@ int main(int argc,char **argv)
   while(ros::ok())
 	{
 
-		pub.publish(turtlebot_vel);
+		//pub.publish(turtlebot_vel);
 		ROBOT_STATUS=ROBOT_GO;
 		std::cout<<"begin\n";
 		avoid_cls.subscribe_objects();
