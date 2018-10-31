@@ -285,3 +285,4 @@ target_link_libraries(udpipreceiver ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 ##
 #set(CMAKE_CXX_FLAGS “-std=c++0x ${CMAKE_CXX_FLAGS}”)
 add_definitions(-std=c++11)
+
