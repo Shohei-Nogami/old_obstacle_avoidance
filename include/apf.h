@@ -14,7 +14,7 @@
 #include<sensor_msgs/image_encodings.h>
 
 #include<ros/ros.h>
-
+#include<omp.h>
 class APF{
 	protected:
 		//apf.cpp

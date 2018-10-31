@@ -22,6 +22,8 @@
 #include"obst_avoid/robot_odm.h"
 #include<geometry_msgs/Twist.h>
 #include<std_msgs/Empty.h>
+#include<omp.h>
+#include<image_transport/image_transport.h>
 class avoid {
 private:
 	ros::NodeHandle nh_sub,nh_sub2, nh_pub,nh_pub2;
@@ -81,7 +83,18 @@ private:
   	//set_safety_vel
 	float safety_vel;
 	float safety_angle;
-
+	//iecon poster
+	cv::Mat depth_image;
+	pcl::PointCloud<pcl::PointXYZ> cloud;
+	ros::NodeHandle nh_sub_pcl;
+	ros::Subscriber sub_pcl;
+	ros::CallbackQueue queue_pcl;
+	const int H=376;
+	const int W=672;
+	ros::NodeHandle nh_pub_dimg;
+	// ros::Publisher pub_dimg;
+	image_transport::ImageTransport it_pub;
+	image_transport::Publisher pub_dimg;
 public:
 	avoid();
 	~avoid();
@@ -124,7 +137,10 @@ public:
 	void draw_dangerous_line(void);
 	void show_cross_cloud(void);
 	void debug_cloud(void);
-
+	//iecon poster
+	void subscribe_pcl(void);
+	void pointcloud_callback(const sensor_msgs::PointCloud2::ConstPtr& msg);
+	void conv_pcl_img(void);
 };
 
 #endif

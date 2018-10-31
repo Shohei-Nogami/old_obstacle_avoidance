@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="tf" type="static_transform_publisher" name="map_merged_broadcaster" args="0 -0.1 0 0 0 0 /zed_camera_center /zed_left_camera_frame 100"/>
+</launch>

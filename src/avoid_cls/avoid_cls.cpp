@@ -21,6 +21,7 @@
 #define ROBOT_GO 1
 
 avoid::avoid()
+:it_pub(nh_pub_dimg)
 {
 	nh_sub.setCallbackQueue(&queue);
 	sub = nh_sub.subscribe("filted_objects_info", 1, &avoid::objects_callback, this);
@@ -34,7 +35,13 @@ avoid::avoid()
 	pub_pcl2 = nh_pub.advertise<sensor_msgs::PointCloud2>("static_or_moving_obstalces", 1);
 
 	//vfh.vfh_class();
+	//iecon
+	nh_sub_pcl.setCallbackQueue(&queue_pcl);
+	sub_pcl = nh_sub_pcl.subscribe("/zed/point_cloud/cloud_registered", 1, &avoid::pointcloud_callback, this);
+	depth_image = cv::Mat::zeros(cv::Size(W,H), CV_32FC1);
+  pub_dimg=it_pub.advertise("depth_image",1);//test string
 
+	pub_pcl = nh_pub.advertise<sensor_msgs::PointCloud2>("intersection_cloud", 1);
 
 	//set vel temp
 	temp_vel.resize(3);
@@ -674,7 +681,7 @@ void avoid::debug_cloud(void){
 	clusted_cloud->points.clear();
 	clusted_cloud->points.reserve(673*376*5);
 	pcl::PointXYZRGB cloud_temp;
-	int debug_num=1;
+	int debug_num=2;
 	if(debug_num==0){
 		for(int i = 0; i < obj_info.objs.size(); i++)
 		{
@@ -682,7 +689,8 @@ void avoid::debug_cloud(void){
 			{
 				double t=0;
 				cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
-				cloud_temp.z=((height/2-obj_info.objs[i].pt[k].y)*obj_info.objs[i].pt[k].z)/f+0.4125;
+				cloud_temp.z=((height/2-obj_info.objs[i].pt[k].y)*obj_info.objs[i].pt[k].z)/f
+										;//+0.4125;
 				cloud_temp.x=obj_info.objs[i].pt[k].z;
 				//cloud_temp.x+=obj_info.objs[i].vel.z*t;
 				//cloud_temp.y+=-obj_info.objs[i].vel.x*t;
@@ -700,7 +708,7 @@ void avoid::debug_cloud(void){
 					cloud_temp.b=colors[0%12][2];
 				}
 				clusted_cloud->points.push_back(cloud_temp);
-			}	
+			}
 		}
 	}
 	else if(debug_num==1){
@@ -710,7 +718,8 @@ void avoid::debug_cloud(void){
 			{
 				double t=0;
 				cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
-				cloud_temp.z=((height/2-obj_info.objs[i].pt[k].y)*obj_info.objs[i].pt[k].z)/f+0.4125;
+				cloud_temp.z=((height/2-obj_info.objs[i].pt[k].y)*obj_info.objs[i].pt[k].z)/f
+											;//+0.4125;
 				cloud_temp.x=obj_info.objs[i].pt[k].z;
 				//cloud_temp.x+=obj_info.objs[i].vel.z*t;
 				//cloud_temp.y+=-obj_info.objs[i].vel.x*t;
@@ -723,7 +732,7 @@ void avoid::debug_cloud(void){
 					cloud_temp.b=colors[1%12][2];
 					clusted_cloud->points.push_back(cloud_temp);
 				}
-				else{					
+				else{
 					cloud_temp.r=colors[0%12][0];
 					cloud_temp.g=colors[0%12][1];
 					cloud_temp.b=colors[0%12][2];
@@ -736,7 +745,29 @@ void avoid::debug_cloud(void){
 						clusted_cloud->points.push_back(cloud_temp);
 					}
 				}
-			}	
+			}
+		}
+	}
+	else if(debug_num==2){
+		for(int i = 0; i < obj_info.objs.size(); i++)
+		{
+			for(int k = 0; k < obj_info.objs[i].pt.size(); k++)
+			{
+				double t=0;
+				cloud_temp.y=-(obj_info.objs[i].pt[k].x-width/2)*obj_info.objs[i].pt[k].z/f;
+				cloud_temp.z=((height/2-obj_info.objs[i].pt[k].y)*obj_info.objs[i].pt[k].z)/f
+											;//+0.4125;
+				cloud_temp.x=obj_info.objs[i].pt[k].z;
+				//cloud_temp.x+=obj_info.objs[i].vel.z*t;
+				//cloud_temp.y+=-obj_info.objs[i].vel.x*t;
+				//cloud_temp.z+=obj_info.objs[i].vel.y*t;
+
+				cloud_temp.r=colors[i%12][0];
+				cloud_temp.g=colors[i%12][1];
+				cloud_temp.b=colors[i%12][2];
+				clusted_cloud->points.push_back(cloud_temp);
+
+			}
 		}
 	}
 	sensor_msgs::PointCloud2 edit_cloud;
@@ -780,7 +811,7 @@ void avoid::show_cross_cloud(void)
 		//vfh.draw_circle(obj_info.objs[i].pos.x,obj_info.objs[i].pos.z);
 		//vfh.draw_line(obj_info.objs[i].pos.x,obj_info.objs[i].pos.z,obj_info.objs[i].pos.x+vxi*w,obj_info.objs[i].pos.z+vyi*w);
 
-//--------point cloud------------------------------------------------
+		//--------point cloud------------------------------------------------
 
 		for(int k = 0; k < obj_info.objs[i].pt.size(); k++)
 		{
@@ -874,7 +905,7 @@ void avoid::show_cross_cloud(void)
 			clusted_cloud->points.push_back(cloud_temp);
 
 		}
-//---------------------------------------------------------
+	//---------------------------------------------------------
 	}
 
 	sensor_msgs::PointCloud2 edit_cloud;
@@ -883,6 +914,34 @@ void avoid::show_cross_cloud(void)
 	pub_pcl.publish(edit_cloud);
 
 }
+
+void avoid::subscribe_pcl(void)
+{
+	queue_pcl.callOne(ros::WallDuration(1));
+}
+
+void avoid::pointcloud_callback(const sensor_msgs::PointCloud2::ConstPtr& msg){
+
+  pcl::fromROSMsg(*msg, cloud);
+
+}
+void avoid::conv_pcl_img(void){
+	// int W=msg->width;
+	// int H=msg->height;
+	int ch=depth_image.channels();
+	// std::cout<<"msg.size:"<<<<"\n";
+	for(int h=0;h<H;h++){
+		float *pd = depth_image.ptr<float>(h);
+		for(int w=0;w<W;w++){
+			pd[ch*w]=cloud.points[h*W+w].x;
+		}
+	}
+	cv_bridge::CvImagePtr publish_cvimage(new cv_bridge::CvImage);
+	publish_cvimage->encoding=sensor_msgs::image_encodings::TYPE_32FC1;
+	publish_cvimage->image=depth_image.clone();
+	pub_dimg.publish(publish_cvimage->toImageMsg());
+}
+
 int main(int argc,char **argv)
 {
   ros::init(argc,argv,"avoid_class_test");
@@ -983,8 +1042,8 @@ int main(int argc,char **argv)
 		avoid_cls.publish_velocity();
 
 		avoid_cls.publish_grid_map();
-
-
+		// avoid_cls.subscribe_pcl();
+		// avoid_cls.conv_pcl_img();
 		std::cout<<"loop\n";
 
 	}
